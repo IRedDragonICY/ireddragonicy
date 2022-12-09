@@ -20,4 +20,3 @@ If you like my project, U can donate from [here](https://saweria.co/Ndikk) OwO
 <br/>
     <a href="https://github.com/IRedDragonICY/github-readme-stats"><img alt="Ndik's Github Stats" src="https://github-readme-stats.vercel.app/api?username=IRedDragonICY&show_icons=true&count_private=true&theme=react&hide_border=true&bg_color=0D1117" /></a>
       <a href="https://github.com/IRedDragonICY/github-readme-stats"><img alt="Ndik's Top Languages" src="https://github-readme-stats.vercel.app/api/top-langs/?username=IRedDragonICY&langs_count=8&count_private=true&layout=compact&theme=react&hide_border=true&bg_color=0D1117" /></a>
-<a href="https://github.com/IRedDragonICY/github-readme-activity-graph"><img alt="Ndik's Activity Graph" src="https://activity-graph.herokuapp.com/graph?username=IRedDragonICY&bg_color=0D1117&color=5BCDEC&line=5BCDEC&point=FFFFFF&hide_border=true" /></a>

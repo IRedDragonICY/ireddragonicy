@@ -1,4 +1,4 @@
-### Hi there 👋 I'm Mohammad Farid Hendianto from Indonesian
+### Hi there 👋 I'm Mohammad Farid Hendianto with Student ID Number 2200018401 Ahmad Dahlan University  from Indonesian
 
 <!--
 **IRedDragonICY/IRedDragonICY** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.

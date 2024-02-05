@@ -3,7 +3,7 @@
 ### Hi there 👋 I'm Mohammad Farid Hendianto with Student ID Number 2200018401 Ahmad Dahlan University  from Indonesian
 
 
-- 🌱 I’m currently learning S1 Informaticsa
+- 🌱 I’m currently learning S1 Informatica
 - ⚡ Fun fact: I'm only like Anime
 
 If you like my project, U can donate from [here](https://saweria.co/Ndikk) OwO

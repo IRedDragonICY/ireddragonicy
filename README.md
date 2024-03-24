@@ -1,9 +1,9 @@
 ![](https://komarev.com/ghpvc/?username=IRedDragonICY&color=green)
 
-### Hi there 👋 I'm Mohammad Farid Hendianto with Student ID Number 2200018401 Ahmad Dahlan University  from Indonesian
+[![Typing SVG](https://readme-typing-svg.herokuapp.com?font=Workbench&pause=1000&color=F7B25B&center=true&multiline=true&random=false&width=435&lines=Hello+I'm+Mohammad+Farid+Hendianto;From+Ahmad+Dahlan+University)](https://git.io/typing-svg)
 
 
-- 🌱 I’m currently learning S1 Informatica
+- 🌱 I’m currently learning S1 Computer Science
 - ⚡ Fun fact: I'm only like Anime
 
 If you like my project, U can donate from [here](https://saweria.co/Ndikk) OwO

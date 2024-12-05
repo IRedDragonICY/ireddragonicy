@@ -52,9 +52,11 @@ If you appreciate my work, you can support me [**here**](https://saweria.co/Ndik
 </p>
 
 <!-- GitHub Snake Animation -->
-<p align="center">
-  <img src="https://github.com/IRedDragonICY/IRedDragonICY/blob/output/github-contribution-grid-snake.svg" alt="GitHub Snake" />
-</p>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="github-snake-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset="github-snake.svg" />
+  <img alt="github-snake" src="github-snake.svg" />
+</picture>
 
 ---
 

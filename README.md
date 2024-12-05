@@ -52,10 +52,12 @@ If you appreciate my work, you can support me [**here**](https://saweria.co/Ndik
 </p>
 
 <!-- GitHub Snake Animation -->
+### 🐍 Watch my contribution snake eating up my commits
+
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="github-snake-dark.svg" />
-  <source media="(prefers-color-scheme: light)" srcset="github-snake.svg" />
-  <img alt="github-snake" src="github-snake.svg" />
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/IRedDragonICY/IRedDragonICY/output/github-contribution-grid-snake-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/IRedDragonICY/IRedDragonICY/output/github-contribution-grid-snake.svg" />
+  <img alt="github-snake" src="https://raw.githubusercontent.com/IRedDragonICY/IRedDragonICY/output/github-contribution-grid-snake.svg" />
 </picture>
 
 ---
@@ -75,3 +77,4 @@ If you appreciate my work, you can support me [**here**](https://saweria.co/Ndik
 ---
 
 **P.S.** *Thank you for visiting my profile.*
+

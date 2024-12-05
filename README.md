@@ -12,6 +12,12 @@
 
 ## 👨‍💻 About Me
 
+
+<p align="center">
+  <img src="https://quotes-github-readme.vercel.app/api?type=horizontal&theme=radical" alt="Quote" />
+</p>
+
+
 I am **Mohammad Farid Hendianto**, a passionate **Software Developer** and **Computer Science** student at **Ahmad Dahlan University**. My interests revolve around building new technologies and products, especially in the fields of software development and open-source contributions.
 
 - 🔭 **I’m currently working on** improving my programming skills and contributing to open-source projects.
@@ -60,7 +66,6 @@ I am **Mohammad Farid Hendianto**, a passionate **Software Developer** and **Com
 
 ---
 
-## 📊 GitHub Statistics
 
 <p align="center">
   <img src="https://github-readme-stats.vercel.app/api?username=IRedDragonICY&show_icons=true&count_private=true&theme=react&hide_border=true&bg_color=0D1117" alt="Ndik's GitHub Stats" />
@@ -68,23 +73,10 @@ I am **Mohammad Farid Hendianto**, a passionate **Software Developer** and **Com
   <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=IRedDragonICY&langs_count=10&layout=compact&theme=react&hide_border=true&bg_color=0D1117" alt="Ndik's Top Languages" />
 </p>
 
-### 🏆 GitHub Trophies
 
 <p align="center">
   <img src="https://github-profile-trophy.vercel.app/?username=IRedDragonICY&theme=onedark&no-frame=true&row=1&column=7" alt="Ndik's Trophies" />
 </p>
-
----
-
-### 💡 Quote of the Day
-
-<p align="center">
-  <img src="https://quotes-github-readme.vercel.app/api?type=horizontal&theme=radical" alt="Quote" />
-</p>
-
----
-
-### 🐍 Contribution Snake
 
 <p align="center">
   <picture>

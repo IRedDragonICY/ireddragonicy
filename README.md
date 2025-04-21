@@ -1,5 +1,5 @@
 <!-- Profile Views Badge -->
-![Profile Views](https://komarev.com/ghpvc/?username=IRedDragonICY&color=green)
+[![Ndik profile views](https://u8views.com/api/v1/github/profiles/98265563/views/day-week-month-total-count.svg)](https://u8views.com/github/IRedDragonICY)
 
 <!-- Animated Typing SVG -->
 <p align="center">

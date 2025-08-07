@@ -3,84 +3,27 @@
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence, useAnimation } from 'framer-motion';
+import { FaPowerOff } from 'react-icons/fa';
+import {
+  LoadingScreenProps,
+  SystemModule,
+  FileSystemNode,
+  Process,
+  CommandHistory,
+  NetworkNode,
+  SystemMetric,
+  CPUCore,
+  RAMModule,
+} from './terminal/types';
+import { AUTO_REDIRECT_DELAY_MS, AUTO_REDIRECT_COUNTDOWN_SECS, INIT_MESSAGES, STORAGE_KEYS } from './terminal/constants';
+import { sleep, safeLocalStorageGet, safeLocalStorageSet } from './terminal/utils';
 
-interface SystemModule {
-  id: string;
-  name: string;
-  status: 'pending' | 'loading' | 'complete' | 'error';
-  progress: number;
-  submodules?: string[];
-  memoryUsage?: number;
-  threads?: number;
-}
-
-interface FileSystemNode {
-  name: string;
-  type: 'file' | 'directory';
-  content?: string;
-  children?: { [key: string]: FileSystemNode };
-  permissions?: string;
-  owner?: string;
-  size?: number;
-  modified?: Date;
-}
-
-interface Process {
-  pid: number;
-  name: string;
-  cpu: number;
-  memory: number;
-  time: string;
-  user: string;
-  status: 'running' | 'sleeping' | 'zombie';
-}
-
-interface CommandHistory {
-  commands: string[];
-  currentIndex: number;
-}
-
-interface NetworkNode {
-  id: number;
-  x: number;
-  y: number;
-  connected: number[];
-  active: boolean;
-}
-
-interface SystemMetric {
-  label: string;
-  value: number;
-  max: number;
-  unit: string;
-  color: string;
-  history: number[];
-  details?: {
-    cores?: number;
-    threads?: number;
-    frequency?: string;
-    modules?: number;
-    speed?: string;
-    temperature?: number;
-  };
-}
-
-interface CPUCore {
-  id: number;
-  usage: number;
-  frequency: number;
-  temperature: number;
-}
-
-interface RAMModule {
-  id: number;
-  size: number;
-  speed: number;
-  manufacturer: string;
-  usage: number;
-}
-
-const LoadingScreen = ({ onLoadComplete }: { onLoadComplete: () => void }) => {
+const LoadingScreen = ({
+  onLoadComplete,
+  startMode = 'boot',
+  variant = 'full',
+  autoRedirectOnIdle = true,
+}: LoadingScreenProps) => {
   const [modules, setModules] = useState<SystemModule[]>([
     { id: 'core', name: 'Core System', status: 'pending', progress: 0, memoryUsage: 0, threads: 0, submodules: ['Kernel', 'Memory Manager', 'Process Handler', 'Thread Pool'] },
     { id: 'neural', name: 'Neural Engine', status: 'pending', progress: 0, memoryUsage: 0, threads: 0, submodules: ['Tensor Core', 'CUDA Driver', 'Model Loader', 'Optimizer'] },
@@ -111,7 +54,7 @@ const LoadingScreen = ({ onLoadComplete }: { onLoadComplete: () => void }) => {
     commands: [],
     currentIndex: -1
   });
-  const [terminalMode, setTerminalMode] = useState<'boot' | 'interactive'>('boot');
+  const [terminalMode, setTerminalMode] = useState<'boot' | 'interactive'>(startMode);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processes, setProcesses] = useState<Process[]>([]);
   const [tabCompletions, setTabCompletions] = useState<string[]>([]);
@@ -120,6 +63,9 @@ const LoadingScreen = ({ onLoadComplete }: { onLoadComplete: () => void }) => {
   const [autoRedirectCountdown, setAutoRedirectCountdown] = useState<number | null>(null);
   const [autoRedirectStarted, setAutoRedirectStarted] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [poweredOff, setPoweredOff] = useState(false);
+  
+  const [isPoweringOn, setIsPoweringOn] = useState(false);
 
   const consoleRef = useRef<HTMLDivElement>(null);
   const lineIdCounter = useRef(0);
@@ -127,6 +73,11 @@ const LoadingScreen = ({ onLoadComplete }: { onLoadComplete: () => void }) => {
   const particleControls = useAnimation();
   const terminateTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const autoRedirectTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const autoRedirectIntervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const countdownLineIdRef = useRef<string | null>(null);
+  const initializedRef = useRef(false);
+  const bootPausedRef = useRef(false);
+  const bootAbortedRef = useRef(false);
 
   // Virtual File System
   const [fileSystem] = useState<FileSystemNode>({
@@ -378,27 +329,58 @@ const LoadingScreen = ({ onLoadComplete }: { onLoadComplete: () => void }) => {
   ]);
 
   // Add console line with type
-  const addConsoleLine = (text: string, type: string = 'info') => {
+  const addConsoleLine = (text: string, type: string = 'info'): string => {
     const id = `line-${Date.now()}-${lineIdCounter.current++}`;
     setConsoleLines(prev => [...prev, { id, text, type }]);
+    return id;
   };
+
+  const updateConsoleLine = (id: string, text: string) => {
+    setConsoleLines(prev => prev.map(line => line.id === id ? { ...line, text } : line));
+  };
+
+  const powerOn = useCallback(async () => {
+    setIsPoweringOn(true);
+    setPoweredOff(false);
+    setConsoleLines([]);
+    addConsoleLine('> Powering on terminal...', 'info');
+    await sleep(150);
+    // Simulate a modern boot ripple and glow before enabling terminal
+    await sleep(600);
+    setSystemStatus('ONLINE');
+    setTerminalMode('interactive');
+    addConsoleLine('> Interactive terminal ready.', 'success');
+    addConsoleLine('> Type "help" for available commands', 'info');
+    // Small delay then hide animation overlay
+    setTimeout(() => setIsPoweringOn(false), 500);
+  }, []);
 
   // Start auto-redirect timer
   const startAutoRedirectTimer = useCallback(() => {
     if (terminalMode !== 'interactive' || autoRedirectStarted) return;
     
     setAutoRedirectStarted(true);
-    let countdown = 10; // 10 seconds countdown
+    let countdown = AUTO_REDIRECT_COUNTDOWN_SECS; // seconds countdown
     setAutoRedirectCountdown(countdown);
+    // Ensure we have a console line to update
+    if (!countdownLineIdRef.current) {
+      countdownLineIdRef.current = addConsoleLine(`> Auto-redirect to portfolio in ${countdown}s if inactive...`, 'detail');
+    } else {
+      updateConsoleLine(countdownLineIdRef.current, `> Auto-redirect to portfolio in ${countdown}s if inactive...`);
+    }
     
     const countdownInterval = setInterval(() => {
       countdown--;
       setAutoRedirectCountdown(countdown);
+      if (countdownLineIdRef.current) {
+        updateConsoleLine(countdownLineIdRef.current, `> Auto-redirect to portfolio in ${countdown}s if inactive...`);
+      }
       
       if (countdown <= 0) {
         clearInterval(countdownInterval);
       }
     }, 1000);
+    autoRedirectIntervalRef.current = countdownInterval as unknown as NodeJS.Timeout;
     
     autoRedirectTimeoutRef.current = setTimeout(async () => {
       clearInterval(countdownInterval);
@@ -419,13 +401,16 @@ const LoadingScreen = ({ onLoadComplete }: { onLoadComplete: () => void }) => {
       addConsoleLine('✨ Portfolio interface ready!', 'success');
       await new Promise(resolve => setTimeout(resolve, 500));
       addConsoleLine('🔄 Redirecting to main portfolio...', 'warning');
+      if (countdownLineIdRef.current) {
+        updateConsoleLine(countdownLineIdRef.current, '> Auto-redirect: redirecting now...');
+      }
       
       setTimeout(() => {
         setTerminalMode('boot');
         setProgressPercentage(100);
         onLoadComplete();
       }, 1000);
-    }, 10000);
+    }, AUTO_REDIRECT_DELAY_MS);
   }, [terminalMode, onLoadComplete, autoRedirectStarted]);
 
   // Cancel auto-redirect timer
@@ -433,8 +418,15 @@ const LoadingScreen = ({ onLoadComplete }: { onLoadComplete: () => void }) => {
     if (autoRedirectTimeoutRef.current) {
       clearTimeout(autoRedirectTimeoutRef.current);
     }
+    if (autoRedirectIntervalRef.current) {
+      clearInterval(autoRedirectIntervalRef.current);
+    }
     setAutoRedirectCountdown(null);
     setAutoRedirectStarted(false);
+    if (countdownLineIdRef.current) {
+      updateConsoleLine(countdownLineIdRef.current, '> Auto-redirect cancelled.');
+      countdownLineIdRef.current = null;
+    }
   }, []);
 
   // Navigate file system
@@ -523,6 +515,8 @@ const LoadingScreen = ({ onLoadComplete }: { onLoadComplete: () => void }) => {
         addConsoleLine('  uptime            - Show system uptime', 'detail');
         addConsoleLine('  history           - Show command history', 'detail');
         addConsoleLine('  uname [-a]        - Display system information', 'detail');
+        addConsoleLine('  poweroff          - Power off terminal (Power On button appears)', 'detail');
+        addConsoleLine('  shutdown/halt     - Aliases for poweroff', 'detail');
         
         addConsoleLine('', 'info');
         addConsoleLine('  ═══ Process & Network Commands ═══', 'success');
@@ -831,6 +825,23 @@ const LoadingScreen = ({ onLoadComplete }: { onLoadComplete: () => void }) => {
         } else {
           addConsoleLine('QuantumOS', 'info');
         }
+        break;
+
+      case 'poweroff':
+      case 'shutdown':
+      case 'halt':
+        addConsoleLine('> Initiating shutdown...', 'warning');
+        await new Promise(resolve => setTimeout(resolve, 300));
+        addConsoleLine('> Stopping services...', 'detail');
+        await new Promise(resolve => setTimeout(resolve, 300));
+        addConsoleLine('> Powering off.', 'error');
+        cancelAutoRedirectTimer();
+        setAutoRedirectStarted(false);
+        setAutoRedirectCountdown(null);
+        setTimeout(() => {
+          setTerminalMode('boot');
+          setPoweredOff(true);
+        }, 400);
         break;
         
       case 'fortune':
@@ -1157,23 +1168,17 @@ const LoadingScreen = ({ onLoadComplete }: { onLoadComplete: () => void }) => {
       }
     }
     
-    // Boot mode - original Ctrl+C behavior
+    // Boot mode - emulate real TTY interrupt, write to console only
     if (terminalMode === 'boot') {
       if (e.ctrlKey && e.key === 'c' && !showTerminatePrompt) {
         e.preventDefault();
         setShowTerminatePrompt(true);
-
-        // Add interrupt message to console
         addConsoleLine('^C', 'error');
         addConsoleLine('> Interrupt signal received (SIGINT)', 'warning');
         addConsoleLine('> Terminate system initialization? (y/n): _', 'prompt');
 
-        // Auto-close prompt after 5 seconds
-        terminateTimeoutRef.current = setTimeout(() => {
-          setShowTerminatePrompt(false);
-          addConsoleLine('n', 'input');
-          addConsoleLine('> Continuing system initialization...', 'info');
-        }, 5000);
+        // Pause boot progression until user responds
+        bootPausedRef.current = true;
       }
 
       // Handle prompt response
@@ -1184,17 +1189,21 @@ const LoadingScreen = ({ onLoadComplete }: { onLoadComplete: () => void }) => {
             clearTimeout(terminateTimeoutRef.current);
           }
 
-          // Add termination sequence
+          // TTY-style termination sequence only in console
           addConsoleLine('y', 'input');
           addConsoleLine('> [CRITICAL] System termination initiated...', 'error');
           addConsoleLine('> Shutting down all modules...', 'error');
           addConsoleLine('> Clearing memory...', 'error');
           addConsoleLine('> Goodbye, Operator.', 'error');
 
-          // Easter egg: different redirect
+          // Mark aborted so boot loop exits and complete to portfolio
+          bootAbortedRef.current = true;
           setTimeout(() => {
-            window.location.href = 'https://www.youtube.com/watch?v=xvFZjo5PgG0';
-          }, 1500);
+            setShowTerminatePrompt(false);
+            setTerminalMode('boot');
+            setProgressPercentage(100);
+            onLoadComplete();
+          }, 1000);
         } else if (e.key === 'n' || e.key === 'N' || e.key === 'Escape') {
           e.preventDefault();
           if (terminateTimeoutRef.current) {
@@ -1203,6 +1212,7 @@ const LoadingScreen = ({ onLoadComplete }: { onLoadComplete: () => void }) => {
           setShowTerminatePrompt(false);
           addConsoleLine('n', 'input');
           addConsoleLine('> Continuing system initialization...', 'info');
+          bootPausedRef.current = false;
         }
       }
     }
@@ -1520,45 +1530,78 @@ const LoadingScreen = ({ onLoadComplete }: { onLoadComplete: () => void }) => {
   }, [isClient]);
 
   // Console messages with types
-  const initMessages = [
-    { text: '> System boot sequence initiated...', type: 'info' },
-    { text: '> BIOS Version: v4.2.0 Phoenix', type: 'system' },
-    { text: '> Checking hardware compatibility...', type: 'info' },
-    { text: '> CPU: AMD Ryzen 9 7950X @ 5.7GHz (16C/32T)', type: 'hardware' },
-    { text: '> GPU: NVIDIA RTX 4090 24GB GDDR6X', type: 'hardware' },
-    { text: '> RAM: 64GB (4x16GB) DDR5 @ 6000MHz CL30', type: 'hardware' },
-    { text: '> SSD: Samsung 990 PRO 2TB NVMe Gen4', type: 'hardware' },
-    { text: '> Loading kernel modules...', type: 'info' },
-    { text: '> [KERNEL] Linux 6.5.0-quantum', type: 'kernel' },
-    { text: '> Establishing secure connection...', type: 'network' },
-    { text: '> [SECURITY] Quantum encryption enabled', type: 'security' },
-    { text: '> Mounting virtual filesystems...', type: 'info' },
-    { text: '> Initializing graphics pipeline...', type: 'info' },
-    { text: '> [VULKAN] API v1.3.268 loaded', type: 'graphics' },
-    { text: '> Configuring neural processors...', type: 'info' },
-    { text: '> [NEURAL] TPU acceleration active', type: 'neural' },
-    { text: '> Calibrating diffusion models...', type: 'info' },
-  ];
+  const initMessages = INIT_MESSAGES as unknown as { text: string; type: string }[];
 
   // Initialize modules with complex sequence
   useEffect(() => {
     let hasInitialized = false;
-    
+
+    const runInteractiveOnly = async () => {
+      setSystemStatus('ONLINE');
+      addConsoleLine('', 'info');
+      addConsoleLine('> Interactive terminal ready.', 'success');
+      addConsoleLine('> Type "help" for available commands', 'info');
+      setTerminalMode('interactive');
+      // Seed processes
+      setProcesses([
+        { pid: 2001, name: 'node', cpu: 6.1, memory: 180, time: '00:00:03', user: 'root', status: 'running' },
+        { pid: 2004, name: 'nextjs', cpu: 4.2, memory: 220, time: '00:00:02', user: 'ireddragonicy', status: 'running' },
+      ]);
+    };
+
+    const runFastBoot = async () => {
+      // Minimal, fast boot experience
+      addConsoleLine('> Quick init...', 'info');
+      setProgressPercentage(40);
+      await new Promise(r => setTimeout(r, 200));
+      addConsoleLine('> Loading UI...', 'info');
+      setProgressPercentage(80);
+      await new Promise(r => setTimeout(r, 200));
+      addConsoleLine('> Ready.', 'success');
+      setProgressPercentage(100);
+      await new Promise(r => setTimeout(r, 150));
+      onLoadComplete();
+    };
+
+    const waitIfPausedOrAborted = async () => {
+      // Busy-wait with small sleep while paused; exit fast if aborted
+      while (bootPausedRef.current && !bootAbortedRef.current) {
+        await sleep(50);
+      }
+      if (bootAbortedRef.current) {
+        throw new Error('BOOT_ABORTED');
+      }
+    };
+
     const initializeModules = async () => {
+      if (initializedRef.current) return; // Guard for StrictMode
+      initializedRef.current = true;
       if (hasInitialized) return;
       hasInitialized = true;
+
+      if (startMode === 'interactive') {
+        await runInteractiveOnly();
+        return;
+      }
+
+      if (variant === 'fast') {
+        await runFastBoot();
+        return;
+      }
+
       // Phase 1: Boot sequence
-      for (let i = 0; i < initMessages.length; i++) {
-        await new Promise(resolve => setTimeout(resolve, 150 + Math.random() * 100));
+      try {
+        for (let i = 0; i < initMessages.length; i++) {
+          await waitIfPausedOrAborted();
+          await sleep(150 + Math.random() * 100);
         addConsoleLine(initMessages[i].text, initMessages[i].type);
         setProgressPercentage((i + 1) / initMessages.length * 15);
 
-        // Update random network node
-        setNetworkNodes(prev => prev.map((node, index) => ({
+        setNetworkNodes(prev => prev.map(node => ({
           ...node,
           active: Math.random() < 0.3
         })));
-      }
+        }
 
       // Phase 2: Module initialization
       setCurrentPhase(1);
@@ -1567,22 +1610,20 @@ const LoadingScreen = ({ onLoadComplete }: { onLoadComplete: () => void }) => {
       for (let i = 0; i < modules.length; i++) {
         const currentModule = modules[i];
 
-        // Start loading module
         setModules(prev => prev.map(m =>
           m.id === currentModule.id ? { ...m, status: 'loading' } : m
         ));
 
         addConsoleLine(`> [${currentModule.id.toUpperCase()}] Initializing ${currentModule.name}...`, 'module');
-        addConsoleLine(`  │ Allocating memory...`, 'detail');
+        addConsoleLine('  │ Allocating memory...', 'detail');
 
-        // Simulate memory allocation
         const targetMemory = 256 + Math.random() * 768;
         const targetThreads = 4 + Math.floor(Math.random() * 12);
 
-        // Load submodules with detailed output
         if (currentModule.submodules) {
           for (let j = 0; j < currentModule.submodules.length; j++) {
-            await new Promise(resolve => setTimeout(resolve, 80 + Math.random() * 40));
+            await waitIfPausedOrAborted();
+            await sleep(80 + Math.random() * 40);
             const progress = ((j + 1) / currentModule.submodules.length) * 100;
 
             setModules(prev => prev.map(m =>
@@ -1595,25 +1636,24 @@ const LoadingScreen = ({ onLoadComplete }: { onLoadComplete: () => void }) => {
             ));
 
             addConsoleLine(`  ├─ Loading ${currentModule.submodules[j]}...`, 'detail');
-            await new Promise(resolve => setTimeout(resolve, 30));
-            addConsoleLine(`  │  └─ Checksum verified [OK]`, 'success');
+            await waitIfPausedOrAborted();
+            await sleep(30);
+            addConsoleLine('  │  └─ Checksum verified [OK]', 'success');
 
-            // Update CPU cores usage during loading
             setCpuCores(prev => prev.map((core, idx) => ({
               ...core,
               usage: Math.min(95, 20 + Math.random() * 60 + (idx === i % 16 ? 20 : 0))
             })));
 
-            // Update RAM usage
-            setRamModules(prev => prev.map((module, idx) => ({
+            setRamModules(prev => prev.map(module => ({
               ...module,
               usage: Math.min(module.size, (progress / 100) * module.size * 0.7 + Math.random() * 1000)
             })));
           }
         }
 
-        // Complete module
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await waitIfPausedOrAborted();
+        await sleep(200);
         setModules(prev => prev.map(m =>
           m.id === currentModule.id ? {
             ...m,
@@ -1624,7 +1664,7 @@ const LoadingScreen = ({ onLoadComplete }: { onLoadComplete: () => void }) => {
           } : m
         ));
 
-        addConsoleLine(`  └─ Module initialized successfully`, 'success');
+        addConsoleLine('  └─ Module initialized successfully', 'success');
         addConsoleLine(`> [${currentModule.id.toUpperCase()}] Ready • Memory: ${targetMemory.toFixed(0)}MB • Threads: ${targetThreads} ✓`, 'complete');
         setProgressPercentage(15 + ((i + 1) / modules.length * 70));
       }
@@ -1655,11 +1695,11 @@ const LoadingScreen = ({ onLoadComplete }: { onLoadComplete: () => void }) => {
       ];
 
       for (let i = 0; i < optimizationMessages.length; i++) {
-        await new Promise(resolve => setTimeout(resolve, 200 + Math.random() * 100));
+        await waitIfPausedOrAborted();
+        await sleep(200 + Math.random() * 100);
         addConsoleLine(optimizationMessages[i].text, optimizationMessages[i].type);
         setProgressPercentage(85 + ((i + 1) / optimizationMessages.length * 15));
 
-        // Gradually reduce system load
         if (i > optimizationMessages.length / 2) {
           setCpuCores(prev => prev.map(core => ({
             ...core,
@@ -1675,42 +1715,47 @@ const LoadingScreen = ({ onLoadComplete }: { onLoadComplete: () => void }) => {
 
       setSystemStatus('ONLINE');
 
-      // Switch to interactive terminal mode
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await waitIfPausedOrAborted();
+      await sleep(1000);
       addConsoleLine('', 'info');
       addConsoleLine('> Entering interactive terminal mode...', 'success');
       addConsoleLine('> Type "help" for available commands', 'info');
-      addConsoleLine('> Auto-redirect to portfolio in 10 seconds if inactive...', 'detail');
+      if (autoRedirectOnIdle) {
+        // Seed initial line so the countdown can overwrite the same line
+        const lineId = addConsoleLine(`> Auto-redirect to portfolio in ${AUTO_REDIRECT_COUNTDOWN_SECS}s if inactive...`, 'detail');
+        countdownLineIdRef.current = lineId;
+      }
       addConsoleLine('', 'info');
       setTerminalMode('interactive');
-      
-      // Will be handled by separate useEffect
-      
-      // Initialize some processes
+      if (autoRedirectOnIdle && !autoRedirectStarted) {
+        startAutoRedirectTimer();
+      }
+
       const initialProcesses: Process[] = [
         { pid: 2001, name: 'node', cpu: 12.3, memory: 256, time: '00:00:12', user: 'root', status: 'running' },
         { pid: 2002, name: 'chrome', cpu: 8.5, memory: 512, time: '00:00:08', user: 'ireddragonicy', status: 'running' },
         { pid: 2003, name: 'vscode', cpu: 5.2, memory: 384, time: '00:00:05', user: 'ireddragonicy', status: 'sleeping' },
       ];
       setProcesses(initialProcesses);
-      
-      // Don't auto-complete, let user interact
-      // onLoadComplete();
+      } catch (err) {
+        // Boot aborted: nothing to do, handler will complete
+        return;
+      }
     };
 
     initializeModules();
-  }, []);
+  }, [startMode, variant, onLoadComplete]);
 
   // Start auto-redirect timer when interactive mode is entered
   useEffect(() => {
+    if (!autoRedirectOnIdle) return;
     if (terminalMode === 'interactive' && !autoRedirectStarted) {
       const timer = setTimeout(() => {
         startAutoRedirectTimer();
       }, 100);
-      
       return () => clearTimeout(timer);
     }
-  }, [terminalMode, autoRedirectStarted, startAutoRedirectTimer]);
+  }, [terminalMode, autoRedirectStarted, startAutoRedirectTimer, autoRedirectOnIdle]);
 
   // Auto-scroll console
   useEffect(() => {
@@ -1863,50 +1908,7 @@ const LoadingScreen = ({ onLoadComplete }: { onLoadComplete: () => void }) => {
           />
         </motion.div>
 
-        {/* Terminate prompt overlay */}
-        <AnimatePresence>
-          {showTerminatePrompt && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
-            >
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.8, opacity: 0 }}
-                className="bg-red-900/20 border border-red-500 rounded-lg p-6 max-w-md"
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
-                    <span className="text-red-500 text-2xl">⚠</span>
-                  </div>
-                  <div>
-                    <h3 className="text-red-500 font-mono font-bold text-lg">SIGINT RECEIVED</h3>
-                    <p className="text-red-400 font-mono text-sm">Process interrupt signal detected</p>
-                  </div>
-                </div>
-                <p className="text-gray-300 font-mono text-sm mb-4">
-                  WARNING: Terminating system initialization may result in undefined behavior.
-                  All loaded modules will be forcefully stopped.
-                </p>
-                <div className="flex items-center justify-between">
-                  <p className="text-cyan-400 font-mono text-sm">Continue termination? (Y/N)</p>
-                  <div className="flex gap-2">
-                    <motion.span
-                      animate={{ opacity: [0.5, 1, 0.5] }}
-                      transition={{ duration: 0.5, repeat: Infinity }}
-                      className="text-red-400 font-mono text-sm"
-                    >
-                      Press Y or N
-                    </motion.span>
-                  </div>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Terminate overlay removed to emulate real TTY; all prompts stay in console */}
 
         {/* Main container */}
         <div className="relative w-full max-w-7xl mx-auto px-4 lg:px-8">
@@ -1918,7 +1920,7 @@ const LoadingScreen = ({ onLoadComplete }: { onLoadComplete: () => void }) => {
             className="mb-6 bg-black/80 backdrop-blur-xl border border-cyan-500/30 rounded-lg p-4"
           >
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-              {systemMetrics.map((metric, i) => (
+              {!poweredOff && systemMetrics.map((metric, i) => (
                 <div key={`metric-${i}-${metric.label}`} className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-mono text-gray-400">{metric.label}</span>
@@ -1962,6 +1964,7 @@ const LoadingScreen = ({ onLoadComplete }: { onLoadComplete: () => void }) => {
             </div>
           </motion.div>
 
+          {!poweredOff && (
           <div className="grid lg:grid-cols-3 gap-6">
             {/* Left side - Console */}
             <motion.div
@@ -2057,7 +2060,7 @@ const LoadingScreen = ({ onLoadComplete }: { onLoadComplete: () => void }) => {
                 ))}
                 
                 {/* Interactive prompt */}
-                {terminalMode === 'interactive' && (
+                {terminalMode === 'interactive' && !poweredOff && (
                   <div className="flex items-center text-white font-mono">
                     <span className="text-green-400">{currentDirectory}</span>
                     <span className="text-cyan-400">$</span>
@@ -2071,7 +2074,7 @@ const LoadingScreen = ({ onLoadComplete }: { onLoadComplete: () => void }) => {
                 )}
                 
                 {/* Auto-redirect countdown warning */}
-                {autoRedirectCountdown !== null && autoRedirectCountdown <= 3 && (
+                {autoRedirectCountdown !== null && autoRedirectCountdown <= 3 && !poweredOff && (
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -2402,6 +2405,68 @@ const LoadingScreen = ({ onLoadComplete }: { onLoadComplete: () => void }) => {
               </div>
             </motion.div>
           </div>
+          )}
+
+          {poweredOff && (
+            <div className="relative w-full h-[70vh] flex items-center justify-center overflow-hidden">
+              {/* subtle power-off scanlines and glow */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: [0.2, 0.35, 0.2] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,255,255,0.05),transparent_60%)]"
+              />
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.06 }}
+                className="absolute inset-0 bg-[repeating-linear-gradient(0deg,rgba(255,255,255,0.08)_0px,rgba(255,255,255,0.08)_1px,transparent_1px,transparent_3px)]"
+              />
+
+              <div className="relative text-center z-10">
+                <div className="text-gray-400 font-mono mb-4">TERMINAL IS POWERED OFF</div>
+                <button
+                  onClick={powerOn}
+                  className="inline-flex items-center gap-3 px-6 py-3 rounded-xl bg-gray-900 border border-cyan-400/40 text-cyan-300 hover:text-white hover:bg-gradient-to-br hover:from-cyan-500/10 hover:to-purple-500/10 hover:border-cyan-400/60 transition-all"
+                >
+                  <FaPowerOff />
+                  <span className="font-semibold">Power On</span>
+                </button>
+              </div>
+
+              {/* power-on animation overlay */}
+              <AnimatePresence>
+                {isPoweringOn && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-0 pointer-events-none"
+                  >
+                    {/* center pulse */}
+                    <motion.div
+                      initial={{ scale: 0.6, opacity: 0.2 }}
+                      animate={{ scale: [0.6, 1.2, 1], opacity: [0.2, 0.6, 0.15] }}
+                      transition={{ duration: 0.8, ease: 'easeOut' }}
+                      className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 rounded-full bg-cyan-500/20 blur-xl"
+                    />
+                    {/* sweep lines */}
+                    <motion.div
+                      initial={{ y: '100%' }}
+                      animate={{ y: ['100%', '-100%'] }}
+                      transition={{ duration: 0.9, ease: 'easeInOut' }}
+                      className="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent"
+                    />
+                    <motion.div
+                      initial={{ x: '-100%' }}
+                      animate={{ x: ['-100%', '100%'] }}
+                      transition={{ duration: 1.1, ease: 'easeInOut', delay: 0.15 }}
+                      className="absolute inset-y-0 w-1 bg-gradient-to-b from-transparent via-cyan-400 to-transparent"
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
 
           {/* Bottom status bar */}
           <motion.div

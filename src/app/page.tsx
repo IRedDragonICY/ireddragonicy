@@ -407,14 +407,36 @@ const StatusNotification = () => {
 }
 
 export default function Home() {
-    const [loading, setLoading] = useState(true);
+    const [hasBooted, setHasBooted] = useState<boolean | null>(null);
+    const [showLoader, setShowLoader] = useState(true);
+    const [showTerminal, setShowTerminal] = useState(false);
 
-    const handleLoadComplete = () => {
-        setLoading(false);
+    useEffect(() => {
+        const booted = typeof window !== 'undefined' && window.localStorage.getItem('hasBooted') === '1';
+        setHasBooted(booted);
+    }, []);
+
+    const handleInitialBootComplete = () => {
+        try {
+            window.localStorage.setItem('hasBooted', '1');
+        } catch {}
+        setShowLoader(false);
     };
 
-    if (loading) {
-        return <LoadingScreen onLoadComplete={handleLoadComplete} />;
+    // Terminal overlay completion returns to portfolio without touching boot flag
+    const handleTerminalOverlayClose = () => {
+        setShowTerminal(false);
+    };
+
+    if (hasBooted === null || showLoader) {
+        return (
+            <LoadingScreen
+                onLoadComplete={handleInitialBootComplete}
+                startMode={hasBooted ? 'boot' : 'boot'}
+                variant={hasBooted ? 'fast' : 'full'}
+                autoRedirectOnIdle={true}
+            />
+        );
     }
 
     return (
@@ -458,6 +480,15 @@ export default function Home() {
             <Navigation personalInfo={portfolioData.personalInfo} />
             <StatusNotification />
 
+            {/* Floating terminal button */}
+            <button
+                onClick={() => setShowTerminal(true)}
+                className="fixed bottom-4 right-4 z-50 inline-flex items-center gap-2 px-4 py-2 bg-gray-900/90 border border-cyan-400/40 rounded-lg text-cyan-300 hover:text-white hover:bg-gradient-to-br hover:from-cyan-500/10 hover:to-purple-500/10 hover:border-cyan-400/60 transition-all"
+            >
+                <FiCode />
+                <span className="font-medium">Terminal</span>
+            </button>
+
             <main className="relative bg-[#0A0A0A] z-10">
                 <Hero />
                 <IntelProfile />
@@ -467,6 +498,16 @@ export default function Home() {
             </main>
 
             <Footer />
+
+            {/* Terminal overlay: interactive mode without idle auto-redirect */}
+            {showTerminal && (
+                <LoadingScreen
+                    onLoadComplete={handleTerminalOverlayClose}
+                    startMode="interactive"
+                    variant="full"
+                    autoRedirectOnIdle={false}
+                />
+            )}
         </>
     );
 }

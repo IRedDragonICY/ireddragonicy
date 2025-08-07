@@ -10,8 +10,41 @@ import { HiOutlineShare } from 'react-icons/hi';
 import Navigation from '@/components/Navigation';
 import CursorEffect from '@/components/CursorEffect';
 
+// TypeScript interfaces
+interface RelatedPost {
+  id: string;
+  title: string;
+  readTime: string;
+}
+
+interface Author {
+  name: string;
+  avatar: string;
+  bio: string;
+  social: {
+    twitter: string;
+    linkedin: string;
+    github: string;
+  };
+}
+
+interface BlogPost {
+  id: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  date: string;
+  readTime: string;
+  tags: string[];
+  image: string;
+  views: number;
+  likes: number;
+  author: Author;
+  relatedPosts: RelatedPost[];
+}
+
 // This would typically come from a database or CMS
-const getBlogPost = (slug: string) => {
+const getBlogPost = (slug: string): BlogPost => {
   // Sample blog post content
   const sampleContent = `
 # Understanding Transformer Architecture
@@ -94,18 +127,28 @@ The flexibility and effectiveness of transformers continue to push the boundarie
   };
 };
 
-export default function BlogPost({ params }: { params: { slug: string } }) {
+export default function BlogPost({ params }: { params: Promise<{ slug: string }> }) {
+  const [slug, setSlug] = useState<string>('');
   const router = useRouter();
-  const [post, setPost] = useState<any>(null);
+  const [post, setPost] = useState<BlogPost | null>(null);
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
 
   useEffect(() => {
-    // Fetch blog post data
-    const postData = getBlogPost(params.slug);
-    setPost(postData);
-  }, [params.slug]);
+    // Resolve params Promise to get slug
+    params.then(({ slug: resolvedSlug }) => {
+      setSlug(resolvedSlug);
+    });
+  }, [params]);
+
+  useEffect(() => {
+    if (slug) {
+      // Fetch blog post data
+      const postData = getBlogPost(slug);
+      setPost(postData);
+    }
+  }, [slug]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -317,7 +360,7 @@ export default function BlogPost({ params }: { params: { slug: string } }) {
           >
             <h3 className="text-2xl font-bold text-white mb-6">Related Articles</h3>
             <div className="grid md:grid-cols-3 gap-4">
-              {post.relatedPosts.map((related: any) => (
+              {post.relatedPosts.map((related: RelatedPost) => (
                 <Link key={related.id} href={`/blog/${related.id}`}>
                   <motion.div
                     whileHover={{ scale: 1.02 }}

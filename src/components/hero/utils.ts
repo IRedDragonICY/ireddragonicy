@@ -213,4 +213,86 @@ export function createOpenPoseOverlayDataURL(size: number, seed: number) {
   return canvas.toDataURL();
 }
 
+// Generate a faux "scribble" map from the input image, approximating the ControlNet Scribble preprocessor
+export function createScribbleDataURL(img: HTMLImageElement, size: number, thickness: 'thin' | 'medium' | 'thick' = 'medium') {
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  if (!ctx) return null;
+
+  // Downscale original to target
+  ctx.drawImage(img, 0, 0, size, size);
+  const image = ctx.getImageData(0, 0, size, size);
+
+  // 1) Edge map via Sobel magnitude (like canny-lite)
+  const gray = new Float32Array(size * size);
+  const data = image.data;
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const i = (y * size + x) * 4;
+      gray[y * size + x] = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+    }
+  }
+
+  const gxKernel = [-1, 0, 1, -2, 0, 2, -1, 0, 1];
+  const gyKernel = [-1, -2, -1, 0, 0, 0, 1, 2, 1];
+
+  const edge = new Uint8ClampedArray(size * size);
+  for (let y = 1; y < size - 1; y++) {
+    for (let x = 1; x < size - 1; x++) {
+      let gx = 0, gy = 0, k = 0;
+      for (let ky = -1; ky <= 1; ky++) {
+        for (let kx = -1; kx <= 1; kx++) {
+          const v = gray[(y + ky) * size + (x + kx)];
+          gx += v * gxKernel[k];
+          gy += v * gyKernel[k];
+          k++;
+        }
+      }
+      const mag = Math.sqrt(gx * gx + gy * gy);
+      edge[y * size + x] = mag > 80 ? 255 : 0;
+    }
+  }
+
+  // 2) Thicken/thin the lines to simulate scribble-like strokes
+  const radius = thickness === 'thin' ? 0 : thickness === 'medium' ? 1 : 2;
+  const out = ctx.createImageData(size, size);
+  const outData = out.data;
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      let v = 0;
+      if (radius === 0) {
+        v = edge[y * size + x];
+      } else {
+        for (let dy = -radius; dy <= radius; dy++) {
+          for (let dx = -radius; dx <= radius; dx++) {
+            const xx = Math.min(size - 1, Math.max(0, x + dx));
+            const yy = Math.min(size - 1, Math.max(0, y + dy));
+            if (edge[yy * size + xx] === 255) { v = 255; dy = radius + 1; break; }
+          }
+        }
+      }
+      const i = (y * size + x) * 4;
+      outData[i] = v;
+      outData[i + 1] = v;
+      outData[i + 2] = v;
+      outData[i + 3] = 255;
+    }
+  }
+
+  // 3) Invert to white background with black strokes for a more scribble-like impression
+  for (let i = 0; i < outData.length; i += 4) {
+    const c = outData[i];
+    const inv = 255 - c;
+    outData[i] = inv;
+    outData[i + 1] = inv;
+    outData[i + 2] = inv;
+    outData[i + 3] = 255;
+  }
+
+  ctx.putImageData(out, 0, 0);
+  return canvas.toDataURL();
+}
+
 

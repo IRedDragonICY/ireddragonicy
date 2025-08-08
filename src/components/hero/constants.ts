@@ -35,6 +35,7 @@ export const CONTROLNET_TYPES = [
   'none',
   'depth',
   'canny',
+  'scribble',
 ] as const;
 
 export type ControlNetType = typeof CONTROLNET_TYPES[number];
@@ -42,6 +43,7 @@ export type ControlNetType = typeof CONTROLNET_TYPES[number];
 export const CONTROLNET_PREPROCESSORS: Record<Exclude<ControlNetType, 'none'>, string[]> = {
   depth: ['MiDaS', 'LeReS', 'ZoeDepth'],
   canny: ['Canny (Low)', 'Canny (Medium)', 'Canny (High)'],
+  scribble: ['Scribble (Thin)', 'Scribble (Medium)', 'Scribble (Thick)'],
 };
 
 

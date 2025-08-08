@@ -5,7 +5,7 @@ import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
 import Image from 'next/image';
 import NeuralNetworkVisualization from '../NeuralNetworkVisualization';
 import { CONTROLNET_PREPROCESSORS, CONTROLNET_TYPES, MODELS, SAMPLERS, type ControlNetType, type ModelName, type Sampler } from '../constants';
-import { createDepthMapDataURL, createSobelEdgeDataURL, generateTransparencyAwareNoise } from '../utils';
+import { createDepthMapDataURL, createSobelEdgeDataURL, createScribbleDataURL, generateTransparencyAwareNoise } from '../utils';
 
 type ControlNetState = {
   enabled: boolean;
@@ -16,6 +16,7 @@ type ControlNetState = {
 type OverlayDataMap = {
   depth?: string | null;
   canny?: string | null;
+  scribble?: string | null;
 };
 
 type Props = {
@@ -43,6 +44,7 @@ const StableDiffusionInterface: React.FC<Props> = ({ isInView, isMobile: isMobil
   const [controlNet, setControlNet] = useState<Record<Exclude<ControlNetType, 'none'>, ControlNetState>>({
     depth: { enabled: true, preprocessor: 'MiDaS', weight: 1.0 },
     canny: { enabled: true, preprocessor: 'Canny (Medium)', weight: 1.0 },
+    scribble: { enabled: false, preprocessor: 'Scribble (Medium)', weight: 1.0 },
   });
   const [showControlNet, setShowControlNet] = useState(false);
   const imageRef = useRef<HTMLImageElement>(null);
@@ -96,7 +98,7 @@ const StableDiffusionInterface: React.FC<Props> = ({ isInView, isMobile: isMobil
     }
   }, [imageAlpha, noiseStrength, seed, isMobileView]);
 
-  // Generate overlays from base image (depth + canny only)
+  // Generate overlays from base image (depth + canny + scribble)
   useEffect(() => {
     const isMobile = isMobileView ?? (typeof window !== 'undefined' ? window.innerWidth < 768 : false);
     const size = isMobile ? 300 : 400;
@@ -107,19 +109,25 @@ const StableDiffusionInterface: React.FC<Props> = ({ isInView, isMobile: isMobil
         const thr = controlNet.canny.preprocessor?.includes('Low') ? 60 : controlNet.canny.preprocessor?.includes('High') ? 140 : 100;
         const cannyUrl = createSobelEdgeDataURL(img, size, thr) || null;
         const depthUrl = createDepthMapDataURL(img, size) || null;
-        setOverlayData({ canny: cannyUrl, depth: depthUrl });
+        const scribbleThickness = controlNet.scribble.preprocessor?.includes('Thin')
+          ? 'thin'
+          : controlNet.scribble.preprocessor?.includes('Thick')
+          ? 'thick'
+          : 'medium';
+        const scribbleUrl = createScribbleDataURL(img, size, scribbleThickness as 'thin' | 'medium' | 'thick') || null;
+        setOverlayData({ canny: cannyUrl, depth: depthUrl, scribble: scribbleUrl });
       } catch (_e) {
         // ignore
       }
     };
     img.src = '/hero-image.png';
-  }, [seed, isMobileView, controlNet.canny.preprocessor]);
+  }, [seed, isMobileView, controlNet.canny.preprocessor, controlNet.scribble.preprocessor]);
 
   const randomizeControlNetScenario = useCallback(() => {
     // 40% none, 30% single, 20% double, 10% all
     const r = Math.random();
-    const enabled = { depth: false, canny: false } as Record<Exclude<ControlNetType, 'none'>, boolean>;
-    const keys: Array<Exclude<ControlNetType, 'none'>> = ['depth', 'canny'];
+    const enabled = { depth: false, canny: false, scribble: false } as Record<Exclude<ControlNetType, 'none'>, boolean>;
+    const keys: Array<Exclude<ControlNetType, 'none'>> = ['depth', 'canny', 'scribble'];
     if (r < 0.4) {
       // none
     } else if (r < 0.8) {
@@ -131,6 +139,7 @@ const StableDiffusionInterface: React.FC<Props> = ({ isInView, isMobile: isMobil
     setControlNet((prev) => ({
       depth: { ...prev.depth, enabled: enabled.depth },
       canny: { ...prev.canny, enabled: enabled.canny },
+      scribble: { ...prev.scribble, enabled: enabled.scribble },
     }));
   }, []);
 
@@ -210,7 +219,7 @@ const StableDiffusionInterface: React.FC<Props> = ({ isInView, isMobile: isMobil
             <Image ref={imageRef} src="/hero-image.png" alt="Generated" fill className="object-contain" quality={100} priority />
           </motion.div>
 
-          {/* ControlNet overlays (depth + canny) */}
+          {/* ControlNet overlays (depth + canny + scribble) */}
           {controlNet.canny.enabled && overlayData.canny && (
             <motion.div className="absolute inset-0 z-20" style={{ opacity: 0.7 * (1 - denoisingProgress) * controlNet.canny.weight }}>
               <Image src={overlayData.canny} alt="Canny" fill className="object-contain mix-blend-screen" unoptimized />
@@ -220,6 +229,11 @@ const StableDiffusionInterface: React.FC<Props> = ({ isInView, isMobile: isMobil
             <motion.div className="absolute inset-0 z-20" style={{ opacity: 0.5 * (1 - denoisingProgress) * controlNet.depth.weight }}>
               <Image src={overlayData.depth} alt="Depth" fill className="object-contain mix-blend-multiply" unoptimized />
               <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-transparent pointer-events-none" />
+            </motion.div>
+          )}
+          {controlNet.scribble.enabled && overlayData.scribble && (
+            <motion.div className="absolute inset-0 z-20" style={{ opacity: 0.8 * (1 - denoisingProgress) * controlNet.scribble.weight }}>
+              <Image src={overlayData.scribble} alt="Scribble" fill className="object-contain mix-blend-multiply" unoptimized />
             </motion.div>
           )}
 
@@ -322,6 +336,7 @@ const StableDiffusionInterface: React.FC<Props> = ({ isInView, isMobile: isMobil
                           </select>
                           {type === 'depth' && overlayData.depth && <span className="text-[10px] text-cyan-400">depth ready</span>}
                           {type === 'canny' && overlayData.canny && <span className="text-[10px] text-cyan-400">edges ready</span>}
+                          {type === 'scribble' && overlayData.scribble && <span className="text-[10px] text-cyan-400">scribble ready</span>}
                         </div>
                       </div>
                     </div>

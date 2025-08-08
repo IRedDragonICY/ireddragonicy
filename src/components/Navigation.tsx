@@ -80,6 +80,7 @@ const Navigation = ({ personalInfo }: NavigationProps) => {
     { id: 'intel', label: 'Intel', icon: TbBrain, href: '#intel' },
     { id: 'projects', label: 'Projects', icon: BiRocket, href: '#projects' },
     { id: 'skills', label: 'Skills', icon: BiCodeAlt, href: '#skills' },
+    { id: 'education', label: 'Education', icon: FaGraduationCap, href: '/education' },
     { id: 'blog', label: 'Blog', icon: RiArticleLine, href: '/blog' },
     { id: 'contact', label: 'Contact', icon: BiEnvelope, href: '#contact' }
   ];
@@ -87,6 +88,7 @@ const Navigation = ({ personalInfo }: NavigationProps) => {
   // Navigation links for blog page with modern icons
   const blogNavLinks = [
     { id: 'home', label: 'Portfolio', icon: BiHomeAlt, href: '/' },
+    { id: 'education', label: 'Education', icon: FaGraduationCap, href: '/education' },
     { id: 'blog', label: 'All Posts', icon: BiNews, href: '/blog' },
     { id: 'ai-research', label: 'AI Research', icon: TbBrain, href: '/blog?category=AI%20Research' },
     { id: 'tutorials', label: 'Tutorials', icon: FaGraduationCap, href: '/blog?category=Tutorial' },
@@ -94,6 +96,7 @@ const Navigation = ({ personalInfo }: NavigationProps) => {
   ];
 
   const navLinks = isBlogPage ? blogNavLinks : homeNavLinks;
+  const isHomePage = pathname === '/';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -252,11 +255,13 @@ const Navigation = ({ personalInfo }: NavigationProps) => {
               {/* Desktop Navigation */}
               <div className="hidden md:flex items-center gap-2">
                 {navLinks.map((link, index) => {
-                  const isExternal = link.href.startsWith('http');
-                  const isActive = (!isBlogPage && activeSection === link.id) ||
-                                 (isBlogPage && link.id === 'blog' && pathname === '/blog');
-
                   const isHashLink = link.href.startsWith('#');
+                  const effectiveHref = isHashLink ? `${isHomePage ? '' : '/'}${link.href}` : link.href;
+                  const isExternal = effectiveHref.startsWith('http');
+                  const isActive = isHashLink
+                    ? (!isBlogPage && isHomePage && activeSection === link.id)
+                    : (pathname === effectiveHref || (effectiveHref !== '/' && pathname?.startsWith(effectiveHref)) || (isBlogPage && link.id === 'blog' && pathname === '/blog'));
+
                   const Icon = link.icon;
 
                   return (
@@ -267,9 +272,9 @@ const Navigation = ({ personalInfo }: NavigationProps) => {
                       whileHover={{ y: -3 }}
                       transition={{ delay: index * 0.1 }}
                     >
-                      {isHashLink ? (
+                      {isExternal ? (
                         <a
-                          href={link.href}
+                          href={effectiveHref}
                           onClick={() => handleNavClick(link.id)}
                           className={`
                             relative px-4 py-2 text-sm font-medium tracking-wider transition-all duration-300 block
@@ -278,9 +283,8 @@ const Navigation = ({ personalInfo }: NavigationProps) => {
                               : 'text-gray-400 hover:text-cyan-400'
                             }
                           `}
-                          {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                          target="_blank" rel="noopener noreferrer"
                         >
-                          {/* Active Indicator */}
                           {isActive && (
                             <motion.div
                               layoutId="activeSection"
@@ -288,13 +292,10 @@ const Navigation = ({ personalInfo }: NavigationProps) => {
                               transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                             />
                           )}
-
                           <span className="relative flex items-center gap-2">
                             <Icon className="text-base" />
                             <span className="font-mono">&lt;{link.label}/&gt;</span>
                           </span>
-
-                          {/* Hover Effect */}
                           <motion.div
                             className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-400 to-transparent"
                             initial={{ scaleX: 0 }}
@@ -304,7 +305,7 @@ const Navigation = ({ personalInfo }: NavigationProps) => {
                         </a>
                       ) : (
                         <Link
-                          href={link.href}
+                          href={effectiveHref}
                           onClick={() => handleNavClick(link.id)}
                           className={`
                             relative px-4 py-2 text-sm font-medium tracking-wider transition-all duration-300 block
@@ -314,7 +315,6 @@ const Navigation = ({ personalInfo }: NavigationProps) => {
                             }
                           `}
                         >
-                          {/* Active Indicator */}
                           {isActive && (
                             <motion.div
                               layoutId="activeSection"
@@ -322,13 +322,10 @@ const Navigation = ({ personalInfo }: NavigationProps) => {
                               transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                             />
                           )}
-
                           <span className="relative flex items-center gap-2">
                             <Icon className="text-base" />
                             <span className="font-mono">&lt;{link.label}/&gt;</span>
                           </span>
-
-                          {/* Hover Effect */}
                           <motion.div
                             className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-400 to-transparent"
                             initial={{ scaleX: 0 }}
@@ -341,19 +338,7 @@ const Navigation = ({ personalInfo }: NavigationProps) => {
                   );
                 })}
 
-                {/* AI Status Indicator */}
-                <div className="ml-4 pl-4 border-l border-gray-700">
-                  <motion.div
-                    className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-full border border-green-500/30"
-                    animate={{
-                      boxShadow: ['0 0 0 0 rgba(34, 197, 94, 0.4)', '0 0 0 10px rgba(34, 197, 94, 0)', '0 0 0 0 rgba(34, 197, 94, 0)']
-                    }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                    <span className="text-xs font-mono text-green-400">AI ONLINE</span>
-                  </motion.div>
-                </div>
+                {/* Removed AI Status Indicator per request */}
               </div>
 
               {/* Mobile Menu Button */}
@@ -379,9 +364,12 @@ const Navigation = ({ personalInfo }: NavigationProps) => {
             >
               <div className="bg-black/90 backdrop-blur-xl rounded-xl border border-cyan-400/20 p-4">
                 {navLinks.map((link, index) => {
-                  const isActive = (!isBlogPage && activeSection === link.id) ||
-                                 (isBlogPage && link.id === 'blog' && pathname === '/blog');
                   const isHashLink = link.href.startsWith('#');
+                  const effectiveHref = isHashLink ? `${isHomePage ? '' : '/'}${link.href}` : link.href;
+                  const isExternal = effectiveHref.startsWith('http');
+                  const isActive = isHashLink
+                    ? (!isBlogPage && isHomePage && activeSection === link.id)
+                    : (pathname === effectiveHref || (effectiveHref !== '/' && pathname?.startsWith(effectiveHref)) || (isBlogPage && link.id === 'blog' && pathname === '/blog'));
                   const Icon = link.icon;
 
                   return (
@@ -391,9 +379,9 @@ const Navigation = ({ personalInfo }: NavigationProps) => {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.1 }}
                     >
-                      {isHashLink ? (
+                      {isExternal ? (
                         <a
-                          href={link.href}
+                          href={effectiveHref}
                           onClick={() => handleNavClick(link.id)}
                           className={`
                             block px-4 py-3 text-sm font-medium rounded-lg transition-all duration-300
@@ -402,6 +390,7 @@ const Navigation = ({ personalInfo }: NavigationProps) => {
                               : 'text-gray-400 hover:bg-cyan-400/5 hover:text-cyan-400'
                             }
                           `}
+                          target="_blank" rel="noopener noreferrer"
                         >
                           <span className="flex items-center gap-3">
                             <Icon className="text-lg" />
@@ -410,7 +399,7 @@ const Navigation = ({ personalInfo }: NavigationProps) => {
                         </a>
                       ) : (
                         <Link
-                          href={link.href}
+                          href={effectiveHref}
                           onClick={() => handleNavClick(link.id)}
                           className={`
                             block px-4 py-3 text-sm font-medium rounded-lg transition-all duration-300

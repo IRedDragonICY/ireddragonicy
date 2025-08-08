@@ -1,7 +1,7 @@
 // src/components/terminal/types.ts
 // Shared terminal and loading screen types to keep components lightweight and maintainable
 
-export interface LoadingScreenProps {
+export interface TerminalProps {
   onLoadComplete: () => void;
   startMode?: 'boot' | 'interactive';
   variant?: 'full' | 'fast';

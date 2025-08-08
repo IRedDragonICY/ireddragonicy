@@ -111,7 +111,7 @@ const TypewriterText = ({
   const done = idx === text.length;
 
   return (
-    <span className={`${className} inline-block`}>
+    <span className={`${className} inline-block relative`}>
       <span
         className={
           gradientAfter && done
@@ -141,15 +141,16 @@ const TypewriterText = ({
 
       {showTokens && typing && !done && (
         <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.8 }}
-          className="absolute -bottom-8 left-0 text-[10px] font-mono"
+          initial={{ opacity: 0, scale: 0.9, y: 6 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 6 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+          className="absolute left-1/2 top-full mt-2 -translate-x-1/2 text-[10px] font-mono pointer-events-none"
         >
-          <div className="px-3 py-1.5 bg-black/90 border border-cyan-500/30 rounded-lg backdrop-blur-xl shadow-2xl">
+          <div className="px-3 py-1.5 bg-black/70 backdrop-blur-md border border-white/10 rounded-full shadow-xl">
             <div className="flex items-center gap-2">
               <BsLightningChargeFill className="text-yellow-400 animate-pulse" />
-              <span className="text-cyan-400 font-bold">{tok} tokens</span>
+              <span className="text-cyan-300 font-bold">{tok} tokens</span>
               <span className="text-gray-500">•</span>
               <span className="text-green-400">{tps} tok/s</span>
               <IoMdPulse className="text-green-400 animate-pulse" />
@@ -456,7 +457,7 @@ const NeuralNetworkVisualization = React.memo(({ isActive, progress }: { isActiv
 NeuralNetworkVisualization.displayName = 'NeuralNetworkVisualization';
 
 // Main Stable Diffusion Interface - Using Old Noise/Denoise Method with New UI
-const StableDiffusionInterface = ({ isInView}: { isInView: boolean, mouseX: MotionValue<number>, mouseY: MotionValue<number> }) => {
+const StableDiffusionInterface = ({ isInView, isMobile: isMobileView }: { isInView: boolean; mouseX: MotionValue<number>; mouseY: MotionValue<number>; isMobile?: boolean }) => {
   const [seed, setSeed] = useState(2743589621);
   const [currentStep, setCurrentStep] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -498,7 +499,7 @@ const StableDiffusionInterface = ({ isInView}: { isInView: boolean, mouseX: Moti
     img.crossOrigin = "anonymous";
     img.onload = () => {
       const canvas = document.createElement('canvas');
-      const isMobile = window.innerWidth < 768;
+      const isMobile = isMobileView ?? (window.innerWidth < 768);
       const size = isMobile ? 300 : 400;
       canvas.width = size;
       canvas.height = size;
@@ -514,7 +515,7 @@ const StableDiffusionInterface = ({ isInView}: { isInView: boolean, mouseX: Moti
   // Generate noise with proper transparency handling (FROM OLD CODE)
   useEffect(() => {
     if (imageAlpha) {
-      const isMobile = window.innerWidth < 768;
+      const isMobile = isMobileView ?? (window.innerWidth < 768);
       const size = isMobile ? 300 : 400;
       const dataUrl = generateTransparencyAwareNoise(size, size, imageAlpha, noiseStrength);
       setNoiseDataUrl(dataUrl);
@@ -578,6 +579,9 @@ const StableDiffusionInterface = ({ isInView}: { isInView: boolean, mouseX: Moti
     return (sigmaMax ** (1 / rho) * t + sigmaMin ** (1 / rho) * (1 - t)) ** rho;
   }, [denoisingProgress]);
 
+  const isMobile = isMobileView ?? (typeof window !== 'undefined' ? window.innerWidth < 768 : false);
+  const maxInitialBlurPx = isMobile ? 8 : 20;
+
   return (
     <motion.div
       style={{ y: interfaceY, scale: interfaceScale }}
@@ -615,8 +619,8 @@ const StableDiffusionInterface = ({ isInView}: { isInView: boolean, mouseX: Moti
             )}
           </AnimatePresence>
 
-          {/* Noise Layer with Proper Transparency (FROM OLD CODE) */}
-          {noiseDataUrl && currentStep >= 8 && (
+          {/* Noise Layer with Proper Transparency (hidden on mobile to avoid double/noisy stacking) */}
+          {!isMobile && noiseDataUrl && currentStep >= 8 && (
             <motion.div
               className="absolute inset-0 z-10"
               animate={{
@@ -645,7 +649,7 @@ const StableDiffusionInterface = ({ isInView}: { isInView: boolean, mouseX: Moti
             className="absolute inset-0"
             animate={{
               opacity: Math.min(1, denoisingProgress * 1.2),
-              filter: `blur(${Math.max(0, (1 - denoisingProgress) * 20)}px) saturate(${0.5 + denoisingProgress * 0.5})`,
+              filter: `blur(${Math.max(0, (1 - denoisingProgress) * maxInitialBlurPx)}px) saturate(${0.5 + denoisingProgress * 0.5})`,
               scale: 1 + (1 - denoisingProgress) * 0.05
             }}
           >
@@ -810,14 +814,29 @@ const Hero = () => {
   const opacityEffect = useTransform(scrollY, [0, 300], [1, 0.8]);
   const blurEffect = useTransform(scrollY, [0, 400], [0, 5]);
 
-  // 3D tilt effect based on mouse
-  const rotateX = useTransform(smoothMouseY, [0, window.innerHeight], [5, -5]);
-  const rotateY = useTransform(smoothMouseX, [0, window.innerWidth], [-5, 5]);
+  // 3D tilt effect based on mouse (avoid direct window usage during render)
+  const [viewportHeight, setViewportHeight] = useState(1000);
+  const [viewportWidth, setViewportWidth] = useState(1000);
+  useEffect(() => {
+    const update = () => {
+      setViewportHeight(window.innerHeight || 1000);
+      setViewportWidth(window.innerWidth || 1000);
+    };
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+  const rotateX = useTransform(smoothMouseY, [0, viewportHeight], [5, -5]);
+  const rotateY = useTransform(smoothMouseX, [0, viewportWidth], [-5, 5]);
+  const isMobile = viewportWidth < 768;
+  const blurFilterMotion = useTransform(blurEffect, (value) => `blur(${value}px)`);
 
   return (
     <section ref={heroRef} id="home" className="relative min-h-screen w-full overflow-hidden bg-black">
-      {/* Interactive Particle System */}
-      <ParticleField mouseX={smoothMouseX} mouseY={smoothMouseY} />
+      {/* Interactive Particle System (disabled on mobile for clarity/perf) */}
+      {!isMobile && (
+        <ParticleField mouseX={smoothMouseX} mouseY={smoothMouseY} />
+      )}
 
       {/* Animated gradient mesh background */}
       <motion.div
@@ -864,7 +883,7 @@ const Hero = () => {
       <motion.div
         className="relative z-10 h-full w-full"
         style={{
-          filter: useTransform(blurEffect, (value) => `blur(${value}px)`),
+          filter: isMobile ? 'none' : blurFilterMotion,
           transform: useTransform(
             [rotateX, rotateY],
             (latest) => {
@@ -944,6 +963,7 @@ const Hero = () => {
                       text="Hendianto"
                       isInView={isInView}
                       delay={1700}
+                       showTokens={true}
                       className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600"
                     />
                   </div>
@@ -1106,6 +1126,7 @@ const Hero = () => {
                 isInView={isInView}
                 mouseX={smoothMouseX}
                 mouseY={smoothMouseY}
+                isMobile={isMobile}
               />
             </div>
           </div>

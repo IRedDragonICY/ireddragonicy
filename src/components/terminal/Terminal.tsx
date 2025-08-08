@@ -1,11 +1,11 @@
-// components/LoadingScreen.tsx
+// components/terminal/Terminal.tsx
 'use client';
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence, useAnimation } from 'framer-motion';
 import { FaPowerOff } from 'react-icons/fa';
 import {
-  LoadingScreenProps,
+  TerminalProps,
   SystemModule,
   FileSystemNode,
   Process,
@@ -14,16 +14,16 @@ import {
   SystemMetric,
   CPUCore,
   RAMModule,
-} from './terminal/types';
-import { AUTO_REDIRECT_DELAY_MS, AUTO_REDIRECT_COUNTDOWN_SECS, INIT_MESSAGES, STORAGE_KEYS } from './terminal/constants';
-import { sleep, safeLocalStorageGet, safeLocalStorageSet } from './terminal/utils';
+} from './types';
+import { AUTO_REDIRECT_DELAY_MS, AUTO_REDIRECT_COUNTDOWN_SECS, INIT_MESSAGES, STORAGE_KEYS } from './constants';
+import { sleep, safeLocalStorageGet, safeLocalStorageSet } from './utils';
 
-const LoadingScreen = ({
+const Terminal = ({
   onLoadComplete,
   startMode = 'boot',
   variant = 'full',
   autoRedirectOnIdle = true,
-}: LoadingScreenProps) => {
+}: TerminalProps) => {
   const [modules, setModules] = useState<SystemModule[]>([
     { id: 'core', name: 'Core System', status: 'pending', progress: 0, memoryUsage: 0, threads: 0, submodules: ['Kernel', 'Memory Manager', 'Process Handler', 'Thread Pool'] },
     { id: 'neural', name: 'Neural Engine', status: 'pending', progress: 0, memoryUsage: 0, threads: 0, submodules: ['Tensor Core', 'CUDA Driver', 'Model Loader', 'Optimizer'] },
@@ -62,10 +62,33 @@ const LoadingScreen = ({
   const [showTabHint, setShowTabHint] = useState(false);
   const [autoRedirectCountdown, setAutoRedirectCountdown] = useState<number | null>(null);
   const [autoRedirectStarted, setAutoRedirectStarted] = useState(false);
+  const [autoRedirectDisabled, setAutoRedirectDisabled] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      return safeLocalStorageGet(STORAGE_KEYS.terminalAutoRedirectHandled) === '1';
+    } catch {
+      return false;
+    }
+  });
   const inputRef = useRef<HTMLInputElement>(null);
   const [poweredOff, setPoweredOff] = useState(false);
   
   const [isPoweringOn, setIsPoweringOn] = useState(false);
+
+  // Mobile UI state
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobilePanel, setMobilePanel] = useState<'console' | 'metrics'>('console');
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
+
+  const dispatchKey = useCallback((key: string, options: { ctrl?: boolean } = {}) => {
+    const event = new KeyboardEvent('keydown', {
+      key,
+      ctrlKey: !!options.ctrl,
+      bubbles: true,
+      cancelable: true,
+    });
+    window.dispatchEvent(event);
+  }, []);
 
   const consoleRef = useRef<HTMLDivElement>(null);
   const lineIdCounter = useRef(0);
@@ -355,9 +378,18 @@ const LoadingScreen = ({
     setTimeout(() => setIsPoweringOn(false), 500);
   }, []);
 
+  const markAutoRedirectHandled = useCallback(() => {
+    if (autoRedirectDisabled) return;
+    setAutoRedirectDisabled(true);
+    safeLocalStorageSet(STORAGE_KEYS.terminalAutoRedirectHandled, '1');
+  }, [autoRedirectDisabled]);
+
   // Start auto-redirect timer
   const startAutoRedirectTimer = useCallback(() => {
-    if (terminalMode !== 'interactive' || autoRedirectStarted) return;
+    if (terminalMode !== 'interactive') return;
+    if (autoRedirectStarted) return;
+    if (!autoRedirectOnIdle) return;
+    if (autoRedirectDisabled) return;
     
     setAutoRedirectStarted(true);
     let countdown = AUTO_REDIRECT_COUNTDOWN_SECS; // seconds countdown
@@ -406,12 +438,22 @@ const LoadingScreen = ({
       }
       
       setTimeout(() => {
-        setTerminalMode('boot');
-        setProgressPercentage(100);
-        onLoadComplete();
+        // Only redirect if still eligible at the end
+        const handled = safeLocalStorageGet(STORAGE_KEYS.terminalAutoRedirectHandled) === '1';
+        if (!handled && !autoRedirectDisabled) {
+          setTerminalMode('boot');
+          setProgressPercentage(100);
+          onLoadComplete();
+        } else {
+          // If became ineligible, reflect disabled state in console
+          if (countdownLineIdRef.current) {
+            updateConsoleLine(countdownLineIdRef.current, '> Auto-redirect disabled.');
+            countdownLineIdRef.current = null;
+          }
+        }
       }, 1000);
     }, AUTO_REDIRECT_DELAY_MS);
-  }, [terminalMode, onLoadComplete, autoRedirectStarted]);
+  }, [terminalMode, onLoadComplete, autoRedirectStarted, autoRedirectDisabled, autoRedirectOnIdle]);
 
   // Cancel auto-redirect timer
   const cancelAutoRedirectTimer = useCallback(() => {
@@ -427,7 +469,9 @@ const LoadingScreen = ({
       updateConsoleLine(countdownLineIdRef.current, '> Auto-redirect cancelled.');
       countdownLineIdRef.current = null;
     }
-  }, []);
+    // Persistently disable any further auto-redirects once user interacted
+    markAutoRedirectHandled();
+  }, [markAutoRedirectHandled]);
 
   // Navigate file system
   const navigateToPath = (path: string): FileSystemNode | null => {
@@ -1096,6 +1140,8 @@ const LoadingScreen = ({
     if (terminalMode === 'interactive') {
       // Cancel auto-redirect timer when user presses any key
       cancelAutoRedirectTimer();
+      // Ensure future sessions do not auto-redirect again
+      markAutoRedirectHandled();
       
       // Ctrl+C to clear current input
       if (e.ctrlKey && e.key === 'c') {
@@ -1172,6 +1218,8 @@ const LoadingScreen = ({
     if (terminalMode === 'boot') {
       if (e.ctrlKey && e.key === 'c' && !showTerminatePrompt) {
         e.preventDefault();
+        // Mark interaction to prevent future auto-redirects
+        markAutoRedirectHandled();
         setShowTerminatePrompt(true);
         addConsoleLine('^C', 'error');
         addConsoleLine('> Interrupt signal received (SIGINT)', 'warning');
@@ -1216,7 +1264,7 @@ const LoadingScreen = ({
         }
       }
     }
-  }, [showTerminatePrompt, terminalMode, currentInput, currentDirectory, commandHistory, cancelAutoRedirectTimer]);
+  }, [showTerminatePrompt, terminalMode, currentInput, currentDirectory, commandHistory, cancelAutoRedirectTimer, markAutoRedirectHandled]);
 
   // Add keyboard event listeners
   useEffect(() => {
@@ -1226,16 +1274,66 @@ const LoadingScreen = ({
       if (terminateTimeoutRef.current) {
         clearTimeout(terminateTimeoutRef.current);
       }
+    };
+  }, [handleKeyDown]);
+
+  // On unmount: ensure any auto-redirect timers are cleaned up
+  useEffect(() => {
+    return () => {
       if (autoRedirectTimeoutRef.current) {
         clearTimeout(autoRedirectTimeoutRef.current);
       }
+      if (autoRedirectIntervalRef.current) {
+        clearInterval(autoRedirectIntervalRef.current);
+      }
     };
-  }, [handleKeyDown]);
+  }, []);
 
   // Set client flag
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // Determine mobile layout
+  useEffect(() => {
+    if (!isClient) return;
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, [isClient]);
+
+  // Detect virtual keyboard visibility (heuristic)
+  useEffect(() => {
+    if (!isClient) return;
+    if (!('visualViewport' in window)) return;
+    const vv = (window as any).visualViewport as VisualViewport;
+    const onResize = () => {
+      const heightDiff = window.innerHeight - vv.height;
+      setIsKeyboardOpen(isMobile && heightDiff > 120);
+    };
+    vv.addEventListener('resize', onResize);
+    vv.addEventListener('scroll', onResize);
+    onResize();
+    return () => {
+      vv.removeEventListener('resize', onResize);
+      vv.removeEventListener('scroll', onResize);
+    };
+  }, [isClient, isMobile]);
+
+  // If redirect becomes disabled at runtime, ensure we stop any running timers and update message
+  useEffect(() => {
+    if (autoRedirectDisabled) {
+      if (autoRedirectStarted || autoRedirectCountdown !== null) {
+        cancelAutoRedirectTimer();
+        if (countdownLineIdRef.current) {
+          updateConsoleLine(countdownLineIdRef.current, '> Auto-redirect disabled.');
+          countdownLineIdRef.current = null;
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoRedirectDisabled]);
 
   // Generate session ID and other client-side values
   useEffect(() => {
@@ -1553,14 +1651,30 @@ const LoadingScreen = ({
       // Minimal, fast boot experience
       addConsoleLine('> Quick init...', 'info');
       setProgressPercentage(40);
-      await new Promise(r => setTimeout(r, 200));
+      await new Promise(r => setTimeout(r, 150));
       addConsoleLine('> Loading UI...', 'info');
       setProgressPercentage(80);
-      await new Promise(r => setTimeout(r, 200));
+      await new Promise(r => setTimeout(r, 150));
       addConsoleLine('> Ready.', 'success');
       setProgressPercentage(100);
-      await new Promise(r => setTimeout(r, 150));
-      onLoadComplete();
+      await new Promise(r => setTimeout(r, 100));
+
+      // If auto-redirect is disabled (user interacted before) or explicitly disabled via prop, exit immediately
+      if (autoRedirectDisabled || !autoRedirectOnIdle) {
+        onLoadComplete();
+        return;
+      }
+
+      // Otherwise enter interactive quickly and start idle countdown
+      addConsoleLine('', 'info');
+      addConsoleLine('> Entering interactive terminal (fast)...', 'success');
+      addConsoleLine('> Type "help" for available commands', 'info');
+      setTerminalMode('interactive');
+      if (!autoRedirectStarted) {
+        const lineId = addConsoleLine(`> Auto-redirect to portfolio in ${AUTO_REDIRECT_COUNTDOWN_SECS}s if inactive...`, 'detail');
+        countdownLineIdRef.current = lineId;
+        startAutoRedirectTimer();
+      }
     };
 
     const waitIfPausedOrAborted = async () => {
@@ -1720,14 +1834,14 @@ const LoadingScreen = ({
       addConsoleLine('', 'info');
       addConsoleLine('> Entering interactive terminal mode...', 'success');
       addConsoleLine('> Type "help" for available commands', 'info');
-      if (autoRedirectOnIdle) {
+      if (autoRedirectOnIdle && !autoRedirectDisabled) {
         // Seed initial line so the countdown can overwrite the same line
         const lineId = addConsoleLine(`> Auto-redirect to portfolio in ${AUTO_REDIRECT_COUNTDOWN_SECS}s if inactive...`, 'detail');
         countdownLineIdRef.current = lineId;
       }
       addConsoleLine('', 'info');
       setTerminalMode('interactive');
-      if (autoRedirectOnIdle && !autoRedirectStarted) {
+      if (autoRedirectOnIdle && !autoRedirectStarted && !autoRedirectDisabled) {
         startAutoRedirectTimer();
       }
 
@@ -1744,18 +1858,18 @@ const LoadingScreen = ({
     };
 
     initializeModules();
-  }, [startMode, variant, onLoadComplete]);
+  }, [startMode, variant, onLoadComplete, autoRedirectOnIdle, autoRedirectDisabled, startAutoRedirectTimer, autoRedirectStarted]);
 
   // Start auto-redirect timer when interactive mode is entered
   useEffect(() => {
-    if (!autoRedirectOnIdle) return;
+    if (!autoRedirectOnIdle || autoRedirectDisabled) return;
     if (terminalMode === 'interactive' && !autoRedirectStarted) {
       const timer = setTimeout(() => {
         startAutoRedirectTimer();
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [terminalMode, autoRedirectStarted, startAutoRedirectTimer, autoRedirectOnIdle]);
+  }, [terminalMode, autoRedirectStarted, startAutoRedirectTimer, autoRedirectOnIdle, autoRedirectDisabled]);
 
   // Auto-scroll console
   useEffect(() => {
@@ -1804,122 +1918,154 @@ const LoadingScreen = ({
         initial={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.5 }}
-        className={`fixed inset-0 bg-black z-[100] flex items-center justify-center overflow-hidden ${glitchActive ? 'glitch-effect' : ''}`}
+        className={`fixed inset-0 bg-black z-[100] flex items-start md:items-center justify-center overflow-x-hidden ${isMobile ? 'overflow-y-hidden' : 'overflow-y-auto'} ${glitchActive ? 'glitch-effect' : ''}`}
       >
         {/* Particle canvas background */}
-        <canvas
-          ref={canvasRef}
-          className="absolute inset-0 opacity-30"
-        />
+        {(!isMobile || mobilePanel === 'metrics') && (
+          <canvas
+            ref={canvasRef}
+            className="absolute inset-0 opacity-30"
+          />
+        )}
 
         {/* Matrix rain effect */}
-        <div className="absolute inset-0 overflow-hidden opacity-10">
-          {matrixRain.map((char, i) => (
-            <motion.div
-              key={`matrix-${i}`}
-              className="absolute text-green-400 font-mono text-xs"
-              style={{ left: `${(i * 2) % 100}%` }}
-              animate={{
-                y: [-20, window.innerHeight + 20],
-              }}
-              transition={{
-                duration: 10 + Math.random() * 10,
-                repeat: Infinity,
-                ease: 'linear',
-                delay: Math.random() * 10,
-              }}
-            >
-              {char}
-            </motion.div>
-          ))}
-        </div>
+        {(!isMobile || mobilePanel === 'metrics') && (
+          <div className="absolute inset-0 overflow-hidden opacity-10">
+            {matrixRain.map((char, i) => (
+              <motion.div
+                key={`matrix-${i}`}
+                className="absolute text-green-400 font-mono text-xs"
+                style={{ left: `${(i * 2) % 100}%` }}
+                animate={{
+                  y: [-20, window.innerHeight + 20],
+                }}
+                transition={{
+                  duration: 10 + Math.random() * 10,
+                  repeat: Infinity,
+                  ease: 'linear',
+                  delay: Math.random() * 10,
+                }}
+              >
+                {char}
+              </motion.div>
+            ))}
+          </div>
+        )}
 
         {/* Circuit pattern SVG */}
-        <svg className="absolute inset-0 opacity-5" viewBox="0 0 100 100" preserveAspectRatio="none">
-          {circuitPattern.map((path) => (
-            <motion.path
-              key={path.id}
-              d={path.d}
-              fill="none"
-              stroke="cyan"
-              strokeWidth="0.1"
-              initial={{ pathLength: 0 }}
-              animate={{ pathLength: 1 }}
-              transition={{ duration: 2, delay: parseInt(path.id.split('-')[1]) * 0.2, repeat: Infinity }}
-            />
-          ))}
-        </svg>
+        {(!isMobile || mobilePanel === 'metrics') && (
+          <svg className="absolute inset-0 opacity-5" viewBox="0 0 100 100" preserveAspectRatio="none">
+            {circuitPattern.map((path) => (
+              <motion.path
+                key={path.id}
+                d={path.d}
+                fill="none"
+                stroke="cyan"
+                strokeWidth="0.1"
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 2, delay: parseInt(path.id.split('-')[1]) * 0.2, repeat: Infinity }}
+              />
+            ))}
+          </svg>
+        )}
 
         {/* Hexagonal patterns */}
-        <div className="absolute inset-0 opacity-20">
-          {hexPatterns.map((hex, i) => (
-            <motion.div
-              key={`hex-${i}`}
-              className="absolute w-12 h-12"
-              style={{ left: `${hex.x}%`, top: `${hex.y}%` }}
-              animate={{
-                rotate: 360,
-                scale: [1, 1.2, 1],
-              }}
-              transition={{
-                duration: 10,
-                delay: hex.delay,
-                repeat: Infinity,
-                ease: 'linear',
-              }}
-            >
-              <svg viewBox="0 0 100 100" className="w-full h-full">
-                <polygon
-                  points="50,5 90,25 90,75 50,95 10,75 10,25"
-                  fill="none"
-                  stroke="cyan"
-                  strokeWidth="1"
-                  opacity="0.5"
-                />
-              </svg>
-            </motion.div>
-          ))}
-        </div>
+        {(!isMobile || mobilePanel === 'metrics') && (
+          <div className="absolute inset-0 opacity-20">
+            {hexPatterns.map((hex, i) => (
+              <motion.div
+                key={`hex-${i}`}
+                className="absolute w-12 h-12"
+                style={{ left: `${hex.x}%`, top: `${hex.y}%` }}
+                animate={{
+                  rotate: 360,
+                  scale: [1, 1.2, 1],
+                }}
+                transition={{
+                  duration: 10,
+                  delay: hex.delay,
+                  repeat: Infinity,
+                  ease: 'linear',
+                }}
+              >
+                <svg viewBox="0 0 100 100" className="w-full h-full">
+                  <polygon
+                    points="50,5 90,25 90,75 50,95 10,75 10,25"
+                    fill="none"
+                    stroke="cyan"
+                    strokeWidth="1"
+                    opacity="0.5"
+                  />
+                </svg>
+              </motion.div>
+            ))}
+          </div>
+        )}
 
         {/* Scanning lines */}
-        <motion.div className="absolute inset-0 pointer-events-none">
-          <motion.div
-            className="h-px bg-gradient-to-r from-transparent via-cyan-500 to-transparent"
-            animate={{
-              y: ['0vh', '100vh'],
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              ease: 'linear'
-            }}
-          />
-          <motion.div
-            className="w-px h-full bg-gradient-to-b from-transparent via-cyan-500 to-transparent absolute"
-            animate={{
-              x: ['0vw', '100vw'],
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              ease: 'linear',
-              delay: 0.5
-            }}
-          />
-        </motion.div>
+        {(!isMobile || mobilePanel === 'metrics') && (
+          <motion.div className="absolute inset-0 pointer-events-none">
+            <motion.div
+              className="h-px bg-gradient-to-r from-transparent via-cyan-500 to-transparent"
+              animate={{
+                y: ['0vh', '100vh'],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: 'linear'
+              }}
+            />
+            <motion.div
+              className="w-px h-full bg-gradient-to-b from-transparent via-cyan-500 to-transparent absolute"
+              animate={{
+                x: ['0vw', '100vw'],
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: 'linear',
+                delay: 0.5
+              }}
+            />
+          </motion.div>
+        )}
 
         {/* Terminate overlay removed to emulate real TTY; all prompts stay in console */}
 
         {/* Main container */}
-        <div className="relative w-full max-w-7xl mx-auto px-4 lg:px-8">
+        <div className="relative w-full max-w-7xl mx-auto px-0 md:px-8 py-0 md:py-6 h-[100dvh] md:h-auto flex flex-col md:block">
           {/* Top metrics bar with graphs */}
+          {!poweredOff && isMobile && (
+            <div className="sticky top-0 z-[101] md:hidden bg-black/60 backdrop-blur supports-[backdrop-filter]:bg-black/30 border-b border-cyan-500/20">
+              <div className="px-4 py-2 flex items-center justify-between gap-2">
+                <div className="text-xs font-mono text-cyan-400">QuantumOS Terminal</div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setMobilePanel('console')}
+                    className={`px-3 py-1 rounded-md text-xs font-mono transition-colors ${mobilePanel === 'console' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' : 'bg-gray-900 text-gray-300 border border-gray-700'}`}
+                  >
+                    Console
+                  </button>
+                  <button
+                    onClick={() => setMobilePanel('metrics')}
+                    className={`px-3 py-1 rounded-md text-xs font-mono transition-colors ${mobilePanel === 'metrics' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' : 'bg-gray-900 text-gray-300 border border-gray-700'}`}
+                  >
+                    Graphs
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="mb-6 bg-black/80 backdrop-blur-xl border border-cyan-500/30 rounded-lg p-4"
+            className={`mb-4 md:mb-6 bg-black/80 backdrop-blur-xl border border-cyan-500/30 rounded-none md:rounded-lg p-2 md:p-4 ${isMobile && mobilePanel !== 'metrics' ? 'hidden md:block' : ''}`}
           >
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
               {!poweredOff && systemMetrics.map((metric, i) => (
                 <div key={`metric-${i}-${metric.label}`} className="space-y-2">
                   <div className="flex items-center justify-between">
@@ -1932,7 +2078,7 @@ const LoadingScreen = ({
                     </span>
                   </div>
 
-                  <div className="h-12 relative">
+                  <div className="h-10 md:h-12 relative">
                     <LineGraph
                       data={metric.history}
                       color={metric.color}
@@ -1965,15 +2111,15 @@ const LoadingScreen = ({
           </motion.div>
 
           {!poweredOff && (
-          <div className="grid lg:grid-cols-3 gap-6">
+          <div className={`grid gap-0 md:gap-4 ${isMobile ? '' : 'lg:grid-cols-3 lg:gap-6'}`}>
             {/* Left side - Console */}
             <motion.div
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
-              className="lg:col-span-2 bg-black/80 backdrop-blur-xl border border-cyan-500/30 rounded-lg p-4 shadow-2xl"
+              className={`lg:col-span-2 bg-black/80 backdrop-blur-xl border border-cyan-500/30 ${isMobile ? 'rounded-none border-x-0' : 'rounded-lg'} p-3 md:p-4 shadow-2xl ${isMobile && mobilePanel !== 'console' ? 'hidden md:block' : ''}`}
             >
-              <div className="flex items-center justify-between mb-3 border-b border-cyan-500/20 pb-2">
+              <div className="hidden md:flex items-center justify-between mb-3 border-b border-cyan-500/20 pb-2">
                 <div className="flex items-center gap-2">
                   <div className="flex gap-1.5">
                     <div className="w-3 h-3 rounded-full bg-red-500" />
@@ -1982,7 +2128,7 @@ const LoadingScreen = ({
                   </div>
                   <span className="text-xs font-mono text-cyan-400 ml-2">system.console</span>
                 </div>
-                <div className="flex items-center gap-3 text-xs font-mono">
+                <div className="hidden md:flex items-center gap-3 text-xs font-mono">
                   <span className="text-gray-500">PID: 1337</span>
                   <span className="text-gray-500">TTY: /dev/quantum0</span>
                   <motion.span
@@ -1995,7 +2141,7 @@ const LoadingScreen = ({
                 </div>
               </div>
 
-              <div className="text-[10px] font-mono text-gray-500 mb-2 flex items-center gap-4">
+              <div className="hidden md:flex text-[10px] font-mono text-gray-500 mb-2 flex-wrap items-center gap-2 md:gap-4">
                 {terminalMode === 'boot' ? (
                   <>
                     <span>Press Ctrl+C to interrupt process</span>
@@ -2026,7 +2172,8 @@ const LoadingScreen = ({
 
               <div
                 ref={consoleRef}
-                className="h-[380px] overflow-y-auto font-mono text-xs lg:text-sm space-y-1 custom-scrollbar"
+                onPointerDown={() => { if (isMobile) { inputRef.current?.focus(); } }}
+                className={`font-mono text-xs lg:text-sm space-y-1 custom-scrollbar ${isMobile ? 'flex-1 min-h-0 overflow-y-auto pb-16' + (isKeyboardOpen ? ' pb-24' : '') : 'h-[380px] overflow-y-auto'}`}
               >
                 {consoleLines.map((line) => (
                   <motion.div
@@ -2068,7 +2215,7 @@ const LoadingScreen = ({
                     <motion.span
                       animate={{ opacity: [1, 0] }}
                       transition={{ duration: 0.5, repeat: Infinity }}
-                      className="inline-block w-2 h-4 bg-cyan-400 ml-1"
+                      className="inline-block w-1 h-3 md:w-2 md:h-4 bg-cyan-400 ml-1"
                     />
                   </div>
                 )}
@@ -2123,11 +2270,11 @@ const LoadingScreen = ({
               </div>
 
               {/* Hardware Details */}
-              <div className="mt-4 grid grid-cols-2 gap-4 border-t border-cyan-500/20 pt-4">
+              <div className="hidden md:grid mt-4 grid-cols-2 gap-4 border-t border-cyan-500/20 pt-4">
                 {/* CPU Cores */}
                 <div>
                   <div className="text-xs font-mono text-gray-400 mb-2">CPU CORES</div>
-                  <div className="grid grid-cols-8 gap-1">
+                  <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-1">
                     {cpuCores.map((core, i) => (
                       <motion.div
                         key={`core-${i}`}
@@ -2135,7 +2282,7 @@ const LoadingScreen = ({
                         whileHover={{ scale: 1.2 }}
                       >
                         <div
-                          className="w-6 h-6 rounded border border-cyan-500/30 flex items-center justify-center text-[8px] font-mono"
+                          className="w-5 h-5 md:w-6 md:h-6 rounded border border-cyan-500/30 flex items-center justify-center text-[8px] font-mono"
                           style={{
                             backgroundColor: `rgba(6, 182, 212, ${core.usage / 100})`,
                             borderColor: core.usage > 80 ? '#ef4444' : core.usage > 50 ? '#f59e0b' : '#06b6d4'
@@ -2185,7 +2332,7 @@ const LoadingScreen = ({
               </div>
 
               {/* Waveform visualization */}
-              <div className="mt-4 border-t border-cyan-500/20 pt-3">
+              <div className="hidden md:block mt-4 border-t border-cyan-500/20 pt-3">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-xs font-mono text-gray-400">SYSTEM AUDIO</span>
                   <motion.div
@@ -2213,7 +2360,7 @@ const LoadingScreen = ({
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 }}
-              className="space-y-4"
+              className={`space-y-4 ${isMobile ? 'hidden md:block' : ''}`}
             >
               {/* System Status Card */}
               <div className="bg-black/80 backdrop-blur-xl border border-cyan-500/30 rounded-lg p-4">
@@ -2306,7 +2453,7 @@ const LoadingScreen = ({
               {/* Network Visualization */}
               <div className="bg-black/80 backdrop-blur-xl border border-cyan-500/30 rounded-lg p-4">
                 <div className="text-sm font-mono text-gray-400 mb-3">NETWORK TOPOLOGY</div>
-                <div className="relative h-32">
+                <div className="relative h-24 md:h-32">
                   <svg className="absolute inset-0 w-full h-full">
                     {networkNodes.map((node, i) => (
                       <g key={`node-${i}`}>
@@ -2473,10 +2620,10 @@ const LoadingScreen = ({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
-            className="mt-6 bg-black/80 backdrop-blur-xl border border-cyan-500/30 rounded-lg p-3"
+            className="hidden md:block mt-6 bg-black/80 backdrop-blur-xl border border-cyan-500/30 rounded-lg p-3"
           >
-            <div className="flex items-center justify-between text-xs font-mono">
-              <div className="flex items-center gap-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs font-mono">
+              <div className="flex flex-wrap items-center gap-3 md:gap-6">
                 <div className="flex items-center gap-2">
                   <span className="text-gray-500">OPERATOR:</span>
                   <span className="text-cyan-400 font-bold">IREDDRAGONICY</span>
@@ -2486,7 +2633,7 @@ const LoadingScreen = ({
                   <span className="text-green-400">LEVEL 9</span>
                 </div>
               </div>
-              <div className="flex items-center gap-6">
+              <div className="flex flex-wrap items-center gap-3 md:gap-6">
                 <div className="flex items-center gap-2">
                   <span className="text-gray-500">SESSION:</span>
                   <span className="text-yellow-400">{sessionId}</span>
@@ -2503,6 +2650,38 @@ const LoadingScreen = ({
             </div>
           </motion.div>
         </div>
+
+        {/* Hidden input to summon mobile keyboard */}
+        {isMobile && (
+          <input
+            ref={inputRef}
+            type="text"
+            inputMode="text"
+            autoCapitalize="none"
+            autoComplete="off"
+            autoCorrect="off"
+            className="absolute -left-[9999px] -top-[9999px] opacity-0 pointer-events-none"
+            value=""
+            onChange={() => {}}
+          />
+        )}
+
+        {/* Mobile keyboard shortcut bar (above keyboard) */}
+        {isMobile && isKeyboardOpen && (
+          <div className="fixed bottom-0 inset-x-0 z-[102] md:hidden pb-[env(safe-area-inset-bottom)]">
+            <div className="mx-2 mb-2 rounded-lg border border-cyan-500/30 bg-black/70 backdrop-blur">
+              <div className="px-2 py-2 flex items-center gap-2 overflow-x-auto">
+                <button onClick={() => dispatchKey('c', { ctrl: true })} className="px-3 py-1 rounded bg-gray-900 border border-cyan-500/40 text-cyan-300 text-[12px] font-mono whitespace-nowrap">Ctrl+C</button>
+                <button onClick={() => dispatchKey('l', { ctrl: true })} className="px-3 py-1 rounded bg-gray-900 border border-cyan-500/40 text-cyan-300 text-[12px] font-mono whitespace-nowrap">Ctrl+L</button>
+                <button onClick={() => dispatchKey('Enter')} className="px-3 py-1 rounded bg-gray-900 border border-cyan-500/40 text-cyan-300 text-[12px] font-mono whitespace-nowrap">Enter</button>
+                <button onClick={() => dispatchKey('Tab')} className="px-3 py-1 rounded bg-gray-900 border border-cyan-500/40 text-cyan-300 text-[12px] font-mono whitespace-nowrap">Tab</button>
+                <button onClick={() => dispatchKey('ArrowUp')} className="px-3 py-1 rounded bg-gray-900 border border-cyan-500/40 text-cyan-300 text-[12px] font-mono whitespace-nowrap">↑</button>
+                <button onClick={() => dispatchKey('ArrowDown')} className="px-3 py-1 rounded bg-gray-900 border border-cyan-500/40 text-cyan-300 text-[12px] font-mono whitespace-nowrap">↓</button>
+                <button onClick={() => dispatchKey('Backspace')} className="px-3 py-1 rounded bg-gray-900 border border-cyan-500/40 text-cyan-300 text-[12px] font-mono whitespace-nowrap">Backspace</button>
+              </div>
+            </div>
+          </div>
+        )}
       </motion.div>
 
       <style jsx>{`
@@ -2568,4 +2747,4 @@ const LoadingScreen = ({
   );
 };
 
-export default LoadingScreen;
+export default Terminal;

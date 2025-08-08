@@ -1,7 +1,7 @@
 // app/page.tsx
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { motion, useInView, AnimatePresence } from 'framer-motion';
 import { FaPython, FaReact, FaNodeJs, FaDocker, FaGitAlt, FaGithub, FaLinkedin, FaBrain } from 'react-icons/fa';
 import { SiTypescript, SiTailwindcss, SiNextdotjs, SiTensorflow, SiPytorch, SiScikitlearn, SiJupyter, SiPostgresql, SiOpenai, SiHuggingface } from 'react-icons/si';
@@ -9,7 +9,7 @@ import { FiExternalLink, FiCode } from 'react-icons/fi';
 import { HiOutlineMail, HiSparkles } from 'react-icons/hi';
 import { IoClose } from 'react-icons/io5';
 import Hero from '@/components/Hero';
-import LoadingScreen from '@/components/LoadingScreen';
+// Terminal is now a dedicated route at /terminal
 import Navigation from '@/components/Navigation';
 import CursorEffect from '@/components/CursorEffect';
 
@@ -407,46 +407,12 @@ const StatusNotification = () => {
 }
 
 export default function Home() {
-    const [hasBooted, setHasBooted] = useState<boolean | null>(null);
-    const [showLoader, setShowLoader] = useState(true);
-    const [showTerminal, setShowTerminal] = useState(false);
-
-    useEffect(() => {
-        const booted = typeof window !== 'undefined' && window.localStorage.getItem('hasBooted') === '1';
-        setHasBooted(booted);
-    }, []);
-
-    const handleInitialBootComplete = () => {
-        try {
-            window.localStorage.setItem('hasBooted', '1');
-        } catch {}
-        setShowLoader(false);
-    };
-
-    // Terminal overlay completion returns to portfolio without touching boot flag
-    const handleTerminalOverlayClose = () => {
-        setShowTerminal(false);
-    };
-
-    if (hasBooted === null || showLoader) {
-        return (
-            <LoadingScreen
-                onLoadComplete={handleInitialBootComplete}
-                startMode={hasBooted ? 'boot' : 'boot'}
-                variant={hasBooted ? 'fast' : 'full'}
-                autoRedirectOnIdle={true}
-            />
-        );
-    }
-
+    // Initial boot loader is globally handled by BootGate in layout
+    
     return (
         <>
             <style jsx global>{`
                 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-                
-                * {
-                    cursor: none !important;
-                }
                 
                 body {
                     font-family: 'Inter', sans-serif;
@@ -455,10 +421,7 @@ export default function Home() {
                     overflow-x: hidden;
                 }
                 
-                /* Hide default cursor */
-                body {
-                    cursor: none !important;
-                }
+                /* Optional: custom cursor styling can be adjusted here */
                 
                 /* Neural network background pattern */
                 body::before {
@@ -481,13 +444,13 @@ export default function Home() {
             <StatusNotification />
 
             {/* Floating terminal button */}
-            <button
-                onClick={() => setShowTerminal(true)}
+            <a
+                href="/terminal"
                 className="fixed bottom-4 right-4 z-50 inline-flex items-center gap-2 px-4 py-2 bg-gray-900/90 border border-cyan-400/40 rounded-lg text-cyan-300 hover:text-white hover:bg-gradient-to-br hover:from-cyan-500/10 hover:to-purple-500/10 hover:border-cyan-400/60 transition-all"
             >
                 <FiCode />
                 <span className="font-medium">Terminal</span>
-            </button>
+            </a>
 
             <main className="relative bg-[#0A0A0A] z-10">
                 <Hero />
@@ -499,15 +462,7 @@ export default function Home() {
 
             <Footer />
 
-            {/* Terminal overlay: interactive mode without idle auto-redirect */}
-            {showTerminal && (
-                <LoadingScreen
-                    onLoadComplete={handleTerminalOverlayClose}
-                    startMode="interactive"
-                    variant="full"
-                    autoRedirectOnIdle={false}
-                />
-            )}
+            {/* Terminal moved to dedicated route /terminal */}
         </>
     );
 }

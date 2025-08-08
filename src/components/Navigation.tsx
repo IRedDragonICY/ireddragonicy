@@ -6,33 +6,27 @@ import { motion, AnimatePresence, useScroll, useTransform, useSpring, useMotionV
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { HiMenuAlt3, HiX } from 'react-icons/hi';
-import {
-  FaBrain,
-  FaHome,
-  FaUserSecret,
-  FaRocket,
-  FaCode,
-  FaBlog,
-  FaEnvelope,
-  FaNewspaper,
-  FaGraduationCap,
-  FaBriefcase
-} from 'react-icons/fa';
+import { FaBrain, FaGraduationCap, FaBriefcase } from 'react-icons/fa';
 import {
   BiHomeAlt,
-  BiUser,
   BiCodeAlt,
   BiRocket,
   BiEnvelope,
   BiNews
 } from 'react-icons/bi';
-import {
-  RiArticleLine,
-  RiLightbulbLine,
-  RiCodeSSlashLine
-} from 'react-icons/ri';
+import { RiArticleLine } from 'react-icons/ri';
 import { TbBrain } from 'react-icons/tb';
-import { IoMdContact } from 'react-icons/io';
+
+// Stable list of section ids used for scroll tracking on the homepage
+const HOME_SECTION_IDS: string[] = [
+  'home',
+  'intel',
+  'projects',
+  'skills',
+  'education',
+  'blog',
+  'contact'
+];
 
 interface NavigationProps {
   personalInfo: {
@@ -104,8 +98,7 @@ const Navigation = ({ personalInfo }: NavigationProps) => {
 
       // Only track sections on homepage
       if (!isBlogPage) {
-        const sections = homeNavLinks.map(link => link.id);
-        const current = sections.find(section => {
+        const current = HOME_SECTION_IDS.find(section => {
           if (section === 'blog') return false; // Skip blog link for section tracking
           const element = document.getElementById(section);
           if (element) {

@@ -75,6 +75,7 @@ const Navigation = ({ personalInfo }: NavigationProps) => {
     { id: 'projects', label: 'Projects', icon: BiRocket, href: '#projects' },
     { id: 'skills', label: 'Skills', icon: BiCodeAlt, href: '#skills' },
     { id: 'education', label: 'Education', icon: FaGraduationCap, href: '/education' },
+    { id: 'donate', label: 'Donate', icon: TbBrain, href: '/donate' },
     { id: 'blog', label: 'Blog', icon: RiArticleLine, href: '/blog' },
     { id: 'contact', label: 'Contact', icon: BiEnvelope, href: '#contact' }
   ];
@@ -83,6 +84,7 @@ const Navigation = ({ personalInfo }: NavigationProps) => {
   const blogNavLinks = [
     { id: 'home', label: 'Portfolio', icon: BiHomeAlt, href: '/' },
     { id: 'education', label: 'Education', icon: FaGraduationCap, href: '/education' },
+    { id: 'donate', label: 'Donate', icon: TbBrain, href: '/donate' },
     { id: 'blog', label: 'All Posts', icon: BiNews, href: '/blog' },
     { id: 'ai-research', label: 'AI Research', icon: TbBrain, href: '/blog?category=AI%20Research' },
     { id: 'tutorials', label: 'Tutorials', icon: FaGraduationCap, href: '/blog?category=Tutorial' },
@@ -182,6 +184,7 @@ const Navigation = ({ personalInfo }: NavigationProps) => {
             relative bg-black/40 backdrop-blur-xl rounded-2xl border transition-all duration-300
             ${scrolled ? 'border-cyan-400/10' : 'border-cyan-400/20'}
             shadow-lg shadow-cyan-500/5
+            overflow-hidden
           `}
           >
             {/* Parallax Background Layers */}
@@ -218,7 +221,7 @@ const Navigation = ({ personalInfo }: NavigationProps) => {
               />
             </div>
 
-            <div className="relative px-6 py-3 flex justify-between items-center">
+            <div className="relative px-4 sm:px-6 py-3 flex justify-between items-center gap-2">
               {/* Logo with AI Animation */}
               <Link href="/">
                 <motion.div
@@ -246,7 +249,7 @@ const Navigation = ({ personalInfo }: NavigationProps) => {
               </Link>
 
               {/* Desktop Navigation */}
-              <div className="hidden md:flex items-center gap-2">
+              <div className="hidden md:flex items-center gap-1 sm:gap-2 flex-nowrap overflow-x-auto no-scrollbar max-w-full">
                 {navLinks.map((link, index) => {
                   const isHashLink = link.href.startsWith('#');
                   const effectiveHref = isHashLink ? `${isHomePage ? '' : '/'}${link.href}` : link.href;
@@ -270,7 +273,7 @@ const Navigation = ({ personalInfo }: NavigationProps) => {
                           href={effectiveHref}
                           onClick={() => handleNavClick(link.id)}
                           className={`
-                            relative px-4 py-2 text-sm font-medium tracking-wider transition-all duration-300 block
+                            relative px-3 sm:px-4 py-2 text-sm font-medium tracking-wider transition-all duration-300 block whitespace-nowrap
                             ${isActive 
                               ? 'text-cyan-400' 
                               : 'text-gray-400 hover:text-cyan-400'
@@ -301,7 +304,7 @@ const Navigation = ({ personalInfo }: NavigationProps) => {
                           href={effectiveHref}
                           onClick={() => handleNavClick(link.id)}
                           className={`
-                            relative px-4 py-2 text-sm font-medium tracking-wider transition-all duration-300 block
+                            relative px-3 sm:px-4 py-2 text-sm font-medium tracking-wider transition-all duration-300 block whitespace-nowrap
                             ${isActive 
                               ? 'text-cyan-400' 
                               : 'text-gray-400 hover:text-cyan-400'

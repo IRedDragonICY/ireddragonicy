@@ -104,3 +104,35 @@ body {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* Wrapping helpers */
+.break-words { word-break: break-word; overflow-wrap: anywhere; }
+
+/* Hide horizontal scrollbar for horizontally scrollable nav container */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+/* Glint effect for icon badges */
+.glint::before {
+  content: '';
+  position: absolute;
+  top: -150%;
+  left: -150%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(115deg, transparent 40%, rgba(255,255,255,0.35) 50%, transparent 60%);
+  transform: rotate(10deg);
+  animation: glint-sweep 5s ease-in-out infinite;
+}
+
+@keyframes glint-sweep {
+  0%, 30% { transform: translate(-30%, -30%) rotate(10deg); opacity: 0; }
+  40% { opacity: 1; }
+  60% { transform: translate(30%, 30%) rotate(10deg); opacity: 0.8; }
+  100% { transform: translate(60%, 60%) rotate(10deg); opacity: 0; }
+}

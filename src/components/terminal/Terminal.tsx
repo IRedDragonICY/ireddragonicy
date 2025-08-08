@@ -14,7 +14,9 @@ import {
   SystemMetric,
   CPUCore,
   RAMModule,
+  TerminalAppManifest,
 } from './types';
+import { APPS, appMap } from './apps';
 import { AUTO_REDIRECT_DELAY_MS, AUTO_REDIRECT_COUNTDOWN_SECS, INIT_MESSAGES, STORAGE_KEYS } from './constants';
 import { sleep, safeLocalStorageGet, safeLocalStorageSet } from './utils';
 
@@ -35,7 +37,7 @@ const Terminal = ({
     { id: 'profile', name: 'User Profile', status: 'pending', progress: 0, memoryUsage: 0, threads: 0, submodules: ['Preferences', 'History', 'Analytics', 'Sync Engine'] },
   ]);
 
-  const [currentPhase, setCurrentPhase] = useState(0);
+  const [, setCurrentPhase] = useState(0);
   const [consoleLines, setConsoleLines] = useState<{ id: string; text: string; type: string }[]>([]);
   const [systemStatus, setSystemStatus] = useState('INITIALIZING');
   const [progressPercentage, setProgressPercentage] = useState(0);
@@ -54,11 +56,12 @@ const Terminal = ({
     commands: [],
     currentIndex: -1
   });
-  const [terminalMode, setTerminalMode] = useState<'boot' | 'interactive'>(startMode);
+  const [terminalMode, setTerminalMode] = useState<'boot' | 'interactive' | 'app'>(startMode);
+  const [activeApp, setActiveApp] = useState<TerminalAppManifest | null>(null);
+  const [appKeyHandler, setAppKeyHandler] = useState<((e: KeyboardEvent) => void) | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processes, setProcesses] = useState<Process[]>([]);
   const [tabCompletions, setTabCompletions] = useState<string[]>([]);
-  const [tabIndex, setTabIndex] = useState(0);
   const [showTabHint, setShowTabHint] = useState(false);
   const [autoRedirectCountdown, setAutoRedirectCountdown] = useState<number | null>(null);
   const [autoRedirectStarted, setAutoRedirectStarted] = useState(false);
@@ -91,6 +94,7 @@ const Terminal = ({
   }, []);
 
   const consoleRef = useRef<HTMLDivElement>(null);
+  const appContainerRef = useRef<HTMLDivElement>(null);
   const lineIdCounter = useRef(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particleControls = useAnimation();
@@ -101,6 +105,14 @@ const Terminal = ({
   const initializedRef = useRef(false);
   const bootPausedRef = useRef(false);
   const bootAbortedRef = useRef(false);
+  const [appViewport, setAppViewport] = useState<{ width: number; height: number }>({ width: 640, height: 360 });
+  const [appFocus, setAppFocus] = useState(true);
+  const savedConsoleRef = useRef<{ lines: { id: string; text: string; type: string }[]; input: string } | null>(null);
+
+  // Will be defined after addConsoleLine; placeholders here to satisfy order
+  const appWriteLine = useCallback((text: string, type?: string) => {}, []);
+  const appRegisterKeyHandler = useCallback((handler: ((e: KeyboardEvent) => void) | null) => {}, []);
+  const appExit = useCallback(() => {}, []);
 
   // Virtual File System
   const [fileSystem] = useState<FileSystemNode>({
@@ -351,16 +363,37 @@ const Terminal = ({
     },
   ]);
 
-  // Add console line with type
-  const addConsoleLine = (text: string, type: string = 'info'): string => {
+  // Add console line with type (stable callbacks)
+  const addConsoleLine = useCallback((text: string, type: string = 'info'): string => {
     const id = `line-${Date.now()}-${lineIdCounter.current++}`;
     setConsoleLines(prev => [...prev, { id, text, type }]);
     return id;
-  };
+  }, []);
 
-  const updateConsoleLine = (id: string, text: string) => {
+  const updateConsoleLine = useCallback((id: string, text: string) => {
     setConsoleLines(prev => prev.map(line => line.id === id ? { ...line, text } : line));
-  };
+  }, []);
+
+  // Stable callbacks for apps so their effects don't re-run on every parent render
+  const appWrite = useCallback((text: string, type?: string) => {
+    addConsoleLine(text, type);
+  }, [addConsoleLine]);
+  const appRegister = useCallback((handler: ((e: KeyboardEvent) => void) | null) => {
+    setAppKeyHandler(() => handler);
+  }, []);
+  const appExitStable = useCallback(() => {
+    // Restore previous console session
+    if (savedConsoleRef.current) {
+      setConsoleLines(savedConsoleRef.current.lines);
+      setCurrentInput(savedConsoleRef.current.input);
+      savedConsoleRef.current = null;
+    }
+    setTerminalMode('interactive');
+    if (activeApp) addConsoleLine(`Exited ${activeApp.name}`, 'warning');
+    setActiveApp(null);
+    setAppKeyHandler(null);
+    setAppFocus(false);
+  }, [activeApp, addConsoleLine]);
 
   const powerOn = useCallback(async () => {
     setIsPoweringOn(true);
@@ -373,7 +406,7 @@ const Terminal = ({
     setSystemStatus('ONLINE');
     setTerminalMode('interactive');
     addConsoleLine('> Interactive terminal ready.', 'success');
-    addConsoleLine('> Type "help" for available commands', 'info');
+    addConsoleLine('> Type \"help\" for available commands', 'info');
     // Small delay then hide animation overlay
     setTimeout(() => setIsPoweringOn(false), 500);
   }, []);
@@ -541,6 +574,10 @@ const Terminal = ({
         
       case 'help':
         addConsoleLine('Available commands:', 'info');
+        addConsoleLine('  ═══ Apps (Games/Utilities) ═══', 'success');
+        addConsoleLine('  apps              - List installed apps', 'detail');
+        addConsoleLine('  run <app>         - Run an app (e.g., run snake, run tetris)', 'detail');
+        addConsoleLine('  snake / tetris    - Shortcuts to launch games', 'detail');
         addConsoleLine('  ═══ File System Commands ═══', 'success');
         addConsoleLine('  ls [path]         - List directory contents', 'detail');
         addConsoleLine('  cd <path>         - Change directory', 'detail');
@@ -596,6 +633,70 @@ const Terminal = ({
         addConsoleLine('  ↑/↓               - Navigate command history', 'detail');
         addConsoleLine('  Ctrl+C            - Cancel current input', 'detail');
         addConsoleLine('  Ctrl+L            - Clear screen', 'detail');
+        break;
+      
+      case 'apps':
+        addConsoleLine('Installed apps:', 'info');
+        APPS.forEach(a => addConsoleLine(`  - ${a.id} :: ${a.name} — ${a.description}`, 'detail'));
+        break;
+
+      case 'run':
+        if (!args[0]) {
+          addConsoleLine('run: missing <app> name. Try: apps', 'error');
+          break;
+        }
+        {
+          const appId = args[0].toLowerCase();
+          const manifest = appMap[appId];
+          if (!manifest) {
+            addConsoleLine(`run: unknown app '${appId}'. Try: apps`, 'error');
+            break;
+          }
+          addConsoleLine(`Launching ${manifest.name}...`, 'success');
+          // One-time usage hint per app per session
+          if (manifest.id === 'snake') {
+            addConsoleLine('Controls: Arrow Keys, P pause, Q quit', 'detail');
+          } else if (manifest.id === 'tetris') {
+            addConsoleLine('Controls: ← → ↓ move, ↑ rotate, Space hard drop, P pause, Q quit', 'detail');
+          }
+          // Save console state and clear for focus mode
+          savedConsoleRef.current = { lines: [...consoleLines], input: currentInput };
+          setConsoleLines([]);
+          setCurrentInput('');
+          setAppFocus(true);
+          cancelAutoRedirectTimer();
+          setAutoRedirectStarted(false);
+          setAutoRedirectCountdown(null);
+          setActiveApp(manifest);
+          setTerminalMode('app');
+        }
+        break;
+
+      case 'snake':
+      case 'tetris':
+        {
+          const appId = command;
+          const manifest = appMap[appId];
+          if (!manifest) {
+            addConsoleLine(`unknown app '${appId}'.`, 'error');
+            break;
+          }
+          addConsoleLine(`Launching ${manifest.name}...`, 'success');
+          if (manifest.id === 'snake') {
+            addConsoleLine('Controls: Arrow Keys, P pause, Q quit', 'detail');
+          } else if (manifest.id === 'tetris') {
+            addConsoleLine('Controls: ← → ↓ move, ↑ rotate, Space hard drop, P pause, Q quit', 'detail');
+          }
+          savedConsoleRef.current = { lines: [...consoleLines], input: currentInput };
+          setConsoleLines([]);
+          setCurrentInput('');
+          setAppFocus(true);
+          cancelAutoRedirectTimer();
+          setAutoRedirectStarted(false);
+          setAutoRedirectCountdown(null);
+          setActiveApp(manifest);
+          setTerminalMode('app');
+        }
         break;
         
       case 'ls':
@@ -1083,7 +1184,7 @@ const Terminal = ({
         
       default:
         addConsoleLine(`Command not found: ${command}`, 'error');
-        addConsoleLine('Type "help" for available commands', 'detail');
+        addConsoleLine('Type \"help\" for available commands', 'detail');
     }
     
     setIsProcessing(false);
@@ -1096,7 +1197,7 @@ const Terminal = ({
     
     if (isCommand) {
       // Complete commands
-      const commands = ['help', 'ls', 'cd', 'pwd', 'cat', 'echo', 'clear', 'whoami', 
+      const commands = ['help', 'apps', 'run', 'snake', 'tetris', 'ls', 'cd', 'pwd', 'cat', 'echo', 'clear', 'whoami', 
                        'date', 'uptime', 'ps', 'top', 'htop', 'btop', 'df', 'ifconfig', 'ping', 
                        'neofetch', 'screenfetch', 'matrix', 'hack', 'secret', 'portfolio', 'exit',
                        'mkdir', 'rm', 'sudo', 'history', 'uname', 'fortune', 'cowsay',
@@ -1114,6 +1215,18 @@ const Terminal = ({
     } else {
       // Complete file paths
       const lastPart = parts[parts.length - 1];
+      if (parts[0] === 'run' && parts.length === 2) {
+        const appMatches = APPS.map(a => a.id).filter(id => id.startsWith(lastPart));
+        if (appMatches.length === 1) {
+          parts[parts.length - 1] = appMatches[0];
+          setCurrentInput(parts.join(' ') + ' ');
+        } else if (appMatches.length > 1) {
+          setTabCompletions(appMatches);
+          setShowTabHint(true);
+          setTimeout(() => setShowTabHint(false), 3000);
+        }
+        return;
+      }
       const pathToComplete = getAbsolutePath(lastPart);
       const parentPath = pathToComplete.substring(0, pathToComplete.lastIndexOf('/')) || '/';
       const parentNode = navigateToPath(parentPath);
@@ -1136,6 +1249,21 @@ const Terminal = ({
 
   // Handle keyboard events for terminal
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    // If an app is running, handle exit keys then delegate
+    if (terminalMode === 'app') {
+      if (e.key === 'Escape' || (e.ctrlKey && e.key === 'c') || e.key === 'q' || e.key === 'Q') {
+        e.preventDefault();
+        setTerminalMode('interactive');
+        if (activeApp) addConsoleLine(`Exited ${activeApp.name}`, 'warning');
+        setActiveApp(null);
+        setAppKeyHandler(null);
+        return;
+      }
+      if (appKeyHandler) {
+        appKeyHandler(e);
+      }
+      return;
+    }
     // Interactive terminal mode
     if (terminalMode === 'interactive') {
       // Cancel auto-redirect timer when user presses any key
@@ -1264,7 +1392,27 @@ const Terminal = ({
         }
       }
     }
-  }, [showTerminatePrompt, terminalMode, currentInput, currentDirectory, commandHistory, cancelAutoRedirectTimer, markAutoRedirectHandled]);
+  }, [showTerminatePrompt, terminalMode, currentInput, currentDirectory, commandHistory, cancelAutoRedirectTimer, markAutoRedirectHandled, appKeyHandler, activeApp]);
+
+  // App viewport sizing
+  useEffect(() => {
+    const update = () => {
+      const el = appContainerRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const padding = 12;
+      // Reserve header a bit more to avoid crowding
+      const headerReserve = 36;
+      setAppViewport({
+        width: Math.max(360, rect.width - padding * 2),
+        height: Math.max(300, rect.height - headerReserve),
+      });
+    };
+    update();
+    const id = window.setInterval(update, 250);
+    window.addEventListener('resize', update);
+    return () => { window.removeEventListener('resize', update); clearInterval(id); };
+  }, [terminalMode]);
 
   // Add keyboard event listeners
   useEffect(() => {
@@ -1307,7 +1455,8 @@ const Terminal = ({
   useEffect(() => {
     if (!isClient) return;
     if (!('visualViewport' in window)) return;
-    const vv = (window as any).visualViewport as VisualViewport;
+    const vv = window.visualViewport;
+    if (!vv) return;
     const onResize = () => {
       const heightDiff = window.innerHeight - vv.height;
       setIsKeyboardOpen(isMobile && heightDiff > 120);
@@ -1414,7 +1563,7 @@ const Terminal = ({
         // Update system metrics with the calculated values
         setSystemMetrics(prev => prev.map(metric => {
           let newValue = metric.value;
-          let newDetails = { ...metric.details };
+          const newDetails = { ...metric.details };
 
           if (metric.label === 'CPU') {
             newValue = avgCpuUsage;
@@ -1638,7 +1787,7 @@ const Terminal = ({
       setSystemStatus('ONLINE');
       addConsoleLine('', 'info');
       addConsoleLine('> Interactive terminal ready.', 'success');
-      addConsoleLine('> Type "help" for available commands', 'info');
+      addConsoleLine('> Type \"help\" for available commands', 'info');
       setTerminalMode('interactive');
       // Seed processes
       setProcesses([
@@ -1668,7 +1817,7 @@ const Terminal = ({
       // Otherwise enter interactive quickly and start idle countdown
       addConsoleLine('', 'info');
       addConsoleLine('> Entering interactive terminal (fast)...', 'success');
-      addConsoleLine('> Type "help" for available commands', 'info');
+      addConsoleLine('> Type \"help\" for available commands', 'info');
       setTerminalMode('interactive');
       if (!autoRedirectStarted) {
         const lineId = addConsoleLine(`> Auto-redirect to portfolio in ${AUTO_REDIRECT_COUNTDOWN_SECS}s if inactive...`, 'detail');
@@ -1833,7 +1982,7 @@ const Terminal = ({
       await sleep(1000);
       addConsoleLine('', 'info');
       addConsoleLine('> Entering interactive terminal mode...', 'success');
-      addConsoleLine('> Type "help" for available commands', 'info');
+      addConsoleLine('> Type \"help\" for available commands', 'info');
       if (autoRedirectOnIdle && !autoRedirectDisabled) {
         // Seed initial line so the countdown can overwrite the same line
         const lineId = addConsoleLine(`> Auto-redirect to portfolio in ${AUTO_REDIRECT_COUNTDOWN_SECS}s if inactive...`, 'detail');
@@ -1918,7 +2067,7 @@ const Terminal = ({
         initial={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.5 }}
-        className={`fixed inset-0 bg-black z-[100] flex items-start md:items-center justify-center overflow-x-hidden ${isMobile ? 'overflow-y-hidden' : 'overflow-y-auto'} ${glitchActive ? 'glitch-effect' : ''}`}
+        className={`fixed inset-0 bg-black z-[100] flex items-start md:items-center justify-center overflow-x-hidden overflow-y-hidden ${glitchActive ? 'glitch-effect' : ''}`}
       >
         {/* Particle canvas background */}
         {(!isMobile || mobilePanel === 'metrics') && (
@@ -1954,7 +2103,7 @@ const Terminal = ({
 
         {/* Circuit pattern SVG */}
         {(!isMobile || mobilePanel === 'metrics') && (
-          <svg className="absolute inset-0 opacity-5" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <svg className="absolute inset-0 opacity-5 pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
             {circuitPattern.map((path) => (
               <motion.path
                 key={path.id}
@@ -1972,7 +2121,7 @@ const Terminal = ({
 
         {/* Hexagonal patterns */}
         {(!isMobile || mobilePanel === 'metrics') && (
-          <div className="absolute inset-0 opacity-20">
+          <div className="absolute inset-0 opacity-20 pointer-events-none">
             {hexPatterns.map((hex, i) => (
               <motion.div
                 key={`hex-${i}`}
@@ -2141,7 +2290,7 @@ const Terminal = ({
                 </div>
               </div>
 
-              <div className="hidden md:flex text-[10px] font-mono text-gray-500 mb-2 flex-wrap items-center gap-2 md:gap-4">
+              <div className={`hidden md:flex text-[10px] font-mono text-gray-500 ${terminalMode === 'app' ? 'mb-0' : 'mb-2'} flex-wrap items-center gap-2 md:gap-4`}>
                 {terminalMode === 'boot' ? (
                   <>
                     <span>Press Ctrl+C to interrupt process</span>
@@ -2159,7 +2308,7 @@ const Terminal = ({
                     <span className="text-gray-400">•</span>
                     <span>↑↓: History</span>
                     <span className="text-gray-400">•</span>
-                    <span>Type "help" for commands</span>
+                    <span>Type &quot;help&quot; for commands</span>
                     {autoRedirectCountdown !== null && (
                       <>
                         <span className="text-gray-400">•</span>
@@ -2173,8 +2322,29 @@ const Terminal = ({
               <div
                 ref={consoleRef}
                 onPointerDown={() => { if (isMobile) { inputRef.current?.focus(); } }}
-                className={`font-mono text-xs lg:text-sm space-y-1 custom-scrollbar ${isMobile ? 'flex-1 min-h-0 overflow-y-auto pb-16' + (isKeyboardOpen ? ' pb-24' : '') : 'h-[380px] overflow-y-auto'}`}
+                className={`font-mono text-xs lg:text-sm space-y-1 custom-scrollbar ${isMobile ? 'flex-1 min-h-0 overflow-y-hidden pb-16' + (isKeyboardOpen ? ' pb-24' : '') : (terminalMode === 'app' ? 'h-[62vh] overflow-y-hidden' : 'h-[380px] overflow-y-auto')}`}
               >
+                {terminalMode === 'app' && activeApp && (
+                  <div ref={appContainerRef} className={`mt-2 mb-3 border border-cyan-500/30 rounded ${appFocus ? 'p-3 pt-4' : 'p-3 pt-4'} bg-black/95 min-h-[70vh]`}
+                  >
+                    <div className="text-[10px] text-gray-400 font-mono mb-3 flex items-center justify-between">
+                      <span className="uppercase tracking-wider text-cyan-300">{activeApp.name}</span>
+                      <span>Press Esc/Q to exit</span>
+                    </div>
+                    {(() => {
+                      const Active = activeApp.component;
+                      return (
+                        <Active
+                          onExit={appExitStable}
+                          writeLine={appWrite}
+                          registerKeyHandler={appRegister}
+                          width={appViewport.width}
+                          height={appViewport.height}
+                        />
+                      );
+                    })()}
+                  </div>
+                )}
                 {consoleLines.map((line) => (
                   <motion.div
                     key={line.id}
@@ -2270,6 +2440,7 @@ const Terminal = ({
               </div>
 
               {/* Hardware Details */}
+              {terminalMode !== 'app' && (
               <div className="hidden md:grid mt-4 grid-cols-2 gap-4 border-t border-cyan-500/20 pt-4">
                 {/* CPU Cores */}
                 <div>
@@ -2330,8 +2501,10 @@ const Terminal = ({
                   </div>
                 </div>
               </div>
+              )}
 
               {/* Waveform visualization */}
+              {terminalMode !== 'app' && (
               <div className="hidden md:block mt-4 border-t border-cyan-500/20 pt-3">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-xs font-mono text-gray-400">SYSTEM AUDIO</span>
@@ -2353,9 +2526,11 @@ const Terminal = ({
                   ))}
                 </div>
               </div>
+              )}
             </motion.div>
 
             {/* Right side - System Status */}
+            {terminalMode !== 'app' && (
             <motion.div
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
@@ -2407,7 +2582,7 @@ const Terminal = ({
                       <span>INTERACTIVE MODE ACTIVE</span>
                     </div>
                     <div className="text-[10px] font-mono text-gray-500 mt-1">
-                      Type "help" for commands • "exit" to continue
+                      Type &quot;help&quot; for commands • &quot;exit&quot; to continue
                     </div>
                   </div>
                 )}
@@ -2551,6 +2726,7 @@ const Terminal = ({
                 </div>
               </div>
             </motion.div>
+            )}
           </div>
           )}
 
@@ -2616,6 +2792,7 @@ const Terminal = ({
           )}
 
           {/* Bottom status bar */}
+          {terminalMode !== 'app' && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -2649,6 +2826,7 @@ const Terminal = ({
               </div>
             </div>
           </motion.div>
+          )}
         </div>
 
         {/* Hidden input to summon mobile keyboard */}

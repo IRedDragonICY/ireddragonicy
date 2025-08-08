@@ -1,9 +1,10 @@
 // src/components/terminal/types.ts
 // Shared terminal and loading screen types to keep components lightweight and maintainable
+import type React from 'react';
 
 export interface TerminalProps {
   onLoadComplete: () => void;
-  startMode?: 'boot' | 'interactive';
+  startMode?: 'boot' | 'interactive' | 'app';
   variant?: 'full' | 'fast';
   autoRedirectOnIdle?: boolean;
 }
@@ -84,4 +85,20 @@ export interface RAMModule {
   usage: number;
 }
 
+// ===== Modular Terminal Apps (Games/Utilities) =====
+export interface TerminalAppProps {
+  onExit: () => void;
+  writeLine: (text: string, type?: string) => void;
+  registerKeyHandler: (handler: ((e: KeyboardEvent) => void) | null) => void;
+  width: number;
+  height: number;
+}
+
+export interface TerminalAppManifest {
+  id: string;
+  name: string;
+  description: string;
+  keywords?: string[];
+  component: React.ComponentType<TerminalAppProps>;
+}
 

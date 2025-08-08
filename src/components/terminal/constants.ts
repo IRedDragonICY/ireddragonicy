@@ -27,6 +27,8 @@ export const INIT_MESSAGES = [
   { text: '> Configuring neural processors...', type: 'info' },
   { text: '> [NEURAL] TPU acceleration active', type: 'neural' },
   { text: '> Calibrating diffusion models...', type: 'info' },
+  { text: '> Mounting /usr/games ...', type: 'info' },
+  { text: '> Registered apps: snake, tetris', type: 'system' },
 ] as const;
 
 

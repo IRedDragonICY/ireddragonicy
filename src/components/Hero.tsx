@@ -7,6 +7,10 @@ import Image from 'next/image';
 import { FaFileAlt, FaRobot, FaBook, FaGithub, FaLinkedin, FaTwitter } from 'react-icons/fa';
 import { BsLightningChargeFill, BsArrowDown } from 'react-icons/bs';
 import { IoMdPulse } from 'react-icons/io';
+import TypewriterTextMod from './hero/TypewriterText';
+import ParticleFieldMod from './hero/ParticleField';
+import HolographicCardMod from './hero/HolographicCard';
+import StableDiffusionCard from './hero/stable/StableDiffusionInterface';
 
 // Interface for Particle type
 interface Particle {
@@ -688,7 +692,7 @@ const StableDiffusionInterface = ({ isInView, isMobile: isMobileView }: { isInVi
           )}
 
           {/* Progress Overlay */}
-          <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 to-transparent">
+          <div className="absolute bottom-0 left-0 right-0 p-1.5 bg-gradient-to-t from-black/80 to-transparent">
             <div className="space-y-1">
               <div className="flex justify-between text-[10px] font-mono">
                 <span className="text-cyan-400">σ={sigmaValue.toFixed(3)}</span>
@@ -832,10 +836,14 @@ const Hero = () => {
   const blurFilterMotion = useTransform(blurEffect, (value) => `blur(${value}px)`);
 
   return (
-    <section ref={heroRef} id="home" className="relative min-h-screen w-full overflow-hidden bg-black">
+    <section
+      ref={heroRef}
+      id="home"
+      className="relative w-full overflow-hidden bg-black pt-20 md:pt-24 scroll-mt-24 md:scroll-mt-28 h-screen"
+    >
       {/* Interactive Particle System (disabled on mobile for clarity/perf) */}
       {!isMobile && (
-        <ParticleField mouseX={smoothMouseX} mouseY={smoothMouseY} />
+        <ParticleFieldMod mouseX={smoothMouseX} mouseY={smoothMouseY} />
       )}
 
       {/* Animated gradient mesh background */}
@@ -894,15 +902,15 @@ const Hero = () => {
           )
         }}
       >
-        <div className="h-full w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-0">
-          <div className="min-h-screen flex flex-col lg:grid lg:grid-cols-2 gap-8 lg:gap-12 items-center justify-center">
+        <div className="h-full w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-6 py-2 lg:py-0">
+          <div className="h-full grid grid-rows-[auto_1fr_auto] lg:grid-rows-1 lg:grid-cols-2 items-center justify-center gap-6 lg:gap-8">
             {/* Left Content - Enhanced */}
             <motion.div
               style={{ opacity: opacityEffect }}
               initial={{ opacity: 0, x: -100 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 1, type: "spring", damping: 20 }}
-              className="space-y-4 sm:space-y-6 w-full"
+              className="space-y-3 sm:space-y-5 w-full"
             >
               {/* Animated Badge */}
               <motion.div
@@ -912,7 +920,7 @@ const Hero = () => {
                 transition={{ delay: 0.2 }}
                 className="inline-block"
               >
-                <HolographicCard className="inline-flex">
+                <HolographicCardMod className="inline-flex">
                   <div className="flex items-center gap-2 px-4 py-2">
                     <motion.span
                       className="relative flex h-2 w-2"
@@ -926,7 +934,7 @@ const Hero = () => {
                       AI Pioneer • Research Lead
                     </span>
                   </div>
-                </HolographicCard>
+                </HolographicCardMod>
               </motion.div>
 
               {/* Enhanced Title */}
@@ -938,7 +946,7 @@ const Hero = () => {
                   className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black leading-tight relative"
                 >
                   <div className="block mb-2 relative">
-                    <TypewriterText
+                    <TypewriterTextMod
                       text="Mohammad Farid"
                       isInView={isInView}
                       delay={500}
@@ -959,7 +967,7 @@ const Hero = () => {
                     />
                   </div>
                   <div className="block relative">
-                    <TypewriterText
+                    <TypewriterTextMod
                       text="Hendianto"
                       isInView={isInView}
                       delay={1700}
@@ -1043,7 +1051,7 @@ const Hero = () => {
                       whileHover={{ scale: 1.1, z: 50 }}
                       transition={{ type: "spring", stiffness: 300 }}
                     >
-                      <HolographicCard className="h-full">
+                      <HolographicCardMod className="h-full">
                         <div className="p-4 text-center space-y-2">
                           <motion.div
                             animate={{ rotate: [0, 360] }}
@@ -1061,7 +1069,7 @@ const Hero = () => {
                             {stat.detail}
                           </div>
                         </div>
-                      </HolographicCard>
+                      </HolographicCardMod>
                     </motion.div>
                   );
                 })}
@@ -1121,11 +1129,9 @@ const Hero = () => {
             </motion.div>
 
             {/* Right Side - Enhanced Stable Diffusion Interface */}
-            <div className="relative w-full h-[600px] lg:h-full flex items-center">
-              <StableDiffusionInterface
+            <div className="relative w-full h-full flex items-stretch lg:pl-4">
+              <StableDiffusionCard
                 isInView={isInView}
-                mouseX={smoothMouseX}
-                mouseY={smoothMouseY}
                 isMobile={isMobile}
               />
             </div>

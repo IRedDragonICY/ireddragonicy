@@ -8,7 +8,7 @@ export default function TerminalPage() {
   const router = useRouter();
 
   return (
-    <div className="fixed inset-0">
+    <div className="fixed inset-0 overflow-hidden">
       <Terminal
         onLoadComplete={() => router.push('/')}
         startMode="interactive"

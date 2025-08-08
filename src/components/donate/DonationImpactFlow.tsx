@@ -171,7 +171,7 @@ const DonationImpactFlow: React.FC = () => {
             {STEPS.map((step, i) => (
               <HolographicCard key={step.id}>
                 <div
-                  ref={(el) => (stepRefs.current[i] = el)}
+                  ref={(el) => { stepRefs.current[i] = el; }}
                   onMouseEnter={() => setActive(i)}
                   className="relative p-5 flex flex-col items-center gap-3 text-center"
                 >

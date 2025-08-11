@@ -14,18 +14,12 @@ import {
   BiEnvelope,
   BiNews
 } from 'react-icons/bi';
-import { RiArticleLine } from 'react-icons/ri';
+import { RiArticleLine, RiShareLine } from 'react-icons/ri';
 import { TbBrain } from 'react-icons/tb';
 
 // Stable list of section ids used for scroll tracking on the homepage
 const HOME_SECTION_IDS: string[] = [
-  'home',
-  'intel',
-  'projects',
-  'skills',
-  'education',
-  'blog',
-  'contact'
+  'home'
 ];
 
 interface NavigationProps {
@@ -71,13 +65,10 @@ const Navigation = ({ personalInfo }: NavigationProps) => {
   // Navigation links for homepage with modern icons
   const homeNavLinks = [
     { id: 'home', label: 'Home', icon: BiHomeAlt, href: '#home' },
-    { id: 'intel', label: 'Intel', icon: TbBrain, href: '#intel' },
-    { id: 'projects', label: 'Projects', icon: BiRocket, href: '#projects' },
-    { id: 'skills', label: 'Skills', icon: BiCodeAlt, href: '#skills' },
     { id: 'education', label: 'Education', icon: FaGraduationCap, href: '/education' },
     { id: 'donate', label: 'Donate', icon: TbBrain, href: '/donate' },
-    { id: 'blog', label: 'Blog', icon: RiArticleLine, href: '/blog' },
-    { id: 'contact', label: 'Contact', icon: BiEnvelope, href: '#contact' }
+    { id: 'social', label: 'Social', icon: RiShareLine, href: '/social' },
+    { id: 'blog', label: 'Blog', icon: RiArticleLine, href: '/blog' }
   ];
 
   // Navigation links for blog page with modern icons
@@ -85,6 +76,7 @@ const Navigation = ({ personalInfo }: NavigationProps) => {
     { id: 'home', label: 'Portfolio', icon: BiHomeAlt, href: '/' },
     { id: 'education', label: 'Education', icon: FaGraduationCap, href: '/education' },
     { id: 'donate', label: 'Donate', icon: TbBrain, href: '/donate' },
+    { id: 'social', label: 'Social', icon: RiShareLine, href: '/social' },
     { id: 'blog', label: 'All Posts', icon: BiNews, href: '/blog' },
     { id: 'ai-research', label: 'AI Research', icon: TbBrain, href: '/blog?category=AI%20Research' },
     { id: 'tutorials', label: 'Tutorials', icon: FaGraduationCap, href: '/blog?category=Tutorial' },

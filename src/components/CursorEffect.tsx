@@ -6,6 +6,7 @@ import { motion, useMotionValue, useSpring } from 'framer-motion';
 
 const CursorEffect = () => {
   const [isPointer, setIsPointer] = useState(false);
+  const [enabled, setEnabled] = useState(true);
   const cursorX = useMotionValue(-100);
   const cursorY = useMotionValue(-100);
 
@@ -14,6 +15,13 @@ const CursorEffect = () => {
   const cursorYSpring = useSpring(cursorY, springConfig);
 
   useEffect(() => {
+    // Disable on touch/coarse pointer devices (mobile/tablet)
+    const isCoarse = typeof window !== 'undefined' && matchMedia('(pointer: coarse)').matches;
+    if (isCoarse) {
+      setEnabled(false);
+      return;
+    }
+
     const moveCursor = (e: MouseEvent) => {
       cursorX.set(e.clientX - 150);
       cursorY.set(e.clientY - 150);
@@ -33,6 +41,8 @@ const CursorEffect = () => {
     window.addEventListener('mousemove', moveCursor);
     return () => window.removeEventListener('mousemove', moveCursor);
   }, [cursorX, cursorY]);
+
+  if (!enabled) return null;
 
   return (
     <>

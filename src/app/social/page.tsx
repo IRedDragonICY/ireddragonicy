@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import Navigation from '@/components/Navigation';
 import CursorEffect from '@/components/CursorEffect';
@@ -39,7 +39,7 @@ const socials: SocialItem[] = [
   {
     id: 'youtube',
     name: 'YouTube',
-    href: 'https://www.youtube.com/channel/UCb-5o4_6ci9QCW2dHgasLEg',
+    href: 'https://www.youtube.com/@Ndik',
     icon: FaYoutube,
     description: 'AI demos, research breakdowns, and development logs.',
     accent: '#FF0033',
@@ -401,6 +401,24 @@ const SectionHeader = ({ title }: { title: string }) => (
 export default function SocialPage() {
   const [query, setQuery] = useState('');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [xStats, setXStats] = useState<{ followers: number | null; following: number | null; posts: number | null; loading: boolean }>(
+    { followers: null, following: null, posts: null, loading: true },
+  );
+  const [threadsStats, setThreadsStats] = useState<{ followers: number | null; loading: boolean }>(
+    { followers: null, loading: true },
+  );
+  const [pinterestStats, setPinterestStats] = useState<{ followers: number | null; following: number | null; loading: boolean }>(
+    { followers: null, following: null, loading: true },
+  );
+  const [instagramStats, setInstagramStats] = useState<{ posts: number | null; followers: number | null; following: number | null; loading: boolean }>(
+    { posts: null, followers: null, following: null, loading: true },
+  );
+  const [instagramDevStats, setInstagramDevStats] = useState<{ posts: number | null; followers: number | null; following: number | null; loading: boolean }>(
+    { posts: null, followers: null, following: null, loading: true },
+  );
+  const [youtubeStats, setYoutubeStats] = useState<{ subscribers: number | null; videos: number | null; views: number | null; loading: boolean }>(
+    { subscribers: null, videos: null, views: null, loading: true },
+  );
 
   const lowerQ = query.toLowerCase();
   const filteredSocials = useMemo(() =>
@@ -427,6 +445,109 @@ export default function SocialPage() {
     } catch (e) {
       // no-op
     }
+  }, []);
+
+  useEffect(() => {
+    let aborted = false;
+    const controller = new AbortController();
+    (async () => {
+      try {
+        const res = await fetch(`/api/x-stats?u=ireddragonicy`, { cache: 'no-store', signal: controller.signal });
+        const data = await res.json();
+        if (aborted) return;
+        setXStats({ followers: data?.followers ?? null, following: data?.following ?? null, posts: data?.posts ?? null, loading: false });
+      } catch {
+        if (aborted) return;
+        setXStats({ followers: null, following: null, posts: null, loading: false });
+      }
+    })();
+    return () => { aborted = true; controller.abort(); };
+  }, []);
+
+  useEffect(() => {
+    let aborted = false;
+    const controller = new AbortController();
+    (async () => {
+      try {
+        const res = await fetch(`/api/threads-stats?u=ireddragonicy`, { cache: 'no-store', signal: controller.signal });
+        const data = await res.json();
+        if (aborted) return;
+        setThreadsStats({ followers: data?.followers ?? null, loading: false });
+      } catch {
+        if (aborted) return;
+        setThreadsStats({ followers: null, loading: false });
+      }
+    })();
+    return () => { aborted = true; controller.abort(); };
+  }, []);
+
+  useEffect(() => {
+    let aborted = false;
+    const controller = new AbortController();
+    (async () => {
+      try {
+        const res = await fetch(`/api/pinterest-stats?u=IRedDragonICY`, { cache: 'no-store', signal: controller.signal });
+        const data = await res.json();
+        if (aborted) return;
+        setPinterestStats({ followers: data?.followers ?? null, following: data?.following ?? null, loading: false });
+      } catch {
+        if (aborted) return;
+        setPinterestStats({ followers: null, following: null, loading: false });
+      }
+    })();
+    return () => { aborted = true; controller.abort(); };
+  }, []);
+
+  useEffect(() => {
+    let aborted = false;
+    const controller = new AbortController();
+    (async () => {
+      try {
+        const res = await fetch(`/api/instagram-stats?u=ireddragonicy`, { cache: 'no-store', signal: controller.signal });
+        const data = await res.json();
+        if (aborted) return;
+        setInstagramStats({ posts: data?.posts ?? null, followers: data?.followers ?? null, following: data?.following ?? null, loading: false });
+      } catch {
+        if (aborted) return;
+        setInstagramStats({ posts: null, followers: null, following: null, loading: false });
+      }
+    })();
+    return () => { aborted = true; controller.abort(); };
+  }, []);
+
+  useEffect(() => {
+    let aborted = false;
+    const controller = new AbortController();
+    (async () => {
+      try {
+        const res = await fetch(`/api/instagram-stats?u=ireddragonicy.code`, { cache: 'no-store', signal: controller.signal });
+        const data = await res.json();
+        if (aborted) return;
+        setInstagramDevStats({ posts: data?.posts ?? null, followers: data?.followers ?? null, following: data?.following ?? null, loading: false });
+      } catch {
+        if (aborted) return;
+        setInstagramDevStats({ posts: null, followers: null, following: null, loading: false });
+      }
+    })();
+    return () => { aborted = true; controller.abort(); };
+  }, []);
+
+  useEffect(() => {
+    let aborted = false;
+    const controller = new AbortController();
+    (async () => {
+      try {
+        // Prefer handle-based lookup; the API will also try channel/ fallback internally
+        const res = await fetch(`/api/youtube-stats?c=@Ndik`, { cache: 'no-store', signal: controller.signal });
+        const data = await res.json();
+        if (aborted) return;
+        setYoutubeStats({ subscribers: data?.subscribers ?? null, videos: data?.videos ?? null, views: data?.views ?? null, loading: false });
+      } catch {
+        if (aborted) return;
+        setYoutubeStats({ subscribers: null, videos: null, views: null, loading: false });
+      }
+    })();
+    return () => { aborted = true; controller.abort(); };
   }, []);
 
   return (
@@ -517,6 +638,81 @@ export default function SocialPage() {
                       <p className="mt-1 text-sm text-gray-300 line-clamp-2">
                         {item.description}
                       </p>
+
+                      {item.id === 'x' && (
+                        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs" aria-live="polite">
+                          <span className="px-2 py-1 rounded bg-white/5 text-gray-200 border border-white/10">
+                            Followers: {xStats.loading ? '…' : (xStats.followers !== null ? xStats.followers.toLocaleString('id-ID') : '—')}
+                          </span>
+                          <span className="px-2 py-1 rounded bg-white/5 text-gray-200 border border-white/10">
+                            Following: {xStats.loading ? '…' : (xStats.following !== null ? xStats.following.toLocaleString('id-ID') : '—')}
+                          </span>
+                          <span className="px-2 py-1 rounded bg-white/5 text-gray-200 border border-white/10">
+                            Posts: {xStats.loading ? '…' : (typeof (xStats as any).posts === 'number' && (xStats as any).posts !== null ? (xStats as any).posts.toLocaleString('id-ID') : '—')}
+                          </span>
+                        </div>
+                      )}
+
+                      {item.id === 'threads' && (
+                        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs" aria-live="polite">
+                          <span className="px-2 py-1 rounded bg-white/5 text-gray-200 border border-white/10">
+                            Followers: {threadsStats.loading ? '…' : (threadsStats.followers !== null ? threadsStats.followers.toLocaleString('id-ID') : '—')}
+                          </span>
+                        </div>
+                      )}
+
+                      {item.id === 'pinterest' && (
+                        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs" aria-live="polite">
+                          <span className="px-2 py-1 rounded bg-white/5 text-gray-200 border border-white/10">
+                            Followers: {pinterestStats.loading ? '…' : (pinterestStats.followers !== null ? pinterestStats.followers.toLocaleString('id-ID') : '—')}
+                          </span>
+                          <span className="px-2 py-1 rounded bg-white/5 text-gray-200 border border-white/10">
+                            Following: {pinterestStats.loading ? '…' : (pinterestStats.following !== null ? pinterestStats.following.toLocaleString('id-ID') : '—')}
+                          </span>
+                        </div>
+                      )}
+
+                      {item.id === 'instagram' && (
+                        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs" aria-live="polite">
+                          <span className="px-2 py-1 rounded bg-white/5 text-gray-200 border border-white/10">
+                            Posts: {instagramStats.loading ? '…' : (instagramStats.posts !== null ? instagramStats.posts.toLocaleString('id-ID') : '—')}
+                          </span>
+                          <span className="px-2 py-1 rounded bg-white/5 text-gray-200 border border-white/10">
+                            Followers: {instagramStats.loading ? '…' : (instagramStats.followers !== null ? instagramStats.followers.toLocaleString('id-ID') : '—')}
+                          </span>
+                          <span className="px-2 py-1 rounded bg-white/5 text-gray-200 border border-white/10">
+                            Following: {instagramStats.loading ? '…' : (instagramStats.following !== null ? instagramStats.following.toLocaleString('id-ID') : '—')}
+                          </span>
+                        </div>
+                      )}
+
+                      {item.id === 'instagram-dev' && (
+                        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs" aria-live="polite">
+                          <span className="px-2 py-1 rounded bg-white/5 text-gray-200 border border-white/10">
+                            Posts: {instagramDevStats.loading ? '…' : (instagramDevStats.posts !== null ? instagramDevStats.posts.toLocaleString('id-ID') : '—')}
+                          </span>
+                          <span className="px-2 py-1 rounded bg-white/5 text-gray-200 border border-white/10">
+                            Followers: {instagramDevStats.loading ? '…' : (instagramDevStats.followers !== null ? instagramDevStats.followers.toLocaleString('id-ID') : '—')}
+                          </span>
+                          <span className="px-2 py-1 rounded bg-white/5 text-gray-200 border border-white/10">
+                            Following: {instagramDevStats.loading ? '…' : (instagramDevStats.following !== null ? instagramDevStats.following.toLocaleString('id-ID') : '—')}
+                          </span>
+                        </div>
+                      )}
+
+                      {item.id === 'youtube' && (
+                        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs" aria-live="polite">
+                          <span className="px-2 py-1 rounded bg-white/5 text-gray-200 border border-white/10">
+                            Subscribers: {youtubeStats.loading ? '…' : (youtubeStats.subscribers !== null ? youtubeStats.subscribers.toLocaleString('id-ID') : '—')}
+                          </span>
+                          <span className="px-2 py-1 rounded bg-white/5 text-gray-200 border border-white/10">
+                            Videos: {youtubeStats.loading ? '…' : (youtubeStats.videos !== null ? youtubeStats.videos.toLocaleString('id-ID') : '—')}
+                          </span>
+                          <span className="px-2 py-1 rounded bg-white/5 text-gray-200 border border-white/10">
+                            Views: {youtubeStats.loading ? '…' : (youtubeStats.views !== null ? youtubeStats.views.toLocaleString('id-ID') : '—')}
+                          </span>
+                        </div>
+                      )}
 
                       <div className="mt-4 flex items-center gap-2 text-cyan-300/90">
                         <FiExternalLink className="text-base" />

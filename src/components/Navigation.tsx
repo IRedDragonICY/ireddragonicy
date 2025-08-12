@@ -71,16 +71,13 @@ const Navigation = ({ personalInfo }: NavigationProps) => {
     { id: 'blog', label: 'Blog', icon: RiArticleLine, href: '/blog' }
   ];
 
-  // Navigation links for blog page with modern icons
+  // Navigation links for blog page should mirror homepage order exactly
   const blogNavLinks = [
-    { id: 'home', label: 'Portfolio', icon: BiHomeAlt, href: '/' },
+    { id: 'home', label: 'Home', icon: BiHomeAlt, href: '/' },
     { id: 'education', label: 'Education', icon: FaGraduationCap, href: '/education' },
     { id: 'donate', label: 'Donate', icon: TbBrain, href: '/donate' },
     { id: 'social', label: 'Social', icon: RiShareLine, href: '/social' },
-    { id: 'blog', label: 'All Posts', icon: BiNews, href: '/blog' },
-    { id: 'ai-research', label: 'AI Research', icon: TbBrain, href: '/blog?category=AI%20Research' },
-    { id: 'tutorials', label: 'Tutorials', icon: FaGraduationCap, href: '/blog?category=Tutorial' },
-    { id: 'case-studies', label: 'Case Studies', icon: FaBriefcase, href: '/blog?category=Case%20Study' },
+    { id: 'blog', label: 'Blog', icon: RiArticleLine, href: '/blog' }
   ];
 
   const navLinks = isBlogPage ? blogNavLinks : homeNavLinks;
@@ -241,8 +238,8 @@ const Navigation = ({ personalInfo }: NavigationProps) => {
               </Link>
 
               {/* Desktop Navigation */}
-              <div className="hidden md:flex items-center gap-1 sm:gap-2 flex-nowrap overflow-x-auto no-scrollbar max-w-full">
-                {navLinks.map((link, index) => {
+              <div className="hidden md:flex items-center gap-1 sm:gap-2 flex-nowrap overflow-x-auto no-scrollbar max-w-full w-full justify-end">
+                {navLinks.filter(l => l.id !== 'donate').map((link, index) => {
                   const isHashLink = link.href.startsWith('#');
                   const effectiveHref = isHashLink ? `${isHomePage ? '' : '/'}${link.href}` : link.href;
                   const isExternal = effectiveHref.startsWith('http');
@@ -326,7 +323,53 @@ const Navigation = ({ personalInfo }: NavigationProps) => {
                   );
                 })}
 
-                {/* Removed AI Status Indicator per request */}
+                {/* Donate CTA pinned to the far right */}
+                {navLinks.find(l => l.id === 'donate') && (() => {
+                  const link = navLinks.find(l => l.id === 'donate')!;
+                  const isHashLink = link.href.startsWith('#');
+                  const effectiveHref = isHashLink ? `${isHomePage ? '' : '/'}${link.href}` : link.href;
+                  const isExternal = effectiveHref.startsWith('http');
+                  const isActive = isHashLink
+                    ? (!isBlogPage && isHomePage && activeSection === link.id)
+                    : (pathname === effectiveHref || (effectiveHref !== '/' && pathname?.startsWith(effectiveHref)) || (isBlogPage && link.id === 'blog' && pathname === '/blog'));
+                  const Icon = link.icon;
+                  const content = (
+                    <span className="relative flex items-center gap-2">
+                      <Icon className="text-base" />
+                      <span className="font-mono">&lt;{link.label}/&gt;</span>
+                    </span>
+                  );
+                  return (
+                    <div className="ml-2 sm:ml-3">
+                      {isExternal ? (
+                        <a
+                          href={effectiveHref}
+                          onClick={() => handleNavClick(link.id)}
+                          className={`
+                            relative px-3 sm:px-4 py-2 text-sm font-semibold tracking-wider transition-all duration-300 block whitespace-nowrap rounded-lg
+                            border ${isActive ? 'text-cyan-300 border-cyan-400/50 bg-cyan-400/10' : 'text-cyan-400 border-cyan-400/30 hover:bg-cyan-400/10'}
+                            shadow-[0_0_20px_rgba(34,211,238,0.10)]
+                          `}
+                          target="_blank" rel="noopener noreferrer"
+                        >
+                          {content}
+                        </a>
+                      ) : (
+                        <Link
+                          href={effectiveHref}
+                          onClick={() => handleNavClick(link.id)}
+                          className={`
+                            relative px-3 sm:px-4 py-2 text-sm font-semibold tracking-wider transition-all duration-300 block whitespace-nowrap rounded-lg
+                            border ${isActive ? 'text-cyan-300 border-cyan-400/50 bg-cyan-400/10' : 'text-cyan-400 border-cyan-400/30 hover:bg-cyan-400/10'}
+                            shadow-[0_0_20px_rgba(34,211,238,0.10)]
+                          `}
+                        >
+                          {content}
+                        </Link>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Mobile Menu Button */}

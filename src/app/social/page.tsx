@@ -294,7 +294,8 @@ type GameItem = {
   server: string;
   uid?: string;
   ign?: string;
-  icon: IconType;
+  icon?: IconType;
+  videoSrc?: string;
   accent: string;
   gradientFrom: string;
   gradientTo: string;
@@ -316,7 +317,7 @@ const games: GameItem[] = [
     name: 'Mobile Legends',
     server: '-',
     uid: '173772595 (2886)',
-    icon: FaGamepad,
+    videoSrc: '/icons/mobile_legends.webm',
     accent: '#1DA1F2',
     gradientFrom: '#1DA1F2',
     gradientTo: '#0E7490',
@@ -324,7 +325,7 @@ const games: GameItem[] = [
   {
     id: 'arknights',
     name: 'Arknights',
-    server: '-',
+    server: 'Global',
     uid: '43207056',
     icon: FaGamepad,
     accent: '#64748B',
@@ -334,7 +335,7 @@ const games: GameItem[] = [
   {
     id: 'azurlane',
     name: 'Azur Lane',
-    server: '-',
+    server: 'Global',
     uid: '71763639',
     icon: FaGamepad,
     accent: '#38BDF8',
@@ -346,7 +347,7 @@ const games: GameItem[] = [
     name: 'Honkai: Star Rail',
     server: 'Asia',
     uid: '800754040',
-    icon: FaGamepad,
+    videoSrc: '/icons/honkai_star_rail.webm',
     accent: '#A855F7',
     gradientFrom: '#7C3AED',
     gradientTo: '#A855F7',
@@ -370,6 +371,16 @@ const games: GameItem[] = [
     accent: '#10B981',
     gradientFrom: '#10B981',
     gradientTo: '#059669',
+  },
+  {
+    id: 'wuthering-waves',
+    name: 'Wuthering Waves',
+    server: 'SEA',
+    uid: '900652876',
+    videoSrc: '/icons/wuthering_waves.webm',
+    accent: '#22D3EE',
+    gradientFrom: '#22D3EE',
+    gradientTo: '#0EA5E9',
   },
 ];
 
@@ -550,10 +561,22 @@ export default function SocialPage() {
 
                 <div className="relative flex items-start gap-4">
                   <div
-                    className="shrink-0 p-3 rounded-xl border"
+                    className={`shrink-0 rounded-xl border ${g.videoSrc ? 'p-0 w-12 h-12 overflow-hidden' : 'p-3'}`}
                     style={{ background: `linear-gradient(145deg, ${g.gradientFrom}26, ${g.gradientTo}26)`, borderColor: `${g.accent}33` }}
                   >
-                    <g.icon className="text-2xl" color={g.accent} />
+                    {g.videoSrc ? (
+                      <video
+                        src={g.videoSrc}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        preload="auto"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : g.icon ? (
+                      <g.icon className="text-2xl" color={g.accent} />
+                    ) : null}
                   </div>
                   <div className="min-w-0">
                     <h3 className="text-lg md:text-xl font-semibold text-white">{g.name}</h3>

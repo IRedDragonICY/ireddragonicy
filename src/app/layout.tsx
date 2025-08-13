@@ -24,6 +24,9 @@ export const metadata: Metadata = {
   },
   description: SITE_DESCRIPTION,
   applicationName: SITE_NAME,
+  verification: {
+    google: "SeU7j1p_RghwijQK39HcGyU9L5su7-xhodHrPXhE2Xs",
+  },
   keywords: [
     "IRedDragonICY",
     "Mohammad Farid Hendianto",

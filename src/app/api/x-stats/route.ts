@@ -155,8 +155,7 @@ export async function GET(req: Request) {
     const res = NextResponse.json(stats, {
       status: ok ? 200 : 502,
     });
-    // Avoid returning stale data (user requested nitter-only fresh values)
-    res.headers.set('Cache-Control', 'no-store');
+    res.headers.set('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
     return res;
   } catch (err: any) {
     const res = NextResponse.json(

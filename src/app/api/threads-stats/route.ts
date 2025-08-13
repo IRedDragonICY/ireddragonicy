@@ -31,26 +31,56 @@ function parseCompactNumber(input: string): number | null {
 }
 
 function extractFollowers(text: string): number | null {
-  // Match patterns like "1,288 followers" or title="1,288" followers
-  const m = text.match(/(\d[\d\s\.,]*?)\s*followers(?!\w)/i);
-  if (m) {
-    const num = parseCompactNumber(m[1]);
-    if (typeof num === 'number') return num;
+  // Normalize exotic spaces and bullets
+  const normalized = text
+    .replace(/[\u00A0\u202F\u2007\u2009\u200A\u200B\u2060]/g, ' ')
+    .replace(/[•·]/g, ' ');
+
+  // Visible labels (EN + ID)
+  const labelFirst = normalized.match(/\bfollowers\b\s*[:\-]?\s*(\d[\d\s\.,kmb]*)/i) || normalized.match(/\bpengikut\b\s*[:\-]?\s*(\d[\d\s\.,kmb]*)/i);
+  if (labelFirst) {
+    const n = parseCompactNumber(labelFirst[1]);
+    if (typeof n === 'number') return n;
   }
-  // Also try "followers\":\"1,288\"" if present in JSON blobs
-  const m2 = text.match(/followers\"?\s*[:=]\s*\"?(\d[\d\s\.,]*)/i);
-  if (m2) {
-    const num = parseCompactNumber(m2[1]);
-    if (typeof num === 'number') return num;
+  const numberFirst = normalized.match(/(\d[\d\s\.,kmb]*)\s*(followers|pengikut)(?!\w)/i);
+  if (numberFirst) {
+    const n = parseCompactNumber(numberFirst[1]);
+    if (typeof n === 'number') return n;
   }
+
+  // JSON-like keys
+  const jsonKeys = [
+    /"followers_count"\s*:\s*"?(\d[\d\s\.,kmb]*)"?/i,
+    /"followersCount"\s*:\s*"?(\d[\d\s\.,kmb]*)"?/i,
+    /"follower_count"\s*:\s*"?(\d[\d\s\.,kmb]*)"?/i,
+    /\bfollowers\b\s*[:=]\s*"?(\d[\d\s\.,kmb]*)"?/i,
+  ];
+  for (const re of jsonKeys) {
+    const m = normalized.match(re);
+    if (m) {
+      const n = parseCompactNumber(m[1]);
+      if (typeof n === 'number') return n;
+    }
+  }
+
+  // og:description style
+  const og = normalized.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["'][^>]*>/i);
+  if (og && og[1]) {
+    const n1 = extractFollowers(og[1]);
+    if (typeof n1 === 'number') return n1;
+  }
+
   return null;
 }
 
-async function fetchText(url: string): Promise<string> {
+const defaultUA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
+const botUA = 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)';
+
+async function fetchText(url: string, userAgent: string = defaultUA): Promise<string> {
   const res = await fetch(url, {
     method: 'GET',
     headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+      'User-Agent': userAgent,
       'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
       'Accept-Language': 'en-US,en;q=0.9',
       'Cache-Control': 'no-cache',
@@ -65,35 +95,87 @@ async function fetchText(url: string): Promise<string> {
   return res.text();
 }
 
+async function fetchTextWithRetry(url: string, userAgents: string[] = [defaultUA, botUA], attempts: number = 4): Promise<string> {
+  let error: any;
+  // round-robin UA per attempt
+  for (let i = 0; i < attempts; i++) {
+    const ua = userAgents[i % userAgents.length];
+    try {
+      return await fetchText(url, ua);
+    } catch (e: any) {
+      error = e;
+      const backoffMs = 300 * Math.pow(2, i); // 300, 600, 1200, 2400
+      await new Promise(r => setTimeout(r, backoffMs));
+    }
+  }
+  throw error || new Error(`Failed to fetch after ${attempts} attempts: ${url}`);
+}
+
 async function crawlThreadsStats(username: string): Promise<ThreadsStats> {
   const nowIso = new Date().toISOString();
 
-  // 1) Try text-mode via r.jina.ai for threads.net
-  try {
-    const textUrl = `https://r.jina.ai/http://www.threads.net/@${username}`;
-    const text = await fetchText(textUrl);
-    const followers = extractFollowers(text);
-    if (followers !== null) {
-      return { username, followers, source: 'threads-text', updatedAt: nowIso };
-    }
-  } catch {}
+  // Candidate URLs (text-mode proxies + direct) with language hints
+  const candidates = [
+    `https://r.jina.ai/http://www.threads.net/@${username}`,
+    `https://r.jina.ai/http://www.threads.net/@${username}?hl=en`,
+    `https://r.jina.ai/http://threads.net/@${username}`,
+    `https://r.jina.ai/http://threads.net/@${username}?hl=en`,
+    `https://www.threads.net/@${username}`,
+    `https://www.threads.net/@${username}?hl=en`,
+  ];
 
-  // 1b) Alternative domain path
-  try {
-    const textUrl2 = `https://r.jina.ai/http://threads.net/@${username}`;
-    const text2 = await fetchText(textUrl2);
-    const followers2 = extractFollowers(text2);
-    if (followers2 !== null) {
-      return { username, followers: followers2, source: 'threads-text', updatedAt: nowIso };
-    }
-  } catch {}
+  for (const url of candidates) {
+    try {
+      const text = await fetchTextWithRetry(url, [defaultUA, botUA]);
+      const followers = extractFollowers(text);
+      if (followers !== null) {
+        const source: ThreadsStats['source'] = url.includes('r.jina.ai') ? 'threads-text' : 'threads';
+        return { username, followers, source, updatedAt: nowIso };
+      }
+    } catch {}
+  }
 
-  // 2) Direct HTML fetch
+  // Optional headless fallback: read og:description on rendered page (if allowed)
   try {
-    const html = await fetchText(`https://www.threads.net/@${username}`);
-    const followers = extractFollowers(html);
-    if (followers !== null) {
-      return { username, followers, source: 'threads', updatedAt: nowIso };
+    if (process.env.ALLOW_PUPPETEER_THREADS === '1') {
+      const isVercel = Boolean(process.env.VERCEL || process.env.VERCEL_ENV);
+      let puppeteer: any;
+      let browser: any;
+      let launchOptions: any = { headless: true };
+
+      if (isVercel) {
+        const chromium = (await import('@sparticuz/chromium')).default;
+        chromium.setHeadlessMode = true;
+        chromium.setGraphicsMode = false;
+        puppeteer = await import('puppeteer-core');
+        const p: any = (puppeteer as any).default || puppeteer;
+        launchOptions = {
+          ...launchOptions,
+          args: [...chromium.args, '--lang=en-US,en'],
+          executablePath: await chromium.executablePath(),
+          defaultViewport: { width: 1200, height: 900 },
+        };
+        puppeteer = p;
+      } else {
+        puppeteer = await import('puppeteer');
+        puppeteer = (puppeteer as any).default || puppeteer;
+      }
+
+      browser = await (puppeteer as any).launch(launchOptions);
+      const page = await browser.newPage();
+      await page.setUserAgent(defaultUA);
+      await page.setExtraHTTPHeaders({ 'Accept-Language': 'en-US,en;q=0.9' });
+      await page.goto(`https://www.threads.net/@${username}?hl=en`, { waitUntil: 'domcontentloaded', timeout: 45000 });
+      // Try to read meta first; Threads often blocks DOM for anon
+      const meta = await page.evaluate(() => {
+        const m = document.querySelector('meta[property="og:description"]') as HTMLMetaElement | null;
+        return m?.content || '';
+      });
+      await browser.close();
+      const followers = extractFollowers(meta || '');
+      if (followers !== null) {
+        return { username, followers, source: 'threads', updatedAt: nowIso };
+      }
     }
   } catch {}
 
@@ -107,7 +189,7 @@ export async function GET(req: Request) {
     const stats = await crawlThreadsStats(username);
     const ok = stats.followers !== null;
     const res = NextResponse.json(stats, { status: ok ? 200 : 502 });
-    res.headers.set('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=86400');
+    res.headers.set('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
     return res;
   } catch (err: any) {
     const res = NextResponse.json(

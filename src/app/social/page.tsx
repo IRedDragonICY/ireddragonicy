@@ -57,6 +57,16 @@ const socials: SocialItem[] = [
     gradientTo: '#0077FF',
   },
   {
+    id: 'strava',
+    name: 'Strava',
+    href: 'https://www.strava.com/athletes/164295314',
+    icon: TbWorld,
+    description: 'Endurance logs, monthly stats, and activity tracking.',
+    accent: '#FC4C02',
+    gradientFrom: '#FF7A3D',
+    gradientTo: '#FC4C02',
+  },
+  {
     id: 'instagram',
     name: 'Instagram',
     href: 'https://www.instagram.com/ireddragonicy',
@@ -419,6 +429,26 @@ export default function SocialPage() {
   const [youtubeStats, setYoutubeStats] = useState<{ subscribers: number | null; videos: number | null; views: number | null; loading: boolean }>(
     { subscribers: null, videos: null, views: null, loading: true },
   );
+  const [blueskyStats, setBlueskyStats] = useState<{ followers: number | null; following: number | null; posts: number | null; loading: boolean }>(
+    { followers: null, following: null, posts: null, loading: true },
+  );
+  const [tiktokStats, setTiktokStats] = useState<{ followers: number | null; following: number | null; likes: number | null; loading: boolean }>(
+    { followers: null, following: null, likes: null, loading: true },
+  );
+  const [hoyolabStats, setHoyolabStats] = useState<{
+    posts: number | null;
+    following: number | null;
+    followers: number | null;
+    likes: number | null;
+    loading: boolean;
+  }>({ posts: null, following: null, followers: null, likes: null, loading: true });
+  const [stravaStats, setStravaStats] = useState<{
+    followers: number | null;
+    following: number | null;
+    distanceKm: number | null;
+    movingTime: string | null;
+    loading: boolean;
+  }>({ followers: null, following: null, distanceKm: null, movingTime: null, loading: true });
 
   const lowerQ = query.toLowerCase();
   const filteredSocials = useMemo(() =>
@@ -447,18 +477,44 @@ export default function SocialPage() {
     }
   }, []);
 
+  // Lightweight client cache to keep last known values visible while refreshing
+  function loadCached<T>(key: string): T | null {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return null;
+      return JSON.parse(raw) as T;
+    } catch {
+      return null;
+    }
+  }
+  function saveCached(key: string, value: unknown) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch {}
+  }
+
   useEffect(() => {
     let aborted = false;
     const controller = new AbortController();
     (async () => {
+      // hydrate from cache first
       try {
-        const res = await fetch(`/api/x-stats?u=ireddragonicy`, { cache: 'no-store', signal: controller.signal });
+        const cached = loadCached<any>('stat:x:ireddragonicy');
+        if (!aborted && cached) {
+          setXStats({ followers: cached?.followers ?? null, following: cached?.following ?? null, posts: cached?.posts ?? null, loading: false });
+        }
+      } catch {}
+      try {
+        const res = await fetch(`/api/x-stats?u=ireddragonicy`, { signal: controller.signal });
         const data = await res.json();
         if (aborted) return;
-        setXStats({ followers: data?.followers ?? null, following: data?.following ?? null, posts: data?.posts ?? null, loading: false });
+        setXStats(prev => ({ followers: data?.followers ?? prev.followers ?? null, following: data?.following ?? prev.following ?? null, posts: data?.posts ?? (prev as any).posts ?? null, loading: false }));
+        if (data && (data.followers !== null || data.following !== null || typeof data.posts === 'number')) {
+          saveCached('stat:x:ireddragonicy', data);
+        }
       } catch {
         if (aborted) return;
-        setXStats({ followers: null, following: null, posts: null, loading: false });
+        setXStats(prev => ({ ...prev, loading: false }));
       }
     })();
     return () => { aborted = true; controller.abort(); };
@@ -469,13 +525,34 @@ export default function SocialPage() {
     const controller = new AbortController();
     (async () => {
       try {
-        const res = await fetch(`/api/threads-stats?u=ireddragonicy`, { cache: 'no-store', signal: controller.signal });
+        const cached = loadCached<any>('stat:strava:164295314');
+        if (!aborted && cached) {
+          setStravaStats({
+            followers: cached?.followers ?? null,
+            following: cached?.following ?? null,
+            distanceKm: cached?.distanceKm ?? null,
+            movingTime: cached?.movingTime ?? null,
+            loading: false,
+          });
+        }
+      } catch {}
+      try {
+        const res = await fetch(`/api/strava-stats?id=164295314`, { signal: controller.signal });
         const data = await res.json();
         if (aborted) return;
-        setThreadsStats({ followers: data?.followers ?? null, loading: false });
+        setStravaStats({
+          followers: data?.followers ?? null,
+          following: data?.following ?? null,
+          distanceKm: data?.distanceKm ?? null,
+          movingTime: data?.movingTime ?? null,
+          loading: false,
+        });
+        if (data && ([data.followers, data.following, data.distanceKm, data.movingTime].some((v: any) => v !== null))) {
+          saveCached('stat:strava:164295314', data);
+        }
       } catch {
         if (aborted) return;
-        setThreadsStats({ followers: null, loading: false });
+        setStravaStats(prev => ({ ...prev, loading: false }));
       }
     })();
     return () => { aborted = true; controller.abort(); };
@@ -486,13 +563,22 @@ export default function SocialPage() {
     const controller = new AbortController();
     (async () => {
       try {
-        const res = await fetch(`/api/pinterest-stats?u=IRedDragonICY`, { cache: 'no-store', signal: controller.signal });
+        const cached = loadCached<any>('stat:bluesky:ireddragonicy.bsky.social');
+        if (!aborted && cached) {
+          setBlueskyStats({ followers: cached?.followers ?? null, following: cached?.following ?? null, posts: cached?.posts ?? null, loading: false });
+        }
+      } catch {}
+      try {
+        const res = await fetch(`/api/bluesky-stats?u=ireddragonicy.bsky.social`, { signal: controller.signal });
         const data = await res.json();
         if (aborted) return;
-        setPinterestStats({ followers: data?.followers ?? null, following: data?.following ?? null, loading: false });
+        setBlueskyStats(prev => ({ followers: data?.followers ?? prev.followers ?? null, following: data?.following ?? prev.following ?? null, posts: data?.posts ?? (prev as any).posts ?? null, loading: false }));
+        if (data && (data.followers !== null || data.following !== null || data.posts !== null)) {
+          saveCached('stat:bluesky:ireddragonicy.bsky.social', data);
+        }
       } catch {
         if (aborted) return;
-        setPinterestStats({ followers: null, following: null, loading: false });
+        setBlueskyStats(prev => ({ ...prev, loading: false }));
       }
     })();
     return () => { aborted = true; controller.abort(); };
@@ -503,13 +589,22 @@ export default function SocialPage() {
     const controller = new AbortController();
     (async () => {
       try {
-        const res = await fetch(`/api/instagram-stats?u=ireddragonicy`, { cache: 'no-store', signal: controller.signal });
+        const cached = loadCached<any>('stat:tiktok:ireddragonicy');
+        if (!aborted && cached) {
+          setTiktokStats({ followers: cached?.followers ?? null, following: cached?.following ?? null, likes: cached?.likes ?? null, loading: false });
+        }
+      } catch {}
+      try {
+        const res = await fetch(`/api/tiktok-stats?u=ireddragonicy`, { signal: controller.signal });
         const data = await res.json();
         if (aborted) return;
-        setInstagramStats({ posts: data?.posts ?? null, followers: data?.followers ?? null, following: data?.following ?? null, loading: false });
+        setTiktokStats(prev => ({ followers: data?.followers ?? prev.followers ?? null, following: data?.following ?? prev.following ?? null, likes: data?.likes ?? (prev as any).likes ?? null, loading: false }));
+        if (data && (data.followers !== null || data.following !== null || data.likes !== null)) {
+          saveCached('stat:tiktok:ireddragonicy', data);
+        }
       } catch {
         if (aborted) return;
-        setInstagramStats({ posts: null, followers: null, following: null, loading: false });
+        setTiktokStats(prev => ({ ...prev, loading: false }));
       }
     })();
     return () => { aborted = true; controller.abort(); };
@@ -520,13 +615,34 @@ export default function SocialPage() {
     const controller = new AbortController();
     (async () => {
       try {
-        const res = await fetch(`/api/instagram-stats?u=ireddragonicy.code`, { cache: 'no-store', signal: controller.signal });
+        const cached = loadCached<any>('stat:hoyolab:10849915');
+        if (!aborted && cached) {
+          setHoyolabStats({
+            posts: cached?.posts ?? null,
+            following: cached?.following ?? null,
+            followers: cached?.followers ?? null,
+            likes: cached?.likes ?? null,
+            loading: false,
+          });
+        }
+      } catch {}
+      try {
+        const res = await fetch(`/api/hoyolab-stats?id=10849915`, { signal: controller.signal });
         const data = await res.json();
         if (aborted) return;
-        setInstagramDevStats({ posts: data?.posts ?? null, followers: data?.followers ?? null, following: data?.following ?? null, loading: false });
+        setHoyolabStats({
+          posts: data?.posts ?? null,
+          following: data?.following ?? null,
+          followers: data?.followers ?? null,
+          likes: data?.likes ?? null,
+          loading: false,
+        });
+        if (data && ([data.posts, data.following, data.followers, data.likes].some((v: any) => v !== null))) {
+          saveCached('stat:hoyolab:10849915', data);
+        }
       } catch {
         if (aborted) return;
-        setInstagramDevStats({ posts: null, followers: null, following: null, loading: false });
+        setHoyolabStats(prev => ({ ...prev, loading: false }));
       }
     })();
     return () => { aborted = true; controller.abort(); };
@@ -536,15 +652,128 @@ export default function SocialPage() {
     let aborted = false;
     const controller = new AbortController();
     (async () => {
+      try {
+        const cached = loadCached<any>('stat:threads:ireddragonicy');
+        if (!aborted && cached) {
+          setThreadsStats({ followers: cached?.followers ?? null, loading: false });
+        }
+      } catch {}
+      try {
+        const res = await fetch(`/api/threads-stats?u=ireddragonicy`, { signal: controller.signal });
+        const data = await res.json();
+        if (aborted) return;
+        setThreadsStats(prev => ({ followers: data?.followers ?? prev.followers ?? null, loading: false }));
+        if (data && data.followers !== null) {
+          saveCached('stat:threads:ireddragonicy', data);
+        }
+      } catch {
+        if (aborted) return;
+        setThreadsStats(prev => ({ ...prev, loading: false }));
+      }
+    })();
+    return () => { aborted = true; controller.abort(); };
+  }, []);
+
+  useEffect(() => {
+    let aborted = false;
+    const controller = new AbortController();
+    (async () => {
+      try {
+        const cached = loadCached<any>('stat:pinterest:IRedDragonICY');
+        if (!aborted && cached) {
+          setPinterestStats({ followers: cached?.followers ?? null, following: cached?.following ?? null, loading: false });
+        }
+      } catch {}
+      try {
+        const res = await fetch(`/api/pinterest-stats?u=IRedDragonICY`, { signal: controller.signal });
+        const data = await res.json();
+        if (aborted) return;
+        setPinterestStats(prev => ({ followers: data?.followers ?? prev.followers ?? null, following: data?.following ?? prev.following ?? null, loading: false }));
+        if (data && (data.followers !== null || data.following !== null)) {
+          saveCached('stat:pinterest:IRedDragonICY', data);
+        }
+      } catch {
+        if (aborted) return;
+        setPinterestStats(prev => ({ ...prev, loading: false }));
+      }
+    })();
+    return () => { aborted = true; controller.abort(); };
+  }, []);
+
+  useEffect(() => {
+    let aborted = false;
+    const controller = new AbortController();
+    (async () => {
+      try {
+        const cached = loadCached<any>('stat:instagram:ireddragonicy');
+        if (!aborted && cached) {
+          setInstagramStats({ posts: cached?.posts ?? null, followers: cached?.followers ?? null, following: cached?.following ?? null, loading: false });
+        }
+      } catch {}
+      try {
+        const res = await fetch(`/api/instagram-stats?u=ireddragonicy`, { signal: controller.signal });
+        const data = await res.json();
+        if (aborted) return;
+        setInstagramStats(prev => ({ posts: data?.posts ?? prev.posts ?? null, followers: data?.followers ?? prev.followers ?? null, following: data?.following ?? prev.following ?? null, loading: false }));
+        if (data && ([data.posts, data.followers, data.following].some((v: any) => v !== null))) {
+          saveCached('stat:instagram:ireddragonicy', data);
+        }
+      } catch {
+        if (aborted) return;
+        setInstagramStats(prev => ({ ...prev, loading: false }));
+      }
+    })();
+    return () => { aborted = true; controller.abort(); };
+  }, []);
+
+  useEffect(() => {
+    let aborted = false;
+    const controller = new AbortController();
+    (async () => {
+      try {
+        const cached = loadCached<any>('stat:instagram:ireddragonicy.code');
+        if (!aborted && cached) {
+          setInstagramDevStats({ posts: cached?.posts ?? null, followers: cached?.followers ?? null, following: cached?.following ?? null, loading: false });
+        }
+      } catch {}
+      try {
+        const res = await fetch(`/api/instagram-stats?u=ireddragonicy.code`, { signal: controller.signal });
+        const data = await res.json();
+        if (aborted) return;
+        setInstagramDevStats(prev => ({ posts: data?.posts ?? prev.posts ?? null, followers: data?.followers ?? prev.followers ?? null, following: data?.following ?? prev.following ?? null, loading: false }));
+        if (data && ([data.posts, data.followers, data.following].some((v: any) => v !== null))) {
+          saveCached('stat:instagram:ireddragonicy.code', data);
+        }
+      } catch {
+        if (aborted) return;
+        setInstagramDevStats(prev => ({ ...prev, loading: false }));
+      }
+    })();
+    return () => { aborted = true; controller.abort(); };
+  }, []);
+
+  useEffect(() => {
+    let aborted = false;
+    const controller = new AbortController();
+    (async () => {
+      try {
+        const cached = loadCached<any>('stat:youtube:@Ndik');
+        if (!aborted && cached) {
+          setYoutubeStats({ subscribers: cached?.subscribers ?? null, videos: cached?.videos ?? null, views: cached?.views ?? null, loading: false });
+        }
+      } catch {}
       try {
         // Prefer handle-based lookup; the API will also try channel/ fallback internally
-        const res = await fetch(`/api/youtube-stats?c=@Ndik`, { cache: 'no-store', signal: controller.signal });
+        const res = await fetch(`/api/youtube-stats?c=@Ndik`, { signal: controller.signal });
         const data = await res.json();
         if (aborted) return;
-        setYoutubeStats({ subscribers: data?.subscribers ?? null, videos: data?.videos ?? null, views: data?.views ?? null, loading: false });
+        setYoutubeStats(prev => ({ subscribers: data?.subscribers ?? prev.subscribers ?? null, videos: data?.videos ?? prev.videos ?? null, views: data?.views ?? prev.views ?? null, loading: false }));
+        if (data && ([data.subscribers, data.videos, data.views].some((v: any) => v !== null))) {
+          saveCached('stat:youtube:@Ndik', data);
+        }
       } catch {
         if (aborted) return;
-        setYoutubeStats({ subscribers: null, videos: null, views: null, loading: false });
+        setYoutubeStats(prev => ({ ...prev, loading: false }));
       }
     })();
     return () => { aborted = true; controller.abort(); };
@@ -700,6 +929,34 @@ export default function SocialPage() {
                         </div>
                       )}
 
+                      {item.id === 'tiktok' && (
+                        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs" aria-live="polite">
+                          <span className="px-2 py-1 rounded bg-white/5 text-gray-200 border border-white/10">
+                            Followers: {tiktokStats.loading ? '…' : (tiktokStats.followers !== null ? tiktokStats.followers.toLocaleString('id-ID') : '—')}
+                          </span>
+                          <span className="px-2 py-1 rounded bg-white/5 text-gray-200 border border-white/10">
+                            Following: {tiktokStats.loading ? '…' : (tiktokStats.following !== null ? tiktokStats.following.toLocaleString('id-ID') : '—')}
+                          </span>
+                          <span className="px-2 py-1 rounded bg-white/5 text-gray-200 border border-white/10">
+                            Likes: {tiktokStats.loading ? '…' : (tiktokStats.likes !== null ? tiktokStats.likes.toLocaleString('id-ID') : '—')}
+                          </span>
+                        </div>
+                      )}
+
+                      {item.id === 'bluesky' && (
+                        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs" aria-live="polite">
+                          <span className="px-2 py-1 rounded bg-white/5 text-gray-200 border border-white/10">
+                            Followers: {blueskyStats.loading ? '…' : (blueskyStats.followers !== null ? blueskyStats.followers.toLocaleString('id-ID') : '—')}
+                          </span>
+                          <span className="px-2 py-1 rounded bg-white/5 text-gray-200 border border-white/10">
+                            Following: {blueskyStats.loading ? '…' : (blueskyStats.following !== null ? blueskyStats.following.toLocaleString('id-ID') : '—')}
+                          </span>
+                          <span className="px-2 py-1 rounded bg-white/5 text-gray-200 border border-white/10">
+                            Posts: {blueskyStats.loading ? '…' : (blueskyStats.posts !== null ? blueskyStats.posts.toLocaleString('id-ID') : '—')}
+                          </span>
+                        </div>
+                      )}
+
                       {item.id === 'youtube' && (
                         <div className="mt-3 flex flex-wrap items-center gap-2 text-xs" aria-live="polite">
                           <span className="px-2 py-1 rounded bg-white/5 text-gray-200 border border-white/10">
@@ -710,6 +967,40 @@ export default function SocialPage() {
                           </span>
                           <span className="px-2 py-1 rounded bg-white/5 text-gray-200 border border-white/10">
                             Views: {youtubeStats.loading ? '…' : (youtubeStats.views !== null ? youtubeStats.views.toLocaleString('id-ID') : '—')}
+                          </span>
+                        </div>
+                      )}
+
+                      {item.id === 'hoyolab' && (
+                        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs" aria-live="polite">
+                          <span className="px-2 py-1 rounded bg-white/5 text-gray-200 border border-white/10">
+                            Posts: {hoyolabStats.loading ? '…' : (hoyolabStats.posts !== null ? hoyolabStats.posts.toLocaleString('id-ID') : '—')}
+                          </span>
+                          <span className="px-2 py-1 rounded bg-white/5 text-gray-200 border border-white/10">
+                            Following: {hoyolabStats.loading ? '…' : (hoyolabStats.following !== null ? hoyolabStats.following.toLocaleString('id-ID') : '—')}
+                          </span>
+                          <span className="px-2 py-1 rounded bg-white/5 text-gray-200 border border-white/10">
+                            Followers: {hoyolabStats.loading ? '…' : (hoyolabStats.followers !== null ? hoyolabStats.followers.toLocaleString('id-ID') : '—')}
+                          </span>
+                          <span className="px-2 py-1 rounded bg-white/5 text-gray-200 border border-white/10">
+                            Likes: {hoyolabStats.loading ? '…' : (hoyolabStats.likes !== null ? hoyolabStats.likes.toLocaleString('id-ID') : '—')}
+                          </span>
+                        </div>
+                      )}
+
+                      {item.id === 'strava' && (
+                        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs" aria-live="polite">
+                          <span className="px-2 py-1 rounded bg-white/5 text-gray-200 border border-white/10">
+                            Followers: {stravaStats.loading ? '…' : (stravaStats.followers !== null ? stravaStats.followers.toLocaleString('id-ID') : '—')}
+                          </span>
+                          <span className="px-2 py-1 rounded bg-white/5 text-gray-200 border border-white/10">
+                            Following: {stravaStats.loading ? '…' : (stravaStats.following !== null ? stravaStats.following.toLocaleString('id-ID') : '—')}
+                          </span>
+                          <span className="px-2 py-1 rounded bg-white/5 text-gray-200 border border-white/10">
+                            Distance (month): {stravaStats.loading ? '…' : (stravaStats.distanceKm !== null ? `${stravaStats.distanceKm.toLocaleString('id-ID')} km` : '—')}
+                          </span>
+                          <span className="px-2 py-1 rounded bg-white/5 text-gray-200 border border-white/10">
+                            Moving Time (month): {stravaStats.loading ? '…' : (stravaStats.movingTime ?? '—')}
                           </span>
                         </div>
                       )}

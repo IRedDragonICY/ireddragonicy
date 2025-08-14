@@ -61,7 +61,7 @@ const BiosSetup: React.FC<BiosSetupProps> = ({ onExit }) => {
   const [tRCD, setTRCD] = useState<number>(38);
   const [tRP, setTRP] = useState<number>(38);
   const [tRAS, setTRAS] = useState<number>(96);
-  const [fanProfile, setFanProfile] = useState<'Silent' | 'Balanced' | 'Performance' | 'Full Speed'>('Balanced');
+  const [fanProfile, setFanProfile] = useState<'Silent' | 'Balanced' | 'Performance' | 'Full Speed' | 'Custom'>('Balanced');
   const [ecoMode, setEcoMode] = useState<boolean>(false);
   const [erpReady, setErpReady] = useState<boolean>(false);
   const [globalCState, setGlobalCState] = useState<'Auto' | 'Enabled' | 'Disabled'>('Auto');

@@ -38,6 +38,7 @@ export async function GET(req: Request) {
     '/api/strava-stats?id=164295314',
     '/api/x-stats?u=ireddragonicy',
     '/api/tiktok-stats?u=ireddragonicy',
+    '/api/pixiv-assets?user=63934020',
   ];
 
   const startAll = Date.now();

@@ -7,6 +7,7 @@ export interface TerminalProps {
   startMode?: 'boot' | 'interactive' | 'app';
   variant?: 'full' | 'fast';
   autoRedirectOnIdle?: boolean;
+  onPowerOff?: () => void; // optional callback when user powers off/shuts down
 }
 
 export interface SystemModule {

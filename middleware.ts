@@ -8,15 +8,19 @@ export function middleware(request: NextRequest) {
   if (pathname === '/') {
     const visited = request.cookies.get('visited');
     if (!visited) {
-      const url = request.nextUrl.clone();
-      url.pathname = '/terminal';
-      const res = NextResponse.redirect(url);
-      res.cookies.set('visited', '1', {
-        path: '/',
-        maxAge: 60 * 60 * 24 * 365, // 1 year
-        sameSite: 'lax'
-      });
-      return res;
+      // Do not redirect if explicitly marked as boot complete
+      const booted = request.cookies.get('hasBooted')?.value === '1';
+      if (!booted) {
+        const url = request.nextUrl.clone();
+        url.pathname = '/terminal';
+        const res = NextResponse.redirect(url);
+        res.cookies.set('visited', '1', {
+          path: '/',
+          maxAge: 60 * 60 * 24 * 365, // 1 year
+          sameSite: 'lax'
+        });
+        return res;
+      }
     }
   }
 

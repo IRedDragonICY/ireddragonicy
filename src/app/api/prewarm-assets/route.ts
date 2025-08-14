@@ -26,17 +26,11 @@ export async function GET(req: Request) {
   const base = new URL(req.url);
   const origin = `${base.protocol}//${base.host}`;
 
+  const pixivUser = (base.searchParams.get('user') || '63934020').replace(/[^0-9]/g, '');
+
   const targets = [
-    '/api/youtube-stats?c=@Ndik',
-    '/api/instagram-stats?u=ireddragonicy',
-    '/api/instagram-stats?u=ireddragonicy.code',
-    '/api/pinterest-stats?u=IRedDragonICY',
-    '/api/threads-stats?u=ireddragonicy',
-    '/api/bluesky-stats?u=ireddragonicy.bsky.social',
-    '/api/hoyolab-stats?id=10849915',
-    '/api/strava-stats?id=164295314',
-    '/api/x-stats?u=ireddragonicy',
-    '/api/pixiv-assets?user=63934020',
+    // Fetch full list and aggressively resolve thumbnails for many items
+    `/api/pixiv-assets?user=${pixivUser}&maxDetails=1200&concurrency=10`,
   ];
 
   const startAll = Date.now();
@@ -45,9 +39,8 @@ export async function GET(req: Request) {
       const url = `${origin}${path}`;
       const t0 = Date.now();
       try {
-        const res = await fetchWithTimeout(url, 25000);
+        const res = await fetchWithTimeout(url, 40000);
         const tookMs = Date.now() - t0;
-        // Read body to ensure edge/CDN caching happens
         try { await res.clone().json().catch(() => res.text().catch(() => undefined)); } catch {}
         return { path, status: res.status, ok: res.ok, tookMs };
       } catch (e: any) {

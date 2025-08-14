@@ -1,6 +1,7 @@
 {
   "crons": [
     { "path": "/api/prewarm-social-light", "schedule": "0 2 * * *" },
-    { "path": "/api/prewarm-social-heavy", "schedule": "0 3 * * *" }
+    { "path": "/api/prewarm-social-heavy", "schedule": "0 3 * * *" },
+    { "path": "/api/prewarm-assets", "schedule": "*/30 * * * *" }
   ]
 }

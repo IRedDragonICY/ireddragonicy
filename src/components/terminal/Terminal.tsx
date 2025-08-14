@@ -25,6 +25,7 @@ const Terminal = ({
   startMode = 'boot',
   variant = 'full',
   autoRedirectOnIdle = true,
+  onPowerOff,
 }: TerminalProps) => {
   const [modules, setModules] = useState<SystemModule[]>([
     { id: 'core', name: 'Core System', status: 'pending', progress: 0, memoryUsage: 0, threads: 0, submodules: ['Kernel', 'Memory Manager', 'Process Handler', 'Thread Pool'] },
@@ -447,44 +448,31 @@ const Terminal = ({
     }, 1000);
     autoRedirectIntervalRef.current = countdownInterval as unknown as NodeJS.Timeout;
     
-    autoRedirectTimeoutRef.current = setTimeout(async () => {
+    autoRedirectTimeoutRef.current = setTimeout(() => {
       clearInterval(countdownInterval);
       setAutoRedirectCountdown(null);
-      
-      // Auto-redirect to portfolio with messages
-      addConsoleLine('', 'info');
-      addConsoleLine('⏰ No user interaction detected...', 'warning');
-      await new Promise(resolve => setTimeout(resolve, 500));
-      addConsoleLine('🤖 Initiating automatic portfolio access...', 'info');
-      await new Promise(resolve => setTimeout(resolve, 500));
-      addConsoleLine('🎯 Accessing portfolio interface...', 'info');
-      await new Promise(resolve => setTimeout(resolve, 500));
-      addConsoleLine('📊 Loading AI researcher profile...', 'detail');
-      await new Promise(resolve => setTimeout(resolve, 300));
-      addConsoleLine('🚀 Initializing project showcase...', 'detail');
-      await new Promise(resolve => setTimeout(resolve, 300));
-      addConsoleLine('✨ Portfolio interface ready!', 'success');
-      await new Promise(resolve => setTimeout(resolve, 500));
-      addConsoleLine('🔄 Redirecting to main portfolio...', 'warning');
-      if (countdownLineIdRef.current) {
-        updateConsoleLine(countdownLineIdRef.current, '> Auto-redirect: redirecting now...');
-      }
-      
-      setTimeout(() => {
-        // Only redirect if still eligible at the end
-        const handled = safeLocalStorageGet(STORAGE_KEYS.terminalAutoRedirectHandled) === '1';
-        if (!handled && !autoRedirectDisabled) {
-          setTerminalMode('boot');
-          setProgressPercentage(100);
-          onLoadComplete();
-        } else {
-          // If became ineligible, reflect disabled state in console
-          if (countdownLineIdRef.current) {
-            updateConsoleLine(countdownLineIdRef.current, '> Auto-redirect disabled.');
-            countdownLineIdRef.current = null;
-          }
+      // Only redirect if still eligible at the end
+      const handled = safeLocalStorageGet(STORAGE_KEYS.terminalAutoRedirectHandled) === '1';
+      if (!handled && !autoRedirectDisabled) {
+        try { safeLocalStorageSet(STORAGE_KEYS.hasBooted, '1'); } catch {}
+        try { document.cookie = 'visited=1; path=/; max-age=31536000; samesite=lax'; } catch {}
+        if (countdownLineIdRef.current) {
+          updateConsoleLine(countdownLineIdRef.current, '> Auto-redirect: redirecting now...');
         }
-      }, 1000);
+        // Ensure cookies/flags set right before navigation
+        try {
+          safeLocalStorageSet(STORAGE_KEYS.hasBooted, '1');
+          document.cookie = 'visited=1; path=/; max-age=31536000; samesite=lax';
+          document.cookie = 'hasBooted=1; path=/; max-age=31536000; samesite=lax';
+        } catch {}
+        onLoadComplete();
+      } else {
+        // If became ineligible, reflect disabled state in console
+        if (countdownLineIdRef.current) {
+          updateConsoleLine(countdownLineIdRef.current, '> Auto-redirect disabled.');
+          countdownLineIdRef.current = null;
+        }
+      }
     }, AUTO_REDIRECT_DELAY_MS);
   }, [terminalMode, onLoadComplete, autoRedirectStarted, autoRedirectDisabled, autoRedirectOnIdle]);
 
@@ -910,13 +898,8 @@ const Terminal = ({
         addConsoleLine('🚀 Initializing project showcase...', 'detail');
         await new Promise(resolve => setTimeout(resolve, 300));
         addConsoleLine('✨ Portfolio interface ready!', 'success');
-        await new Promise(resolve => setTimeout(resolve, 500));
         addConsoleLine('🔄 Redirecting to main portfolio...', 'warning');
-        setTimeout(() => {
-          setTerminalMode('boot');
-          setProgressPercentage(100);
-          onLoadComplete();
-        }, 1000);
+        onLoadComplete();
         break;
         
       case 'mkdir':
@@ -986,6 +969,11 @@ const Terminal = ({
         setTimeout(() => {
           setTerminalMode('boot');
           setPoweredOff(true);
+          try {
+            window.localStorage.setItem('os.power', 'off');
+            window.localStorage.removeItem('os.current');
+          } catch {}
+          if (onPowerOff) onPowerOff();
         }, 400);
         break;
         
@@ -2062,8 +2050,9 @@ const Terminal = ({
   }
 
   return (
-    <AnimatePresence>
-      <motion.div
+    <>
+      <AnimatePresence>
+        <motion.div
         initial={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.5 }}
@@ -2860,7 +2849,8 @@ const Terminal = ({
             </div>
           </div>
         )}
-      </motion.div>
+        </motion.div>
+      </AnimatePresence>
 
       <style jsx>{`
         @keyframes grid-move {
@@ -2921,7 +2911,7 @@ const Terminal = ({
           }
         }
       `}</style>
-    </AnimatePresence>
+    </>
   );
 };
 

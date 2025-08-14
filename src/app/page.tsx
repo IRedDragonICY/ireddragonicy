@@ -378,33 +378,7 @@ const Footer = () => (
     </footer>
 );
 
-const StatusNotification = () => {
-    const [isVisible, setIsVisible] = useState(true);
-    if (!isVisible) return null;
-
-    return (
-        <AnimatePresence>
-            <motion.div
-                initial={{ opacity: 0, x: -50 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -50 }}
-                transition={{ delay: 2.5, duration: 0.5 }}
-                className="fixed bottom-4 left-4 z-50"
-            >
-                <button
-                    onClick={() => setIsVisible(false)}
-                    className="flex items-center gap-2 bg-gradient-to-r from-green-600/80 to-emerald-600/80 text-white text-sm font-semibold pl-2 pr-3 py-1.5 rounded-full backdrop-blur-sm border border-green-500/50 shadow-lg hover:from-green-500/80 hover:to-emerald-500/80 transition-all"
-                >
-                    <span className="flex items-center justify-center w-5 h-5 bg-green-800 rounded-full">
-                        <HiSparkles className="w-3 h-3" />
-                    </span>
-                    <span>AI Mode Active</span>
-                    <IoClose className="w-4 h-4 opacity-70"/>
-                </button>
-            </motion.div>
-        </AnimatePresence>
-    );
-}
+// StatusNotification removed as requested
 
 export default function Home() {
     // Initial boot loader is globally handled by BootGate in layout
@@ -441,15 +415,26 @@ export default function Home() {
 
             <CursorEffect />
             <Navigation personalInfo={portfolioData.personalInfo} />
-            <StatusNotification />
 
-            {/* Floating terminal button */}
+            {/* Floating launcher reflecting current OS */}
             <a
-                href="/terminal"
+                href={(typeof window !== 'undefined' && window.localStorage.getItem('os.current') === 'windows' && window.localStorage.getItem('os.power') !== 'off') ? '/windows' : '/terminal'}
                 className="fixed bottom-4 right-4 z-50 inline-flex items-center gap-2 px-4 py-2 bg-gray-900/90 border border-cyan-400/40 rounded-lg text-cyan-300 hover:text-white hover:bg-gradient-to-br hover:from-cyan-500/10 hover:to-purple-500/10 hover:border-cyan-400/60 transition-all"
+                title="Open System"
             >
-                <FiCode />
-                <span className="font-medium">Terminal</span>
+                {/* Icon shows Windows or Terminal depending on persisted OS */}
+                <span className="inline-flex items-center justify-center w-5 h-5">
+                  {/* using small svg for windows logo */}
+                  {/* will show windows if os.current === 'windows' */}
+                  <svg viewBox="0 0 48 48" className="w-4 h-4" style={{ display: typeof window !== 'undefined' && window.localStorage.getItem('os.current') === 'windows' && window.localStorage.getItem('os.power') !== 'off' ? 'block' : 'none' }}>
+                    <rect x="2" y="2" width="20" height="20" fill="currentColor"/>
+                    <rect x="26" y="2" width="20" height="20" fill="currentColor"/>
+                    <rect x="2" y="26" width="20" height="20" fill="currentColor"/>
+                    <rect x="26" y="26" width="20" height="20" fill="currentColor"/>
+                  </svg>
+                  <FiCode style={{ display: typeof window !== 'undefined' && window.localStorage.getItem('os.current') === 'windows' && window.localStorage.getItem('os.power') !== 'off' ? 'none' : 'block' }} />
+                </span>
+                <span className="font-medium">{typeof window !== 'undefined' && window.localStorage.getItem('os.current') === 'windows' && window.localStorage.getItem('os.power') !== 'off' ? 'Windows' : 'Terminal'}</span>
             </a>
 
             <main className="relative bg-[#0A0A0A] z-10">

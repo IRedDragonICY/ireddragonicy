@@ -68,6 +68,7 @@ const Navigation = ({ personalInfo }: NavigationProps) => {
     { id: 'education', label: 'Education', icon: FaGraduationCap, href: '/education' },
     { id: 'donate', label: 'Donate', icon: TbBrain, href: '/donate' },
     { id: 'social', label: 'Social', icon: RiShareLine, href: '/social' },
+    { id: 'assets', label: 'Assets', icon: BiCodeAlt, href: '/assets' },
     { id: 'blog', label: 'Blog', icon: RiArticleLine, href: '/blog' }
   ];
 
@@ -77,6 +78,7 @@ const Navigation = ({ personalInfo }: NavigationProps) => {
     { id: 'education', label: 'Education', icon: FaGraduationCap, href: '/education' },
     { id: 'donate', label: 'Donate', icon: TbBrain, href: '/donate' },
     { id: 'social', label: 'Social', icon: RiShareLine, href: '/social' },
+    { id: 'assets', label: 'Assets', icon: BiCodeAlt, href: '/assets' },
     { id: 'blog', label: 'Blog', icon: RiArticleLine, href: '/blog' }
   ];
 

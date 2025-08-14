@@ -1,8 +1,8 @@
 // src/components/terminal/constants.ts
 // Constants and immutable configs for the terminal application
 
-export const AUTO_REDIRECT_DELAY_MS = 10_000;
-export const AUTO_REDIRECT_COUNTDOWN_SECS = 10;
+export const AUTO_REDIRECT_DELAY_MS = 5_000;
+export const AUTO_REDIRECT_COUNTDOWN_SECS = 5;
 
 export const STORAGE_KEYS = {
   hasBooted: 'hasBooted',

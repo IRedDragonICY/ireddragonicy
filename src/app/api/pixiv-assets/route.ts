@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { crawlWithPuppeteer } from './puppeteer';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -82,21 +81,57 @@ async function resolveArtworkDetails(ids: string[], concurrency: number): Promis
       if (cur >= ids.length) break;
       const id = ids[cur];
       try {
-        // 1) Prefer JSON API via text proxy to get direct pximg URLs
+        // 1) Prefer direct AJAX API to get pximg URLs (including full-ratio original)
+        try {
+          const ajaxResponse = await fetch(`https://www.pixiv.net/ajax/illust/${id}`, {
+            method: 'GET',
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+              'Accept': 'application/json',
+              'Referer': 'https://www.pixiv.net/',
+            },
+            cache: 'no-store',
+            redirect: 'follow',
+          });
+          if (ajaxResponse.ok) {
+            const ajaxText = await ajaxResponse.text();
+            const parsed = JSON.parse(ajaxText);
+            const body = parsed?.body || {};
+            const urls = body?.urls || {};
+            // Prefer original first; fall back to other pximg sizes
+            const candidates: string[] = [
+              urls.original,
+              urls.regular,
+              urls.small,
+              urls.thumb,
+              urls.thumb_mini,
+              urls.mini,
+            ].filter(Boolean);
+            const chosen = candidates.find((u: string) => typeof u === 'string' && /(^|\.)pximg\.net$/i.test(new URL(u).hostname)) || candidates[0] || null;
+            const title = body?.title || null;
+            if (chosen) {
+              results.set(id, { thumb: String(chosen), title, alt: title });
+              continue;
+            }
+          }
+        } catch {}
+
+        // 2) Fallback to Jina.ai text proxy for AJAX
         try {
           const jsonRaw = await fetchText(`https://r.jina.ai/http://www.pixiv.net/ajax/illust/${id}`);
           const parsed = JSON.parse(jsonRaw);
           const body = parsed?.body || {};
           const urls = body?.urls || {};
+          // Prefer original first; fall back to other pximg sizes
           const candidates: string[] = [
+            urls.original,
             urls.regular,
             urls.small,
             urls.thumb,
             urls.thumb_mini,
             urls.mini,
-            urls.original,
           ].filter(Boolean);
-          const chosen = candidates.find((u: string) => typeof u === 'string' && u.includes('pximg.net')) || candidates[0] || null;
+          const chosen = candidates.find((u: string) => typeof u === 'string' && /(^|\.)pximg\.net$/i.test(new URL(u).hostname)) || candidates[0] || null;
           const title = body?.title || null;
           if (chosen) {
             results.set(id, { thumb: String(chosen), title, alt: title });
@@ -104,7 +139,7 @@ async function resolveArtworkDetails(ids: string[], concurrency: number): Promis
           }
         } catch {}
 
-        // 2) Fallback to direct page meta and meta-preload-data
+        // 3) Fallback to direct page meta and meta-preload-data
         const direct = await fetch(`https://www.pixiv.net/en/artworks/${id}`, {
           method: 'GET',
           headers: {
@@ -122,8 +157,8 @@ async function resolveArtworkDetails(ids: string[], concurrency: number): Promis
         } else {
           html = await fetchText(`https://r.jina.ai/http://www.pixiv.net/en/artworks/${id}`);
         }
-        // Try meta-preload-data first for direct pximg URLs
-        let ogImage = null as string | null;
+        // Try meta-preload-data first for direct pximg URLs (prefer original)
+        let candidateImage = null as string | null;
         try {
           const preload = html.match(/<meta[^>]+id=["']meta-preload-data["'][^>]+content=["']([^"']+)["']/i)?.[1];
           if (preload) {
@@ -133,44 +168,32 @@ async function resolveArtworkDetails(ids: string[], concurrency: number): Promis
             const illustMap = parsed?.illust || parsed?.preload || {};
             const ill = illustMap?.[id] || Object.values(illustMap || {})[0];
             const urls = (ill as any)?.urls || {};
-            const candidates: string[] = [urls.regular, urls.small, urls.thumb, urls.thumb_mini, urls.mini, urls.original].filter(Boolean);
-            const chosen = candidates.find((u: string) => u.includes('pximg.net')) || candidates[0];
+      const candidates: string[] = [urls.original, urls.regular, urls.small, urls.thumb, urls.thumb_mini, urls.mini].filter(Boolean);
+      const chosen = candidates.find((u: string) => /pximg\.net/i.test(String(u))) || candidates[0];
             if (chosen) {
-              ogImage = String(chosen);
+              candidateImage = String(chosen);
             }
           }
         } catch {}
-        if (!ogImage) {
-          ogImage = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)?.[1] || null;
-        }
+        // Fallback to og:image (will only accept later if pximg)
+        let ogImage = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)?.[1] || null;
         const ogTitle = html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i)?.[1] || null;
         const twTitle = html.match(/<meta[^>]+name=["']twitter:title["'][^>]+content=["']([^"']+)["']/i)?.[1] || null;
         const title = ogTitle || twTitle || null;
         if (ogImage) ogImage = ogImage.replace(/&amp;/g, '&');
-        results.set(id, { thumb: ogImage, title, alt: title });
-        if (ogImage) continue;
+        // If we already got a pximg candidate (preload JSON), use it and continue
+        if (candidateImage && /pximg\.net/i.test(candidateImage)) {
+          results.set(id, { thumb: candidateImage, title, alt: title });
+          continue;
+        }
+        // If og:image is pximg, accept it and continue; otherwise try embed route for pximg
+        if (ogImage && /pximg\.net/i.test(ogImage)) {
+          results.set(id, { thumb: ogImage, title, alt: title });
+          continue;
+        }
 
-        // 3) Last resort: embed page
-        try {
-          const embed = await fetch(`https://embed.pixiv.net/artwork.php?illust_id=${id}`, {
-            method: 'GET',
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-              'Accept-Language': 'en-US,en;q=0.9',
-              'Referer': 'https://www.pixiv.net/',
-            },
-            cache: 'no-store',
-            redirect: 'follow',
-          });
-          const t = await embed.text();
-          const img = t.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)?.[1]
-            || t.match(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i)?.[1];
-          if (img) {
-            results.set(id, { thumb: img.replace(/&amp;/g, '&'), title, alt: title });
-            continue;
-          }
-        } catch {}
+        // If no pximg found, set thumb to null (don't use embed or non-pximg URLs)
+        results.set(id, { thumb: null, title, alt: title });
       } catch {
         results.set(id, { thumb: null, title: null, alt: null });
       }
@@ -209,6 +232,11 @@ function extractArtworksFromHtml(html: string): PixivArtwork[] {
       }
     }
 
+    // REJECT cropped/resized thumbnails entirely - we want only original full-ratio images
+    if (thumb && /\/(c\/|custom-thumb\/|img-master\/).*_(square1200|master1200|custom1200|480mw)/i.test(thumb)) {
+      thumb = null; // Force resolution to get original
+    }
+
     // Title often appears as a sibling anchor beneath; try to capture it from nearby HTML (post-card footer)
     // Search forward up to 600 chars after current anchor closing tag for a title anchor linking to the same artwork id
     const lookaheadSlice = html.slice(anchorRegex.lastIndex, anchorRegex.lastIndex + 600);
@@ -228,7 +256,6 @@ export async function GET(req: Request) {
   const limitPages = limitPagesParam ? Math.max(1, Math.min(50, parseInt(limitPagesParam, 10) || 1)) : null;
   const stepParam = searchParams.get('step');
   const step = stepParam ? Math.max(1, Math.min(5, parseInt(stepParam, 10) || 1)) : 1;
-  const prefer = (searchParams.get('mode') || 'puppeteer').toLowerCase();
 
   try {
     const baseHost = 'www.pixiv.net';
@@ -236,31 +263,16 @@ export async function GET(req: Request) {
     let pageHtmls: string[] = [];
     let html1 = '';
 
-    const tryJina = async () => {
-      const page1Url = `https://r.jina.ai/http://${baseHost}${basePath}`;
-      const first = await fetchHtml(page1Url);
-      const maxPage = limitPages ?? extractMaxPage(first);
-      const pageNumbers = Array.from({ length: maxPage }, (_, i) => i + 1).filter(p => (p - 1) % step === 0 || step === 1);
-      const pageUrls = pageNumbers.map(p => p === 1 ? page1Url : `https://r.jina.ai/http://${baseHost}${basePath}?p=${p}`);
-      const htmls = await Promise.all(pageUrls.map(u => fetchHtml(u).catch(() => '')));
-      return { first, htmls };
-    };
-
-    if (prefer !== 'puppeteer') {
-      try {
-        const r = await tryJina();
-        html1 = r.first;
-        pageHtmls = r.htmls;
-      } catch {
-        pageHtmls = [];
-      }
-    }
-
-    if (pageHtmls.length === 0) {
-      const r = await crawlWithPuppeteer({ userId, limitPages: limitPages ?? undefined, step });
-      html1 = r.firstHtml;
-      pageHtmls = r.pageHtmls;
-    }
+    // Use Jina.ai text proxy to fetch Pixiv pages
+    const page1Url = `https://r.jina.ai/http://${baseHost}${basePath}`;
+    const first = await fetchHtml(page1Url);
+    const maxPage = limitPages ?? extractMaxPage(first);
+    const pageNumbers = Array.from({ length: maxPage }, (_, i) => i + 1).filter(p => (p - 1) % step === 0 || step === 1);
+    const pageUrls = pageNumbers.map(p => p === 1 ? page1Url : `https://r.jina.ai/http://${baseHost}${basePath}?p=${p}`);
+    const htmls = await Promise.all(pageUrls.map(u => fetchHtml(u).catch(() => '')));
+    
+    html1 = first;
+    pageHtmls = htmls;
     let allItems = pageHtmls.flatMap(extractArtworksFromHtml);
 
     // Fallback: if list parsing yields nothing, extract IDs from text and resolve details
@@ -282,14 +294,30 @@ export async function GET(req: Request) {
       }
     }
 
-    // If thumbs are missing, resolve details for a subset to populate images and titles
+    // If thumbs are missing or appear to be cropped/downsized, resolve details to populate full-ratio originals and titles
     const maxDetailsParam = searchParams.get('maxDetails');
     // Default: crawl all missing thumbs up to 1200 to cover full galleries
     const maxDetails = maxDetailsParam ? Math.max(0, Math.min(2000, parseInt(maxDetailsParam, 10) || 0)) : 1200;
     const concurrencyParam = searchParams.get('concurrency');
     const concurrency = concurrencyParam ? Math.max(1, Math.min(16, parseInt(concurrencyParam, 10) || 6)) : 6;
-    // Resolve details in chunks to avoid timeouts
-    const missingIds = allItems.filter(it => !it.thumb).map(it => it.id);
+    // Determine which IDs need upgrading - ONLY accept img-original URLs, reject everything else
+    const isNotFullOriginal = (url: string | null | undefined): boolean => {
+      if (!url) return true; // No URL, needs upgrading
+      try {
+        const u = new URL(url.replace(/&amp;/g, '&'), 'https://www.pixiv.net');
+        const h = u.hostname;
+        const p = u.pathname;
+        // ONLY accept pximg.net with img-original path - reject ALL other variants
+        const isPximg = /(^|\.)pximg\.net$/i.test(h);
+        if (!isPximg) return true; // Not pximg, needs upgrading
+        if (!/\/img-original\//i.test(p)) return true; // Not img-original, needs upgrading
+        if (/(square1200|master1200|custom1200|480mw|c\/\d+x\d+)/i.test(p)) return true; // Any cropped variants, needs upgrading
+        return false; // Only img-original full URLs are acceptable
+      } catch {
+        return true; // Invalid URL, needs upgrading
+      }
+    };
+    const missingIds = allItems.filter(it => !it.thumb || isNotFullOriginal(it.thumb)).map(it => it.id);
     const chunkSize = Math.max(concurrency * 4, 24);
     let processed = 0;
     while (processed < Math.min(missingIds.length, maxDetails)) {

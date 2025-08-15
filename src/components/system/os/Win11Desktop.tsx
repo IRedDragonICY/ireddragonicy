@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Win11ThemeProvider, useWin11Theme } from './win11';
-import { SettingsApp } from './win11';
+import { Win11ThemeProvider, useWin11Theme, CalculatorApp, SettingsApp } from './win11';
 import StartMenu from './win11/ui/StartMenu';
+import CalendarPanel from './win11/ui/CalendarPanel';
+import LockScreen from './win11/ui/LockScreen';
 
 // Simple canvas-based paint tool
 const PaintApp: React.FC = () => {
@@ -155,6 +156,8 @@ interface WindowSpec {
   z: number;
   minimized: boolean;
   maximized: boolean;
+  // Last non-maximized geometry for proper restore
+  restore?: { x: number; y: number; w: number; h: number };
 }
 
 type AppContentProps = { app: AppId; openApp: (app: AppId) => void };
@@ -326,16 +329,7 @@ const AppContent: React.FC<AppContentProps> = ({ app, openApp }) => {
     );
   }
   if (app === 'calc') {
-    return (
-      <div className="w-full h-full p-4 text-xl grid grid-cols-4 gap-2" style={{ background: surfaceBG, color: surfaceText }}>
-        {['7','8','9','/','4','5','6','*','1','2','3','-','0','.','=','+'].map(k => (
-          <button key={k} className="py-3 rounded border" aria-label={k} style={{
-            background: softBG,
-            borderColor: themeMode==='dark' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)'
-          }}>{k}</button>
-        ))}
-      </div>
-    );
+    return <CalculatorApp />
   }
   if (app === 'settings') {
     return <SettingsApp />
@@ -477,6 +471,7 @@ const DesktopChrome: React.FC<Win11DesktopProps> = ({ onReboot }) => {
           z: zTop + 1,
           minimized: false,
           maximized: false,
+          restore: { x: 160 + (prev.length * 24) % 300, y: 120 + (prev.length * 16) % 200, w: 900, h: 600 },
         }
       ];
     });
@@ -488,16 +483,44 @@ const DesktopChrome: React.FC<Win11DesktopProps> = ({ onReboot }) => {
     setWindows((prev) => prev.map(w => w.id === id ? { ...w, z: zTop + 1 } : w));
     setZTop((z) => z + 1);
   };
-  const toggleMinimize = (id: string) => setWindows((prev) => prev.map(w => w.id === id ? { ...w, minimized: !w.minimized } : w));
-  const toggleMaximize = (id: string) => setWindows((prev) => prev.map(w => w.id === id ? {
-    ...w,
-    maximized: !w.maximized,
-    // When maximizing, snap to full viewport; when restoring, ensure inside viewport
-    x: !w.maximized ? 0 : Math.max(0, Math.min(w.x, window.innerWidth - w.w)),
-    y: !w.maximized ? 0 : Math.max(0, Math.min(w.y, window.innerHeight - 48 - w.h)),
-    w: !w.maximized ? window.innerWidth : Math.min(w.w, window.innerWidth),
-    h: !w.maximized ? window.innerHeight - 48 : Math.min(w.h, window.innerHeight - 48),
-  } : w));
+  const toggleMinimize = (id: string) => setWindows((prev) => prev.map(w => {
+    if (w.id !== id) return w;
+    if (w.minimized) {
+      // restore. If maximized, use full screen. If not, use last restore bounds.
+      if (w.maximized) {
+        return { ...w, minimized: false, x: 0, y: 0, w: window.innerWidth, h: window.innerHeight - 48 };
+      }
+      const rb = w.restore || { x: w.x, y: w.y, w: w.w, h: w.h };
+      const maxW = window.innerWidth, maxH = window.innerHeight - 48;
+      return { ...w, minimized: false, x: Math.max(0, Math.min(rb.x, maxW - rb.w)), y: Math.max(0, Math.min(rb.y, maxH - rb.h)), w: Math.min(rb.w, maxW), h: Math.min(rb.h, maxH) };
+    }
+    return { ...w, minimized: true };
+  }));
+  const toggleMaximize = (id: string) => setWindows((prev) => prev.map(w => {
+    if (w.id !== id) return w;
+    if (!w.maximized) {
+      // store current geometry before maximizing
+      const restore = { x: w.x, y: w.y, w: w.w, h: w.h };
+      return {
+        ...w,
+        maximized: true,
+        restore,
+        x: 0,
+        y: 0,
+        w: window.innerWidth,
+        h: window.innerHeight - 48,
+      };
+    } else {
+      // restore to last known non-maximized geometry
+      const rb = w.restore || { x: w.x, y: w.y, w: Math.min(w.w, window.innerWidth), h: Math.min(w.h, window.innerHeight - 48) };
+      const maxW = window.innerWidth, maxH = window.innerHeight - 48;
+      const nx = Math.max(0, Math.min(rb.x, maxW - rb.w));
+      const ny = Math.max(0, Math.min(rb.y, maxH - rb.h));
+      const nw = Math.min(rb.w, maxW);
+      const nh = Math.min(rb.h, maxH);
+      return { ...w, maximized: false, x: nx, y: ny, w: nw, h: nh };
+    }
+  }));
 
   // Clock
   useEffect(() => {
@@ -518,7 +541,7 @@ const DesktopChrome: React.FC<Win11DesktopProps> = ({ onReboot }) => {
         const vh = window.innerHeight - 48; // taskbar
         const clampedX = Math.min(Math.max(0, nx), Math.max(0, vw - w.w));
         const clampedY = Math.min(Math.max(0, ny), Math.max(0, vh - w.h));
-        return { ...w, x: clampedX, y: clampedY };
+        return { ...w, x: clampedX, y: clampedY, restore: { x: clampedX, y: clampedY, w: w.w, h: w.h } };
       }));
     };
     const onUp = () => { dragRef.current = null; };
@@ -547,7 +570,7 @@ const DesktopChrome: React.FC<Win11DesktopProps> = ({ onReboot }) => {
         if (dir.includes('n')) { height = Math.max(minH, startH - dy); y = startT + (startH - height); }
         const vw = window.innerWidth, vh = window.innerHeight - 48;
         width = Math.min(width, vw - x); height = Math.min(height, vh - y);
-        return { ...w, x, y, w: width, h: height };
+        return { ...w, x, y, w: width, h: height, restore: { x, y, w: width, h: height } };
       }));
     };
     const onUp = () => { resizeRef.current = null; };
@@ -574,6 +597,49 @@ const DesktopChrome: React.FC<Win11DesktopProps> = ({ onReboot }) => {
   }, [onReboot]);
 
   const { themeMode, accentColor, transparency } = useWin11Theme();
+  // Taskbar live preview state
+  const [tbPreview, setTbPreview] = useState<{ windowId: string; x: number; y: number } | null>(null);
+
+  const LiveDomPreview: React.FC<{ windowId: string; width?: number; height?: number }> = ({ windowId, width = 236, height = 160 }) => {
+    const hostRef = useRef<HTMLDivElement | null>(null);
+    useEffect(() => {
+      const render = () => {
+        const el = document.getElementById(`window-content-${windowId}`) as HTMLElement | null;
+        const host = hostRef.current;
+        if (!host) return;
+        host.innerHTML = '';
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        const clone = el.cloneNode(true) as HTMLElement;
+        clone.style.pointerEvents = 'none';
+        clone.style.userSelect = 'none';
+        clone.querySelectorAll('*').forEach(n => { (n as HTMLElement).style.pointerEvents = 'none'; (n as HTMLElement).setAttribute('disabled','true'); });
+        const scale = Math.max(0.1, Math.min(width / rect.width, height / rect.height));
+        clone.style.transformOrigin = 'top left';
+        clone.style.transform = `scale(${scale})`;
+        clone.style.width = `${rect.width}px`;
+        clone.style.height = `${rect.height}px`;
+        host.appendChild(clone);
+      };
+      render();
+      const i = window.setInterval(render, 500);
+      return () => { const host = hostRef.current; if (host) host.innerHTML = ''; window.clearInterval(i); };
+    }, [windowId, width, height]);
+    return <div ref={hostRef} style={{ width, height, overflow: 'hidden', borderRadius: 10 }} />;
+  };
+
+  const showTaskbarPreview = (appId: AppId, targetEl: HTMLElement) => {
+    const liveWin = [...windows].reverse().find(w => w.app === appId && !w.minimized);
+    if (!liveWin) { setTbPreview(null); return; }
+    const rect = targetEl.getBoundingClientRect();
+    const desiredWidth = 236, desiredHeight = 160;
+    const x = rect.left + rect.width / 2 - desiredWidth / 2;
+    const y = window.innerHeight - 48 - (desiredHeight + 16);
+    const clampedX = Math.max(8, Math.min(x, window.innerWidth - desiredWidth - 8));
+    const clampedY = Math.max(8, y);
+    setTbPreview({ windowId: liveWin.id, x: clampedX, y: clampedY });
+  };
+  const hideTaskbarPreview = () => setTbPreview(null);
 
   return (
     <div className={`fixed inset-0 ${themeMode==='dark' ? 'dark' : ''}`} style={{
@@ -590,14 +656,7 @@ const DesktopChrome: React.FC<Win11DesktopProps> = ({ onReboot }) => {
       )}
 
       {phase === 'lock' && (
-        <div className="w-full h-full bg-[url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1964&auto=format&fit=crop')] bg-cover bg-center">
-          <div className="absolute inset-0 bg-black/30" />
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-white select-none">
-            <div className="text-6xl font-light">11:11</div>
-            <div className="text-sm mt-1">Press any key to sign in</div>
-            <button className="mt-8 px-4 py-2 bg-white/20 rounded border border-white/30" onClick={() => setPhase('desktop')}>Sign In</button>
-          </div>
-        </div>
+        <LockScreen onUnlock={() => setPhase('desktop')} />
       )}
 
       {phase === 'desktop' && (
@@ -658,7 +717,7 @@ const DesktopChrome: React.FC<Win11DesktopProps> = ({ onReboot }) => {
                   </button>
                 </div>
               </div>
-              <div className="w-full h-[calc(100%-40px)] relative">
+              <div id={`window-content-${w.id}`} className="w-full h-[calc(100%-40px)] relative">
                 {w.app === 'settings' ? (
                   <SettingsApp />
                 ) : (
@@ -692,7 +751,10 @@ const DesktopChrome: React.FC<Win11DesktopProps> = ({ onReboot }) => {
             {taskbarPinned.map((a) => {
               const running = windows.some(w => w.app === a && !w.minimized);
               return (
-                <button key={a} className="relative w-10 h-10 rounded hover:bg-white/60 flex items-center justify-center" onClick={() => openApp(a)} aria-label={APP_META[a].label}>
+                <button key={a} className="relative w-10 h-10 rounded hover:bg-white/60 flex items-center justify-center" onClick={() => openApp(a)} aria-label={APP_META[a].label}
+                  onMouseEnter={(e)=> showTaskbarPreview(a, e.currentTarget)}
+                  onMouseLeave={hideTaskbarPreview}
+                >
                   <Icon name={APP_META[a].icon} className="w-6 h-6 text-black/70" />
                   {running && <span className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-black/60" />}
                 </button>
@@ -761,18 +823,8 @@ const DesktopChrome: React.FC<Win11DesktopProps> = ({ onReboot }) => {
 
           {/* Notification Center / Calendar */}
           {ncOpen && (
-            <div className="absolute right-2 bottom-14 w-[360px] rounded-xl shadow-2xl p-3" style={{
-              background: themeMode==='dark' ? 'var(--panelBGDark)' : 'var(--panelBG)',
-              border: themeMode==='dark' ? '1px solid rgba(255,255,255,0.2)' : '1px solid rgba(0,0,0,0.1)',
-              backdropFilter: transparency ? 'blur(10px)' : 'none',
-              color: themeMode==='dark' ? 'white' : 'black'
-            }}>
-              <div className="text-sm font-medium mb-2">Notifications</div>
-              <div className="text-xs text-black/60 mb-4">No new notifications</div>
-              <div className="text-sm font-medium mb-2">Calendar</div>
-              <div className="grid grid-cols-7 gap-1 text-xs text-black/70">
-                {Array.from({ length: 35 }).map((_, i) => (<div key={i} className="h-8 flex items-center justify-center border rounded bg-gray-50">{(i%7)+1}</div>))}
-              </div>
+            <div className="absolute right-2 bottom-14">
+              <CalendarPanel />
             </div>
           )}
 
@@ -788,6 +840,14 @@ const DesktopChrome: React.FC<Win11DesktopProps> = ({ onReboot }) => {
               setStartPowerOpen={setStartPowerOpen}
               onSleep={() => setPhase('lock')}
             />
+          )}
+
+          {tbPreview && (
+            <div className="absolute z-[9999]" style={{ left: tbPreview.x, top: tbPreview.y }} onMouseEnter={()=>{}} onMouseLeave={hideTaskbarPreview}>
+              <div className="rounded-xl shadow-2xl border" style={{ background: themeMode==='dark' ? 'rgba(0,0,0,0.85)' : '#ffffff', border: themeMode==='dark' ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(0,0,0,0.1)' }}>
+                <LiveDomPreview windowId={tbPreview.windowId} />
+              </div>
+            </div>
           )}
         </div>
       )}

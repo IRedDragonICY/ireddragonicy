@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { useWin11Theme } from '../Win11ThemeContext';
 import { IconName } from '../types';
 
@@ -22,8 +22,27 @@ const StartMenu: React.FC<StartMenuProps> = ({ open, pinned, onOpenApp, onClose,
   const { themeMode, transparency, accentColor } = useWin11Theme();
   if (!open) return null;
 
+  // Container ref (previews are taskbar-only; none in Start)
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  // Dynamic sizing/position so the menu hugs the taskbar and never looks "floating"
+  const [menuHeight, setMenuHeight] = useState<number>(560);
+  const taskbarHeight = 48; // must match desktop taskbar height
+  const gap = 12; // small gap above taskbar like Windows
+  React.useEffect(() => {
+    const update = () => {
+      const h = Math.min(560, Math.max(420, (window.innerHeight - taskbarHeight - gap*2)));
+      setMenuHeight(h);
+    };
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+
+
   return (
-    <div className="absolute left-1/2 -translate-x-1/2 bottom-14 w-[760px] h-[560px] rounded-2xl shadow-2xl border" style={{
+    <div ref={containerRef} className="fixed left-1/2 -translate-x-1/2 z-[5000] w-[760px] rounded-2xl shadow-2xl border" style={{
+      bottom: taskbarHeight + gap,
+      height: menuHeight,
       background: themeMode==='dark' ? (transparency ? 'rgba(0,0,0,0.45)' : '#111827') : (transparency ? 'rgba(255,255,255,0.9)' : '#ffffff'),
       borderColor: themeMode==='dark' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)',
       backdropFilter: transparency ? 'blur(10px)' : 'none',
@@ -40,15 +59,19 @@ const StartMenu: React.FC<StartMenuProps> = ({ open, pinned, onOpenApp, onClose,
       </div>
       <div className="px-6 grid grid-cols-6 gap-3 mt-3">
         {pinned.map((a) => (
-          <button key={a.id} className="h-24 rounded-xl border flex flex-col items-center justify-center gap-2" style={{
+          <button key={a.id} className="h-24 rounded-xl border flex flex-col items-center justify-center gap-2"
+            style={{
             borderColor: themeMode==='dark' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)',
             background: themeMode==='dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)'
-          }} onClick={() => { onOpenApp(a.id); onClose(); }}>
+          }}
+            onClick={() => { onOpenApp(a.id); onClose(); }}
+          >
             {renderIcon(a.icon, "w-8 h-8 text-black/70 dark:text-white/80")}
             <div className="text-xs opacity-80">{a.label}</div>
           </button>
         ))}
       </div>
+      {/* Hover previews are removed in Start menu */}
       <div className="px-6 mt-6 text-sm opacity-70">Recommended</div>
       <div className="px-6 mt-2 grid grid-cols-3 gap-3 text-sm">
         {['README.md','docs/GettingStarted.pdf','design/wireframe.fig'].map((r) => (

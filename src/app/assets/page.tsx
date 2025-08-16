@@ -383,7 +383,7 @@ export default function AssetsPage() {
             <img
               src={`/api/pixiv-img?src=${encodeURIComponent(selectedItem.thumb!)}`}
               alt={selectedItem.alt || selectedItem.title || `Artwork ${selectedItem.id}`}
-              className="fullscreen-image absolute inset-0 m-auto max-w-none max-h-none object-contain select-none"
+              className="fullscreen-image absolute inset-0 m-auto max-w-full max-h-full object-contain select-none"
               style={{
                 transform: `scale(${zoomLevel}) translate(${dragOffset.x / zoomLevel}px, ${dragOffset.y / zoomLevel}px)`,
                 transition: isDragging ? 'none' : 'transform 0.1s ease-out'

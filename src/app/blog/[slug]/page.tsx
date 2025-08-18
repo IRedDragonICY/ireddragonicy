@@ -9,108 +9,60 @@ import { FaArrowLeft, FaCalendar, FaClock, FaEye, FaHeart, FaShare, FaBookmark, 
 import { HiOutlineShare } from 'react-icons/hi';
 import Navigation from '@/components/Navigation';
 import CursorEffect from '@/components/CursorEffect';
+import { getBlogPost, getAllBlogPosts, type BlogPost } from '@/data/blogPosts';
 
-// TypeScript interfaces
+// TypeScript interfaces for additional data
 interface RelatedPost {
-  id: string;
+  slug: string;
   title: string;
   readTime: string;
 }
 
-interface Author {
-  name: string;
-  avatar: string;
-  bio: string;
-  social: {
-    twitter: string;
-    linkedin: string;
-    github: string;
-  };
-}
-
-interface BlogPost {
+// Extended blog post interface for component use
+interface ExtendedBlogPost {
+  slug: string;
   id: string;
   title: string;
   excerpt: string;
   content: string;
   date: string;
-  readTime: string;
   tags: string[];
+  readTime: string;
   image: string;
   views: number;
   likes: number;
-  author: Author;
+  published: boolean;
+  featured?: boolean;
+  category: 'AI Research' | 'Tutorial' | 'Case Study' | 'Opinion';
+  author: {
+    name: string;
+    avatar: string;
+    bio: string;
+    social: {
+      twitter: string;
+      linkedin: string;
+      github: string;
+    };
+  };
   relatedPosts: RelatedPost[];
 }
 
-// This would typically come from a database or CMS
-const getBlogPost = (slug: string): BlogPost => {
-  // Sample blog post content
-  const sampleContent = `
-# Understanding Transformer Architecture
+// Helper function to extend blog post with additional data
+const getExtendedBlogPost = (slug: string): ExtendedBlogPost | null => {
+  const post = getBlogPost(slug);
+  if (!post) return null;
 
-The transformer architecture has revolutionized the field of natural language processing and beyond. In this comprehensive guide, we'll explore the fundamental concepts that make transformers so powerful.
-
-## The Attention Mechanism
-
-At the heart of the transformer lies the attention mechanism. Unlike traditional sequential models, transformers can process all positions simultaneously, making them highly parallelizable.
-
-### Self-Attention
-
-Self-attention allows the model to weigh the importance of different words in a sentence when encoding each word. This is computed using three learned linear projections:
-
-- **Query (Q)**: What information am I looking for?
-- **Key (K)**: What information do I have?
-- **Value (V)**: The actual information content
-
-The attention scores are calculated as:
-
-\`\`\`python
-attention_scores = softmax(QK^T / sqrt(d_k))
-output = attention_scores * V
-\`\`\`
-
-## Multi-Head Attention
-
-Instead of performing a single attention function, transformers use multiple attention heads. Each head learns different relationships in the data, allowing the model to capture various types of dependencies.
-
-## Position Encodings
-
-Since transformers don't have inherent sequence order understanding, we add positional encodings to give the model information about the position of tokens in the sequence.
-
-## The Transformer Block
-
-A complete transformer block consists of:
-1. Multi-head self-attention
-2. Layer normalization
-3. Feed-forward network
-4. Another layer normalization
-5. Residual connections
-
-## Applications and Impact
-
-Transformers have enabled breakthroughs in:
-- Language models (GPT, BERT)
-- Machine translation
-- Computer vision (Vision Transformer)
-- Multimodal learning
-
-The flexibility and effectiveness of transformers continue to push the boundaries of what's possible in AI.
-  `;
+  // Get related posts (other published posts)
+  const allPosts = getAllBlogPosts();
+  const relatedPosts = allPosts
+    .filter(p => p.slug !== slug)
+    .slice(0, 3)
+    .map(p => ({ slug: p.slug, title: p.title, readTime: p.readTime }));
 
   return {
-    id: slug,
-    title: 'Understanding Transformer Architecture: From Attention to GPT',
-    excerpt: 'Deep dive into the revolutionary transformer architecture that powers modern AI language models.',
-    content: sampleContent,
-    date: '2024-01-15',
-    readTime: '12 min',
-    tags: ['Transformers', 'NLP', 'Deep Learning', 'GPT', 'BERT'],
-    image: 'https://picsum.photos/1200/600?random=1',
-    views: 1523,
-    likes: 234,
+    ...post,
     author: {
-      name: 'Mohammad Farid Hendianto',
+      name: post.author,
       avatar: 'https://picsum.photos/100/100?random=10',
       bio: 'AI Research Scientist specializing in deep learning and neural architectures.',
       social: {
@@ -119,18 +71,14 @@ The flexibility and effectiveness of transformers continue to push the boundarie
         github: 'https://github.com'
       }
     },
-    relatedPosts: [
-      { id: 'bert-explained', title: 'BERT: Bidirectional Training Explained', readTime: '10 min' },
-      { id: 'gpt-evolution', title: 'The Evolution of GPT Models', readTime: '15 min' },
-      { id: 'attention-all-you-need', title: 'Attention Is All You Need: Paper Review', readTime: '8 min' }
-    ]
-  };
+    relatedPosts
+  } as ExtendedBlogPost;
 };
 
 export default function BlogPost({ params }: { params: Promise<{ slug: string }> }) {
   const [slug, setSlug] = useState<string>('');
   const router = useRouter();
-  const [post, setPost] = useState<BlogPost | null>(null);
+  const [post, setPost] = useState<ExtendedBlogPost | null>(null);
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -145,7 +93,7 @@ export default function BlogPost({ params }: { params: Promise<{ slug: string }>
   useEffect(() => {
     if (slug) {
       // Fetch blog post data
-      const postData = getBlogPost(slug);
+      const postData = getExtendedBlogPost(slug);
       setPost(postData);
     }
   }, [slug]);
@@ -361,7 +309,7 @@ export default function BlogPost({ params }: { params: Promise<{ slug: string }>
             <h3 className="text-2xl font-bold text-white mb-6">Related Articles</h3>
             <div className="grid md:grid-cols-3 gap-4">
               {post.relatedPosts.map((related: RelatedPost) => (
-                <Link key={related.id} href={`/blog/${related.id}`}>
+                <Link key={related.slug} href={`/blog/${related.slug}`}>
                   <motion.div
                     whileHover={{ scale: 1.02 }}
                     className="p-4 bg-gradient-to-br from-gray-900 to-black rounded-lg border border-cyan-400/20 hover:border-cyan-400/40 transition-all"

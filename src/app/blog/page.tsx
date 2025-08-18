@@ -11,99 +11,10 @@ import { SiMedium, SiHashnode } from 'react-icons/si';
 import Navigation from '@/components/Navigation';
 import CursorEffect from '@/components/CursorEffect';
 
-// Blog data type
-interface BlogPost {
-  id: string;
-  title: string;
-  excerpt: string;
-  content?: string;
-  date: string;
-  readTime: string;
-  tags: string[];
-  image: string;
-  views: number;
-  likes: number;
-  featured?: boolean;
-  category: 'AI Research' | 'Tutorial' | 'Case Study' | 'Opinion';
-}
+import { getAllBlogPosts, BlogPost } from '@/data/blogPosts';
 
-// Sample blog posts data
-const blogPosts: BlogPost[] = [
-  {
-    id: 'understanding-transformers',
-    title: 'Understanding Transformer Architecture: From Attention to GPT',
-    excerpt: 'Deep dive into the revolutionary transformer architecture that powers modern AI language models like GPT and BERT.',
-    date: '2024-01-15',
-    readTime: '12 min',
-    tags: ['Transformers', 'NLP', 'Deep Learning', 'GPT'],
-    image: 'https://picsum.photos/800/400?random=1',
-    views: 1523,
-    likes: 234,
-    featured: true,
-    category: 'AI Research'
-  },
-  {
-    id: 'stable-diffusion-explained',
-    title: 'Stable Diffusion Explained: How AI Creates Art',
-    excerpt: 'Exploring the mathematics and implementation behind diffusion models and their application in AI art generation.',
-    date: '2024-01-10',
-    readTime: '15 min',
-    tags: ['Diffusion Models', 'Computer Vision', 'Generative AI'],
-    image: 'https://picsum.photos/800/400?random=2',
-    views: 2341,
-    likes: 456,
-    featured: true,
-    category: 'AI Research'
-  },
-  {
-    id: 'fine-tuning-llms',
-    title: 'Fine-tuning LLMs with LoRA: A Practical Guide',
-    excerpt: 'Step-by-step tutorial on efficiently fine-tuning large language models using Low-Rank Adaptation techniques.',
-    date: '2024-01-08',
-    readTime: '10 min',
-    tags: ['LLM', 'LoRA', 'Fine-tuning', 'Tutorial'],
-    image: 'https://picsum.photos/800/400?random=3',
-    views: 892,
-    likes: 123,
-    category: 'Tutorial'
-  },
-  {
-    id: 'rag-implementation',
-    title: 'Building a RAG System from Scratch',
-    excerpt: 'Implementing Retrieval-Augmented Generation for enhanced AI responses using vector databases and embeddings.',
-    date: '2024-01-05',
-    readTime: '18 min',
-    tags: ['RAG', 'Vector DB', 'Embeddings', 'LangChain'],
-    image: 'https://picsum.photos/800/400?random=4',
-    views: 1102,
-    likes: 189,
-    category: 'Tutorial'
-  },
-  {
-    id: 'vision-transformers',
-    title: 'Vision Transformers: When Attention Meets Computer Vision',
-    excerpt: 'How transformers revolutionized computer vision tasks and why ViT outperforms traditional CNNs.',
-    date: '2024-01-02',
-    readTime: '14 min',
-    tags: ['ViT', 'Computer Vision', 'Transformers'],
-    image: 'https://picsum.photos/800/400?random=5',
-    views: 756,
-    likes: 98,
-    category: 'AI Research'
-  },
-  {
-    id: 'ml-deployment',
-    title: 'Deploying ML Models at Scale: Best Practices',
-    excerpt: 'Production-ready machine learning deployment strategies using Docker, Kubernetes, and MLOps principles.',
-    date: '2023-12-28',
-    readTime: '20 min',
-    tags: ['MLOps', 'Deployment', 'Docker', 'Kubernetes'],
-    image: 'https://picsum.photos/800/400?random=6',
-    views: 1435,
-    likes: 201,
-    category: 'Case Study'
-  }
-];
+// Sample blog posts data - replaced with dynamic import
+const blogPosts: BlogPost[] = getAllBlogPosts();
 
 // Category colors
 const categoryColors: Record<string, string> = {

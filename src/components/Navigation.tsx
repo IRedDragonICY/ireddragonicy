@@ -6,13 +6,10 @@ import { motion, AnimatePresence, useScroll, useTransform, useSpring, useMotionV
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { HiMenuAlt3, HiX } from 'react-icons/hi';
-import { FaBrain, FaGraduationCap, FaBriefcase } from 'react-icons/fa';
+import { FaBrain, FaGraduationCap } from 'react-icons/fa';
 import {
   BiHomeAlt,
-  BiCodeAlt,
-  BiRocket,
-  BiEnvelope,
-  BiNews
+  BiCodeAlt
 } from 'react-icons/bi';
 import { RiArticleLine, RiShareLine } from 'react-icons/ri';
 import { TbBrain } from 'react-icons/tb';

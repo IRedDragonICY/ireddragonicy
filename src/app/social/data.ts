@@ -8,7 +8,10 @@ import {
   FaPinterest, 
   FaGamepad, 
   FaRobot, 
-  FaGithub 
+  FaGithub,
+  FaCertificate,
+  FaGraduationCap,
+  FaMusic
 } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
 import { 
@@ -205,6 +208,16 @@ export const socials: SocialItem[] = [
     gradientTo: '#004182',
   },
   {
+    id: 'credly',
+    name: 'Credly',
+    href: 'https://www.credly.com/users/ireddragonicy',
+    icon: FaCertificate,
+    description: 'Digital badges, certifications, and professional achievements.',
+    accent: '#FF8500',
+    gradientFrom: '#FF8500',
+    gradientTo: '#E5740A',
+  },
+  {
     id: 'gcloud-skillboost',
     name: 'Google Cloud Skills Boost',
     href: 'https://www.cloudskillsboost.google/public_profiles/a0d99021-862b-40d4-b668-c5a85a2b0f85',
@@ -235,6 +248,16 @@ export const socials: SocialItem[] = [
     gradientTo: '#00B894',
   },
   {
+    id: 'suno',
+    name: 'Suno',
+    href: 'https://suno.com/@IRedDragonICY',
+    icon: FaMusic,
+    description: 'AI-generated music creations and audio experiments.',
+    accent: '#8B5CF6',
+    gradientFrom: '#8B5CF6',
+    gradientTo: '#7C3AED',
+  },
+  {
     id: 'orcid',
     name: 'ORCID',
     href: 'https://orcid.org/0009-0001-4686-1928',
@@ -243,6 +266,16 @@ export const socials: SocialItem[] = [
     accent: '#A6CE39',
     gradientFrom: '#A6CE39',
     gradientTo: '#7CB518',
+  },
+  {
+    id: 'academia',
+    name: 'Academia.edu',
+    href: 'https://universitasahmaddahlan.academia.edu/MohammadFaridHendianto',
+    icon: FaGraduationCap,
+    description: 'Academic papers, research, and scholarly publications.',
+    accent: '#1A472A',
+    gradientFrom: '#166534',
+    gradientTo: '#15803D',
   },
   {
     id: 'kaggle',

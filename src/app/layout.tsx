@@ -5,6 +5,7 @@ import BootGate from '@/components/BootGate';
 import Script from "next/script";
 import type { ReactNode } from "react";
 import React from "react";
+import { Analytics } from '@vercel/analytics/next';
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -130,6 +131,7 @@ export default function RootLayout({
         <BootGate>
           {children}
         </BootGate>
+        <Analytics />
       </body>
     </html>
   );

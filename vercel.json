@@ -1,4 +1,9 @@
 {
+  "git": {
+    "deploymentEnabled": {
+      "output": false
+    }
+  },
   "crons": [
     { "path": "/api/prewarm-social-light", "schedule": "0 2 * * *" },
     { "path": "/api/prewarm-assets", "schedule": "0 3 * * *" }

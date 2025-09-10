@@ -12,6 +12,9 @@ on:
   push:
     branches:
     - master
+    - main
+    branches-ignore:
+    - output
     
   
 

@@ -13,8 +13,6 @@ on:
     branches:
     - master
     - main
-    branches-ignore:
-    - output
     
   
 

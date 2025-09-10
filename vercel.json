@@ -1,8 +1,14 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "git": {
     "deploymentEnabled": {
+      "main": true,
+      "master": true,
       "output": false
     }
+  },
+  "github": {
+    "autoAlias": false
   },
   "crons": [
     { "path": "/api/prewarm-social-light", "schedule": "0 2 * * *" },

@@ -11,7 +11,8 @@ import {
   FaGithub,
   FaCertificate,
   FaGraduationCap,
-  FaMusic
+  FaMusic,
+  FaFacebook
 } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
 import { 
@@ -86,6 +87,16 @@ export const socials: SocialItem[] = [
     accent: '#E1306C',
     gradientFrom: '#833AB4',
     gradientTo: '#E1306C',
+  },
+  {
+    id: 'facebook',
+    name: 'Facebook',
+    href: 'https://www.facebook.com/IRedDragonICY',
+    icon: FaFacebook,
+    description: 'Community updates, shared posts, and social engagement.',
+    accent: '#1877F2',
+    gradientFrom: '#1877F2',
+    gradientTo: '#0A5AD4',
   },
   {
     id: 'instagram-dev',

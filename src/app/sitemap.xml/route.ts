@@ -111,20 +111,40 @@ async function getBlogPosts(): Promise<{ routes: string[], lastModified: Date }>
   }
 }
 
+async function getSocialLinks(): Promise<SitemapUrl[]> {
+  try {
+    const { socials } = await import('../social/data');
+    const now = new Date();
+
+    return socials.map((social) => ({
+      url: social.href,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.4,
+    }));
+  } catch (error) {
+    console.warn('Error loading social links:', error);
+    return [];
+  }
+}
+
 async function generateSitemapUrls(): Promise<SitemapUrl[]> {
   const baseUrl = getBaseUrl();
   const staticRoutes = collectStaticRoutes();
   const { routes: blogRoutes, lastModified: blogLastModified } = await getBlogPosts();
+  const socialUrls = await getSocialLinks();
   const allRoutes = [...staticRoutes, ...blogRoutes];
   
   const now = new Date();
   
-  return allRoutes.map(route => ({
+  const internalRoutes: SitemapUrl[] = allRoutes.map((route): SitemapUrl => ({
     url: `${baseUrl}${route}`,
     lastModified: route.startsWith('/blog/') ? blogLastModified : now,
     changeFrequency: route === '/' ? 'weekly' : route.startsWith('/blog/') ? 'monthly' : 'weekly',
     priority: route === '/' ? 1.0 : route.startsWith('/blog/') ? 0.7 : 0.8
   }));
+
+  return [...internalRoutes, ...socialUrls];
 }
 
 function generateSitemapXml(urls: SitemapUrl[]): string {

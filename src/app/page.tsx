@@ -1,13 +1,12 @@
 // app/page.tsx
 'use client';
 
-import React, { useRef, useState } from 'react';
-import { motion, useInView, AnimatePresence } from 'framer-motion';
+import React, { useRef } from 'react';
+import { motion, useInView } from 'framer-motion';
 import { FaPython, FaReact, FaNodeJs, FaDocker, FaGitAlt, FaGithub, FaLinkedin, FaBrain } from 'react-icons/fa';
 import { SiTypescript, SiTailwindcss, SiNextdotjs, SiTensorflow, SiPytorch, SiScikitlearn, SiJupyter, SiPostgresql, SiOpenai, SiHuggingface } from 'react-icons/si';
 import { FiExternalLink, FiCode } from 'react-icons/fi';
-import { HiOutlineMail, HiSparkles } from 'react-icons/hi';
-import { IoClose } from 'react-icons/io5';
+import { HiSparkles } from 'react-icons/hi';
 import Hero from '@/components/Hero';
 // Terminal is now a dedicated route at /terminal
 import Navigation from '@/components/Navigation';
@@ -320,50 +319,6 @@ const Skills = () => {
     );
 };
 
-const Contact = () => (
-    <Section id="contact" title="CONNECT">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="text-center max-w-2xl mx-auto"
-        >
-            <div className="p-8 rounded-2xl bg-gradient-to-br from-cyan-500/5 via-purple-500/5 to-pink-500/5 border border-cyan-400/20">
-                <p className="text-lg mb-8 text-gray-300 leading-relaxed">
-                    Ready to collaborate on cutting-edge AI research and innovative machine learning projects.
-                    Let's push the boundaries of artificial intelligence together.
-                </p>
-
-                <motion.a
-                    href={`mailto:${portfolioData.personalInfo.email}`}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-xl shadow-2xl shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all duration-300"
-                >
-                    <HiOutlineMail className="text-2xl" />
-                    <span>{portfolioData.personalInfo.email}</span>
-                </motion.a>
-
-                <div className="flex justify-center gap-6 mt-12">
-                    {portfolioData.socials.map((social) => (
-                        <motion.a
-                            key={social.name}
-                            href={social.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            whileHover={{ scale: 1.2, rotate: 5 }}
-                            whileTap={{ scale: 0.9 }}
-                            className="p-3 bg-gray-900 rounded-xl border border-gray-800 hover:border-cyan-400/40 hover:bg-gradient-to-br hover:from-cyan-500/10 hover:to-purple-500/10 transition-all duration-300"
-                        >
-                            <social.icon className="text-2xl text-gray-400 hover:text-cyan-400" />
-                        </motion.a>
-                    ))}
-                </div>
-            </div>
-        </motion.div>
-    </Section>
-);
-
 const Footer = () => (
     <footer className="relative w-full py-8 border-t border-cyan-400/10">
         <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/5 to-transparent" />
@@ -442,7 +397,6 @@ export default function Home() {
                 <IntelProfile />
                 <Projects />
                 <Skills />
-                <Contact />
             </main>
 
             <Footer />

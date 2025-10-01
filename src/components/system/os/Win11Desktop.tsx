@@ -5,6 +5,28 @@ import { Win11ThemeProvider, useWin11Theme, CalculatorApp, SettingsApp } from '.
 import StartMenu from './win11/ui/StartMenu';
 import CalendarPanel from './win11/ui/CalendarPanel';
 import LockScreen from './win11/ui/LockScreen';
+import DesktopContextMenu from './win11/desktop/DesktopContextMenu';
+import DesktopIconGrid from './win11/desktop/DesktopIconGrid';
+import Taskbar from './win11/desktop/Taskbar';
+import WindowFrame from './win11/desktop/WindowFrame';
+import IconGlyph from './win11/desktop/IconGlyph';
+import {
+  APP_META,
+  DEFAULT_DESKTOP_ICONS,
+  DEFAULT_START_PINNED,
+  DEFAULT_TASKBAR_PINNED,
+  DESKTOP_GRID_SIZE,
+  DESKTOP_STORAGE_KEY,
+} from './win11/desktop/constants';
+import type {
+  AppId,
+  ContextMenuItem,
+  ContextMenuState,
+  DesktopIconItem,
+  ResizeDir,
+  WindowSpec,
+} from './win11/desktop/types';
+import { BatteryIcon, VolumeIcon } from './win11/desktop/icons';
 
 // Simple canvas-based paint tool
 const PaintApp: React.FC = () => {
@@ -42,123 +64,143 @@ interface Win11DesktopProps {
   onReboot: (reason?: 'restart' | 'shutdown') => void;
 }
 
-type AppId = 'explorer' | 'notepad' | 'paint' | 'calc' | 'edge' | 'settings' | 'taskmgr' | 'portfolio';
+const MENU_ICON_CLASS = 'w-5 h-5 text-black/60 dark:text-white/70';
 
-type IconName = 'start' | 'explorer' | 'edge' | 'notepad' | 'paint' | 'calc' | 'settings' | 'pc' | 'portfolio';
-
-const Icon: React.FC<{ name: IconName; className?: string }> = ({ name, className }) => {
-  if (name === 'start') {
-    return (
-      <svg viewBox="0 0 48 48" className={className} aria-hidden>
-        <g fill="currentColor">
-          <rect x="4" y="4" width="18" height="18" rx="2" />
-          <rect x="26" y="4" width="18" height="18" rx="2" />
-          <rect x="4" y="26" width="18" height="18" rx="2" />
-          <rect x="26" y="26" width="18" height="18" rx="2" />
-        </g>
-      </svg>
-    );
-  }
-  if (name === 'explorer') {
-    return (
-      <svg viewBox="0 0 48 48" className={className} aria-hidden>
-        <path fill="currentColor" d="M6 14h12l3-4h10a5 5 0 0 1 5 5v21a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5V19a5 5 0 0 1 5-5Zm0 6h36v3H6v-3Z"/>
-      </svg>
-    );
-  }
-  if (name === 'edge') {
-    return (
-      <svg viewBox="0 0 48 48" className={className} aria-hidden>
-        <path fill="currentColor" d="M24 6c9.94 0 18 8.06 18 18 0 1.6-.2 3.16-.57 4.65C39.1 24.7 33.87 21 27.83 21c-6.74 0-12.2 5.46-12.2 12.2 0 2.63.85 5.06 2.3 7.04A18.01 18.01 0 0 1 6 24C6 14.06 14.06 6 24 6Z"/>
-      </svg>
-    );
-  }
-  if (name === 'notepad') {
-    return (
-      <svg viewBox="0 0 48 48" className={className} aria-hidden>
-        <path fill="currentColor" d="M10 6h24a4 4 0 0 1 4 4v28a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4V10a4 4 0 0 1 4-4Zm4 10h16v3H14v-3Zm0 8h16v3H14v-3Z"/>
-      </svg>
-    );
-  }
-  if (name === 'paint') {
-    return (
-      <svg viewBox="0 0 48 48" className={className} aria-hidden>
-        <path fill="currentColor" d="M30 6c6.63 0 12 5.37 12 12 0 6.08-3.42 8-7 8h-5c-2.76 0-5 2.24-5 5 0 2.2-1.8 4-4 4-3.31 0-6-2.69-6-6 0-12.15 6.37-23 15-23Zm-9 29a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z"/>
-      </svg>
-    );
-  }
-  if (name === 'calc') {
-    return (
-      <svg viewBox="0 0 48 48" className={className} aria-hidden>
-        <path fill="currentColor" d="M10 6h28a4 4 0 0 1 4 4v28a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4V10a4 4 0 0 1 4-4Zm5 7h18v6H15v-6Zm0 12h6v6h-6v-6Zm8 0h6v6h-6v-6Zm8 0h6v6h-6v-6Zm-16 8h6v6h-6v-6Zm8 0h6v6h-6v-6Zm8 0h6v6h-6v-6Z"/>
-      </svg>
-    );
-  }
-  if (name === 'settings') {
-    return (
-      <svg viewBox="0 0 48 48" className={className} aria-hidden>
-        <path fill="currentColor" d="M26.6 6.5 28 10a15.9 15.9 0 0 1 4.05 2.35l3.54-1.44 3 5.2-3 2.59c.14.99.14 2.02 0 3l3 2.59-3 5.2L32.05 28A15.9 15.9 0 0 1 28 30.05L26.6 33.5h-6.2L19 30.05A15.9 15.9 0 0 1 14.95 28l-3.54 1.44-3-5.2 3-2.59a12.9 12.9 0 0 1 0-3l-3-2.59 3-5.2 3.54 1.44A15.9 15.9 0 0 1 19 10l1.4-3.5h6.2ZM24 18a6 6 0 1 0 0 12 6 6 0 0 0 0-12Z"/>
-      </svg>
-    );
-  }
-  if (name === 'portfolio') {
-    return (
-      <svg viewBox="0 0 48 48" className={className} aria-hidden>
-        <rect x="6" y="10" width="30" height="22" rx="3" fill="currentColor" opacity="0.25"/>
-        <rect x="10" y="14" width="22" height="14" rx="2" fill="currentColor"/>
-        <path d="M38 24l6-4v8l-6-4Z" fill="currentColor"/>
-      </svg>
-    );
-  }
-  // pc / monitor
-  return (
-    <svg viewBox="0 0 48 48" className={className} aria-hidden>
-      <path fill="currentColor" d="M6 10h36a2 2 0 0 1 2 2v20a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V12a2 2 0 0 1 2-2Zm10 28h16v4H16v-4Z"/>
+const MENU_ICONS = {
+  share: (
+    <svg viewBox="0 0 24 24" className={MENU_ICON_CLASS}>
+      <circle cx="5" cy="12" r="1.7" fill="currentColor" />
+      <circle cx="12" cy="7" r="1.7" fill="currentColor" />
+      <circle cx="19" cy="12" r="1.7" fill="currentColor" />
+      <path d="M6.6 11.3 11 8.9M13 8.9l4.4 2.4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
     </svg>
-  );
+  ),
+  shield: (
+    <svg viewBox="0 0 24 24" className={MENU_ICON_CLASS}>
+      <path d="M12 3 5 6v5c0 4.6 3.1 8.9 7 10 3.9-1.1 7-5.4 7-10V6l-7-3Z" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+    </svg>
+  ),
+  shieldStar: (
+    <svg viewBox="0 0 24 24" className={MENU_ICON_CLASS}>
+      <path d="M12 3 5 6v5c0 4.6 3.1 8.9 7 10 3.9-1.1 7-5.4 7-10V6l-7-3Z" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="m12 9.2 1 2.2 2.5.2-1.9 1.6.6 2.4L12 14.4l-2.2 1.2.6-2.4-1.9-1.6 2.5-.2Z" fill="currentColor" />
+    </svg>
+  ),
+  pin: (
+    <svg viewBox="0 0 24 24" className={MENU_ICON_CLASS}>
+      <path d="M8 3h8l-1 7 3 2-5 5-5-5 3-2Z" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M12 17v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  ),
+  star: (
+    <svg viewBox="0 0 24 24" className={MENU_ICON_CLASS}>
+      <path d="m12 4 2.1 4.6 5.1.6-3.7 3.4.9 4.9L12 15.8l-4.4 2.7.9-4.9L4.8 9.2l5.1-.6Z" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+    </svg>
+  ),
+  archive: (
+    <svg viewBox="0 0 24 24" className={MENU_ICON_CLASS}>
+      <rect x="4" y="4" width="16" height="5" rx="1.5" fill="none" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M6 9h12v9a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9Z" fill="none" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M10 12h4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  ),
+  copy: (
+    <svg viewBox="0 0 24 24" className={MENU_ICON_CLASS}>
+      <rect x="8" y="7" width="11" height="13" rx="1.6" fill="none" stroke="currentColor" strokeWidth="1.4" />
+      <rect x="5" y="4" width="11" height="13" rx="1.6" fill="none" stroke="currentColor" strokeWidth="1.4" opacity="0.6" />
+    </svg>
+  ),
+  rename: (
+    <svg viewBox="0 0 24 24" className={MENU_ICON_CLASS}>
+      <path d="M5 6h14M5 18h14M9 6v12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  ),
+  info: (
+    <svg viewBox="0 0 24 24" className={MENU_ICON_CLASS}>
+      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M12 10v6M12 7v.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  ),
+  pencil: (
+    <svg viewBox="0 0 24 24" className={MENU_ICON_CLASS}>
+      <path d="m7 17-2 4 4-2 10-10-2-2Z" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+      <path d="m14 6 2 2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  ),
+  more: (
+    <svg viewBox="0 0 24 24" className={MENU_ICON_CLASS}>
+      <circle cx="6" cy="12" r="1.6" fill="currentColor" />
+      <circle cx="12" cy="12" r="1.6" fill="currentColor" />
+      <circle cx="18" cy="12" r="1.6" fill="currentColor" />
+    </svg>
+  ),
+  refresh: (
+    <svg viewBox="0 0 24 24" className={MENU_ICON_CLASS}>
+      <path d="M4 12a8 8 0 0 1 13.6-5.4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M18 6v4h-4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M20 12a8 8 0 0 1-13.6 5.4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M6 18v-4h4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  grid: (
+    <svg viewBox="0 0 24 24" className={MENU_ICON_CLASS}>
+      <rect x="4" y="4" width="6" height="6" rx="1" fill="none" stroke="currentColor" strokeWidth="1.4" />
+      <rect x="14" y="4" width="6" height="6" rx="1" fill="none" stroke="currentColor" strokeWidth="1.4" />
+      <rect x="4" y="14" width="6" height="6" rx="1" fill="none" stroke="currentColor" strokeWidth="1.4" />
+      <rect x="14" y="14" width="6" height="6" rx="1" fill="none" stroke="currentColor" strokeWidth="1.4" />
+    </svg>
+  ),
+  sort: (
+    <svg viewBox="0 0 24 24" className={MENU_ICON_CLASS}>
+      <path d="M8 6h8M8 12h5M8 18h2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <path d="m15 9 3-3 3 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  plus: (
+    <svg viewBox="0 0 24 24" className={MENU_ICON_CLASS}>
+      <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  ),
+  monitor: (
+    <svg viewBox="0 0 24 24" className={MENU_ICON_CLASS}>
+      <rect x="3" y="5" width="18" height="12" rx="2" fill="none" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M9 19h6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  ),
+  palette: (
+    <svg viewBox="0 0 24 24" className={MENU_ICON_CLASS}>
+      <path d="M12 4a8 8 0 1 0 0 16h2.5a1.5 1.5 0 0 0 0-3H12a2 2 0 0 1-2-2c0-1.1.9-2 2-2h4a4 4 0 0 0 0-8Z" fill="none" stroke="currentColor" strokeWidth="1.4" />
+      <circle cx="8.5" cy="10" r="1" fill="currentColor" />
+      <circle cx="9.5" cy="6.5" r="1" fill="currentColor" />
+      <circle cx="14.5" cy="6.5" r="1" fill="currentColor" />
+    </svg>
+  ),
+  folder: (
+    <svg viewBox="0 0 24 24" className={MENU_ICON_CLASS}>
+      <path d="M4 6h6l2 2h8a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+    </svg>
+  ),
+  doc: (
+    <svg viewBox="0 0 24 24" className={MENU_ICON_CLASS}>
+      <path d="M7 3h8l4 4v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+      <path d="M15 3v4h4" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+      <path d="M9 13h6M9 17h4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  ),
+  link: (
+    <svg viewBox="0 0 24 24" className={MENU_ICON_CLASS}>
+      <path d="M10.5 7h-3a4 4 0 0 0 0 8h3" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <path d="M13.5 7h3a4 4 0 0 1 0 8h-3" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <path d="M8 12h8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  ),
 };
 
-const APP_META: Record<AppId, { label: string; icon: IconName }> = {
-  explorer: { label: 'File Explorer', icon: 'explorer' },
-  edge: { label: 'Microsoft Edge', icon: 'edge' },
-  notepad: { label: 'Notepad', icon: 'notepad' },
-  paint: { label: 'Paint', icon: 'paint' },
-  calc: { label: 'Calculator', icon: 'calc' },
-  settings: { label: 'Settings', icon: 'settings' },
-  taskmgr: { label: 'Task Manager', icon: 'settings' },
-  portfolio: { label: 'Portfolio', icon: 'portfolio' },
-};
-
-// System tray icons (wifi/volume/battery)
-const WifiIcon: React.FC<{ on?: boolean; className?: string }> = ({ on = true, className }) => (
-  <svg viewBox="0 0 48 48" className={className}><path fill="currentColor" d="M24 36a3 3 0 1 0 0 6 3 3 0 0 0 0-6Zm0-8c4.97 0 9.48 2.03 12.73 5.27l-2.83 2.83A15.96 15.96 0 0 0 24 32c-4.28 0-8.17 1.66-11.1 4.37l-2.82-2.83A19.97 19.97 0 0 1 24 28Zm0-8c7.5 0 14.29 3.05 19.2 7.96l-2.83 2.83A23.93 23.93 0 0 0 24 24c-6.61 0-12.59 2.69-16.97 7.04l-2.83-2.83C9.61 19.91 16.41 16 24 16Z" opacity={on ? 1 : 0.35}/></svg>
-);
-const VolumeIcon: React.FC<{ muted?: boolean; className?: string }> = ({ muted = false, className }) => (
-  <svg viewBox="0 0 48 48" className={className}><path fill="currentColor" d="M6 20h8l10-8v24l-10-8H6z"/><path fill="currentColor" d="M32 18c2.2 2.2 2.2 9.8 0 12" opacity={muted ? 0.2 : 1}/><path fill="currentColor" d="M36 14c4.4 4.4 4.4 16.6 0 21" opacity={muted ? 0.2 : 1}/>{muted && <path d="M30 14 42 34" stroke="currentColor" strokeWidth="3"/>}</svg>
-);
-const BatteryIcon: React.FC<{ level?: number; charging?: boolean; className?: string }> = ({ level = 0.98, charging = false, className }) => (
-  <svg viewBox="0 0 64 32" className={className}>
-    <rect x="2" y="6" width="54" height="20" rx="4" fill="none" stroke="currentColor" strokeWidth="2" />
-    <rect x="58" y="12" width="4" height="8" rx="1" fill="currentColor" />
-    <rect x="4" y="8" width={50 * Math.max(0, Math.min(1, level))} height="16" rx="3" fill="currentColor" opacity={0.6} />
-    {charging && <path d="M30 9 24 18h6l-4 8 12-12h-8z" fill="currentColor" />}
+const CHECK_ICON = (
+  <svg viewBox="0 0 20 20" className="w-4 h-4 text-[var(--accent,theme(colors.blue.500))]">
+    <path d="M4 10.5 7.5 14 16 5.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
-
-interface WindowSpec {
-  id: string;
-  app: AppId;
-  title: string;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  z: number;
-  minimized: boolean;
-  maximized: boolean;
-  // Last non-maximized geometry for proper restore
-  restore?: { x: number; y: number; w: number; h: number };
-}
 
 type AppContentProps = { app: AppId; openApp: (app: AppId) => void };
 
@@ -222,13 +264,19 @@ const TaskManagerApp: React.FC<{ openApp: (app: AppId) => void }> = ({ openApp }
   return (
     <div className="w-full h-full bg-[#111827] text-gray-200 flex">
       <div className="w-48 border-r border-black/40 p-2 space-y-1 text-sm">
-        {[
-          { id:'processes', label:'Processes' },
-          { id:'performance', label:'Performance' },
-          { id:'startup', label:'Startup apps' },
-          { id:'users', label:'Users' },
-        ].map(it => (
-          <button key={it.id} className={`w-full text-left px-3 py-2 rounded ${tab===it.id ? 'bg-white/10' : 'hover:bg-white/5'}`} onClick={()=>setTab(it.id as any)}>{it.label}</button>
+        {([
+          { id: 'processes', label: 'Processes' },
+          { id: 'performance', label: 'Performance' },
+          { id: 'startup', label: 'Startup apps' },
+          { id: 'users', label: 'Users' },
+        ] satisfies Array<{ id: typeof tab; label: string }>).map((item) => (
+          <button
+            key={item.id}
+            className={`w-full text-left px-3 py-2 rounded ${tab === item.id ? 'bg-white/10' : 'hover:bg-white/5'}`}
+            onClick={() => setTab(item.id)}
+          >
+            {item.label}
+          </button>
         ))}
       </div>
       <div className="flex-1 p-3">
@@ -353,59 +401,14 @@ const AppContent: React.FC<AppContentProps> = ({ app, openApp }) => {
 };
 
 const DesktopChrome: React.FC<Win11DesktopProps> = ({ onReboot }) => {
+  const { themeMode, accentColor, transparency } = useWin11Theme();
   const [phase, setPhase] = useState<'splash' | 'lock' | 'desktop'>('splash');
   const [windows, setWindows] = useState<WindowSpec[]>([]);
   const [zTop, setZTop] = useState(10);
-  const [taskbarPinned] = useState<AppId[]>(['explorer','edge','notepad','paint','calc','settings','taskmgr']);
-  const [startPinned] = useState<AppId[]>(['explorer','edge','notepad','paint','calc','settings','taskmgr','portfolio']);
+  const [taskbarPinned] = useState<AppId[]>(DEFAULT_TASKBAR_PINNED);
+  const [startPinned, setStartPinned] = useState<AppId[]>(DEFAULT_START_PINNED);
   const [startOpen, setStartOpen] = useState(false);
   const [startPowerOpen, setStartPowerOpen] = useState(false);
-  const [startSearch, setStartSearch] = useState('');
-  const dragRef = useRef<{ id: string; dx: number; dy: number } | null>(null);
-  const [clock, setClock] = useState<string>(new Date().toLocaleTimeString());
-  // Window resize state/ref
-  type ResizeDir = 'n' | 'e' | 's' | 'w' | 'ne' | 'nw' | 'se' | 'sw';
-  const resizeRef = useRef<{ id: string; dir: ResizeDir; startX: number; startY: number; startW: number; startH: number; startL: number; startT: number } | null>(null);
-  // Desktop icons state with drag positions
-  const [desktopIcons, setDesktopIcons] = useState<{ app: AppId; x: number; y: number }[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const raw = window.localStorage.getItem('win11_desktop_icons');
-        if (raw) return JSON.parse(raw);
-      } catch {}
-    }
-    return [
-      { app: 'explorer', x: 20, y: 20 },
-      { app: 'notepad', x: 20, y: 120 },
-      { app: 'paint', x: 20, y: 220 },
-      { app: 'calc', x: 20, y: 320 },
-      { app: 'settings', x: 20, y: 420 },
-      { app: 'portfolio', x: 20, y: 520 },
-    ];
-  });
-  useEffect(() => {
-    try { window.localStorage.setItem('win11_desktop_icons', JSON.stringify(desktopIcons)); } catch {}
-  }, [desktopIcons]);
-  const iconDragRef = useRef<{ idx: number; ox: number; oy: number; dx: number; dy: number } | null>(null);
-  const startDragIcon = (idx: number, e: React.MouseEvent) => {
-    const ico = desktopIcons[idx];
-    iconDragRef.current = { idx, ox: ico.x, oy: ico.y, dx: e.clientX - ico.x, dy: e.clientY - ico.y };
-  };
-  useEffect(() => {
-    const onMove = (e: MouseEvent) => {
-      if (!iconDragRef.current) return;
-      const { idx, dx, dy } = iconDragRef.current;
-      const nx = e.clientX - dx;
-      const ny = e.clientY - dy;
-      const snap = (v: number, g: number) => Math.round(v / g) * g;
-      setDesktopIcons(prev => prev.map((ic, i) => i === idx ? { ...ic, x: snap(nx, 20), y: snap(ny, 20) } : ic));
-    };
-    const onUp = () => { iconDragRef.current = null; };
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onUp);
-    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
-  }, []);
-  // Quick settings / tray state
   const [qsOpen, setQsOpen] = useState(false);
   const [ncOpen, setNcOpen] = useState(false);
   const [wifiOn, setWifiOn] = useState(true);
@@ -418,37 +421,149 @@ const DesktopChrome: React.FC<Win11DesktopProps> = ({ onReboot }) => {
   const [volume, setVolume] = useState(40);
   const [muted, setMuted] = useState(false);
   const [batteryLevel] = useState(98);
+  const [clock, setClock] = useState<string>(new Date().toLocaleTimeString());
+  const [iconSize, setIconSize] = useState<'small' | 'medium' | 'large'>('medium');
+  const [showDesktopIcons, setShowDesktopIcons] = useState(true);
+  const [autoArrange, setAutoArrange] = useState(false);
+  const [toast, setToast] = useState<{ id: number; message: string } | null>(null);
+  const toastTimerRef = useRef<number | null>(null);
+  const dragRef = useRef<{ id: string; dx: number; dy: number } | null>(null);
+  const resizeRef = useRef<{ id: string; dir: ResizeDir; startX: number; startY: number; startW: number; startH: number; startL: number; startT: number } | null>(null);
+  const iconDragRef = useRef<{ id: string; idx: number; offsetX: number; offsetY: number } | null>(null);
+  const [tbPreview, setTbPreview] = useState<{ windowId: string; x: number; y: number } | null>(null);
+  const [contextMenu, setContextMenu] = useState<ContextMenuState>({ open: false, x: 0, y: 0, targetType: 'desktop', items: [] });
+  const [selectedIcons, setSelectedIcons] = useState<string[]>([]);
+  const [renameId, setRenameId] = useState<string | null>(null);
 
-  // Boot audio (simple chord chime)
+  const loadDesktopIcons = (): DesktopIconItem[] => {
+    if (typeof window === 'undefined') return DEFAULT_DESKTOP_ICONS;
+    try {
+      const raw = window.localStorage.getItem(DESKTOP_STORAGE_KEY);
+      if (!raw) return DEFAULT_DESKTOP_ICONS;
+      const parsed = JSON.parse(raw) as unknown;
+      if (!Array.isArray(parsed)) return DEFAULT_DESKTOP_ICONS;
+      const normalized: DesktopIconItem[] = parsed
+        .map((entry, idx) => {
+          if (typeof entry !== 'object' || entry === null) return null;
+          const candidate = entry as Partial<DesktopIconItem> & { app?: string };
+          const app = candidate.app;
+          if (!app || !APP_META[app as AppId]) return null;
+          const appId = app as AppId;
+          const defaultIcon = DEFAULT_DESKTOP_ICONS[Math.min(idx, DEFAULT_DESKTOP_ICONS.length - 1)];
+          const labelSource = typeof candidate.label === 'string' && candidate.label.trim().length
+            ? candidate.label
+            : appId === 'explorer'
+              ? 'This PC'
+              : APP_META[appId].label;
+          return {
+            id: candidate.id ?? `${appId}-${idx}`,
+            app: appId,
+            x: typeof candidate.x === 'number' ? candidate.x : defaultIcon.x,
+            y: typeof candidate.y === 'number' ? candidate.y : defaultIcon.y,
+            label: labelSource,
+          } satisfies DesktopIconItem;
+        })
+        .filter((icon): icon is DesktopIconItem => Boolean(icon));
+      const missingDefaults = DEFAULT_DESKTOP_ICONS.filter(def => !normalized.some(icon => icon.app === def.app));
+      return [...normalized, ...missingDefaults];
+    } catch {
+      return DEFAULT_DESKTOP_ICONS;
+    }
+  };
+
+  const [desktopIcons, setDesktopIcons] = useState<DesktopIconItem[]>(loadDesktopIcons);
+
+  const persistIcons = (iconsToPersist: DesktopIconItem[]) => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem(DESKTOP_STORAGE_KEY, JSON.stringify(iconsToPersist));
+    } catch {
+      // ignore storage errors
+    }
+  };
+
   useEffect(() => {
-    if (phase !== 'splash') return;
-    const audio = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const freqs = [587, 784, 880];
-    const gains: GainNode[] = [];
-    const oscs: OscillatorNode[] = [];
-    freqs.forEach((f, i) => {
-      const o = audio.createOscillator();
-      const g = audio.createGain();
-      o.type = 'sine';
-      o.frequency.value = f;
-      o.connect(g);
-      g.connect(audio.destination);
-      g.gain.setValueAtTime(0.0001, audio.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.15 / (i + 1), audio.currentTime + 0.08 + i * 0.03);
-      g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + 1.4 + i * 0.02);
-      o.start();
-      o.stop(audio.currentTime + 1.5 + i * 0.02);
-      gains.push(g); oscs.push(o);
+    persistIcons(desktopIcons);
+  }, [desktopIcons]);
+
+  const showToast = (message: string) => {
+    if (typeof window === 'undefined') return;
+    if (toastTimerRef.current) {
+      window.clearTimeout(toastTimerRef.current);
+      toastTimerRef.current = null;
+    }
+    const id = Date.now();
+    setToast({ id, message });
+    toastTimerRef.current = window.setTimeout(() => {
+      setToast(null);
+      toastTimerRef.current = null;
+    }, 2600);
+  };
+
+  const closeContextMenu = () => setContextMenu(prev => ({ ...prev, open: false }));
+
+  const arrangeIcons = (source?: DesktopIconItem[]) => {
+    if (typeof window === 'undefined') return;
+    const list = source ? [...source] : [...desktopIcons];
+    const sorted = [...list].sort((a, b) => a.label.localeCompare(b.label));
+    const columnWidth = iconSize === 'large' ? 120 : iconSize === 'small' ? 80 : 100;
+    const rowHeight = iconSize === 'large' ? 120 : iconSize === 'small' ? 80 : 96;
+    const paddingX = 20;
+    const paddingY = 20;
+    const maxHeight = window.innerHeight - 160;
+    let x = paddingX;
+    let y = paddingY;
+    const rearranged = sorted.map(icon => {
+      const next = { ...icon, x, y };
+      y += rowHeight;
+      if (y > maxHeight) {
+        y = paddingY;
+        x += columnWidth;
+      }
+      return next;
     });
-    const t = setTimeout(() => setPhase('lock'), 1800);
-    return () => { oscs.forEach(o => o.disconnect()); gains.forEach(g => g.disconnect()); clearTimeout(t); };
-  }, [phase]);
+    setDesktopIcons(rearranged);
+  };
+
+  useEffect(() => {
+    if (autoArrange) arrangeIcons();
+  }, [autoArrange, iconSize]);
+
+  const sortDesktopIcons = (mode: 'name' | 'type') => {
+    const comparator =
+      mode === 'name'
+        ? (a: DesktopIconItem, b: DesktopIconItem) => a.label.localeCompare(b.label)
+        : (a: DesktopIconItem, b: DesktopIconItem) => APP_META[a.app].label.localeCompare(APP_META[b.app].label);
+    const sorted = [...desktopIcons].sort(comparator);
+    if (autoArrange) {
+      arrangeIcons(sorted);
+    } else {
+      setDesktopIcons(sorted);
+    }
+  };
+
+  const copyToClipboard = async (text: string) => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast('Copied to clipboard');
+        return;
+      } catch {
+        // fallthrough
+      }
+    }
+    showToast('Clipboard unavailable');
+  };
 
   const openApp = (app: AppId) => {
+    closeContextMenu();
+    setStartOpen(false);
+    setStartPowerOpen(false);
+    setQsOpen(false);
+    setNcOpen(false);
     if (app === 'portfolio') {
       if (typeof window !== 'undefined') {
         try {
-          // Mark that OS continues running in background; we do not change power
           window.localStorage.setItem('os.current', 'windows');
           window.localStorage.setItem('os.power', 'on');
         } catch {}
@@ -456,95 +571,130 @@ const DesktopChrome: React.FC<Win11DesktopProps> = ({ onReboot }) => {
       }
       return;
     }
-    setWindows((prev) => {
+    let shouldRaise = true;
+    setWindows(prev => {
+      const existing = [...prev].reverse().find(w => w.app === app);
+      if (existing) {
+        const maxZ = prev.reduce((max, win) => Math.max(max, win.z), 0);
+        return prev.map(w => {
+          if (w.id !== existing.id) return w;
+          if (w.minimized || existing.z < maxZ) {
+            const restore = w.restore || { x: w.x, y: w.y, w: w.w, h: w.h };
+            return {
+              ...w,
+              minimized: false,
+              x: restore.x,
+              y: restore.y,
+              w: restore.w,
+              h: restore.h,
+              z: zTop + 1,
+            };
+          }
+          shouldRaise = false;
+          return { ...w, minimized: true };
+        });
+      }
+      const baseX = 160 + (prev.length * 24) % 300;
+      const baseY = 120 + (prev.length * 16) % 200;
       const id = `${app}-${Date.now()}`;
-      return [
-        ...prev,
-        {
-          id,
-          app,
-          title: APP_META[app].label,
-          x: 160 + (prev.length * 24) % 300,
-          y: 120 + (prev.length * 16) % 200,
-          w: 900,
-          h: 600,
-          z: zTop + 1,
-          minimized: false,
-          maximized: false,
-          restore: { x: 160 + (prev.length * 24) % 300, y: 120 + (prev.length * 16) % 200, w: 900, h: 600 },
-        }
-      ];
+      const win: WindowSpec = {
+        id,
+        app,
+        title: APP_META[app].label,
+        x: baseX,
+        y: baseY,
+        w: 900,
+        h: 600,
+        z: zTop + 1,
+        minimized: false,
+        maximized: false,
+        restore: { x: baseX, y: baseY, w: 900, h: 600 },
+      };
+      return [...prev, win];
     });
-    setZTop((z) => z + 1);
+    if (shouldRaise) {
+      setZTop(z => z + 1);
+    }
   };
 
-  const closeWindow = (id: string) => setWindows((prev) => prev.filter(w => w.id !== id));
+  const closeWindow = (id: string) => setWindows(prev => prev.filter(w => w.id !== id));
+
   const focusWindow = (id: string) => {
-    setWindows((prev) => prev.map(w => w.id === id ? { ...w, z: zTop + 1 } : w));
-    setZTop((z) => z + 1);
+    setWindows(prev => prev.map(w => (w.id === id ? { ...w, z: zTop + 1 } : w)));
+    setZTop(z => z + 1);
+    closeContextMenu();
   };
-  const toggleMinimize = (id: string) => setWindows((prev) => prev.map(w => {
-    if (w.id !== id) return w;
-    if (w.minimized) {
-      // restore. If maximized, use full screen. If not, use last restore bounds.
-      if (w.maximized) {
-        return { ...w, minimized: false, x: 0, y: 0, w: window.innerWidth, h: window.innerHeight - 48 };
+
+  const toggleMinimize = (id: string) => {
+    setWindows(prev => prev.map(w => {
+      if (w.id !== id) return w;
+      if (w.minimized) {
+        if (w.maximized) {
+          return { ...w, minimized: false, x: 0, y: 0, w: window.innerWidth, h: window.innerHeight - 48 };
+        }
+        const rb = w.restore || { x: w.x, y: w.y, w: w.w, h: w.h };
+        const maxW = window.innerWidth;
+        const maxH = window.innerHeight - 48;
+        return {
+          ...w,
+          minimized: false,
+          x: Math.max(0, Math.min(rb.x, maxW - rb.w)),
+          y: Math.max(0, Math.min(rb.y, maxH - rb.h)),
+          w: Math.min(rb.w, maxW),
+          h: Math.min(rb.h, maxH),
+        };
       }
-      const rb = w.restore || { x: w.x, y: w.y, w: w.w, h: w.h };
-      const maxW = window.innerWidth, maxH = window.innerHeight - 48;
-      return { ...w, minimized: false, x: Math.max(0, Math.min(rb.x, maxW - rb.w)), y: Math.max(0, Math.min(rb.y, maxH - rb.h)), w: Math.min(rb.w, maxW), h: Math.min(rb.h, maxH) };
-    }
-    return { ...w, minimized: true };
-  }));
-  const toggleMaximize = (id: string) => setWindows((prev) => prev.map(w => {
-    if (w.id !== id) return w;
-    if (!w.maximized) {
-      // store current geometry before maximizing
-      const restore = { x: w.x, y: w.y, w: w.w, h: w.h };
-      return {
-        ...w,
-        maximized: true,
-        restore,
-        x: 0,
-        y: 0,
-        w: window.innerWidth,
-        h: window.innerHeight - 48,
-      };
-    } else {
-      // restore to last known non-maximized geometry
+      return { ...w, minimized: true };
+    }));
+  };
+
+  const toggleMaximize = (id: string) => {
+    setWindows(prev => prev.map(w => {
+      if (w.id !== id) return w;
+      if (!w.maximized) {
+        return {
+          ...w,
+          maximized: true,
+          restore: { x: w.x, y: w.y, w: w.w, h: w.h },
+          x: 0,
+          y: 0,
+          w: window.innerWidth,
+          h: window.innerHeight - 48,
+        };
+      }
       const rb = w.restore || { x: w.x, y: w.y, w: Math.min(w.w, window.innerWidth), h: Math.min(w.h, window.innerHeight - 48) };
-      const maxW = window.innerWidth, maxH = window.innerHeight - 48;
+      const maxW = window.innerWidth;
+      const maxH = window.innerHeight - 48;
       const nx = Math.max(0, Math.min(rb.x, maxW - rb.w));
       const ny = Math.max(0, Math.min(rb.y, maxH - rb.h));
       const nw = Math.min(rb.w, maxW);
       const nh = Math.min(rb.h, maxH);
       return { ...w, maximized: false, x: nx, y: ny, w: nw, h: nh };
-    }
-  }));
+    }));
+  };
 
-  // Clock
-  useEffect(() => {
-    const i = setInterval(() => setClock(new Date().toLocaleTimeString()), 1000);
-    return () => clearInterval(i);
-  }, []);
+  const handleWindowDragStart = (id: string, event: React.MouseEvent<HTMLDivElement>) => {
+    const win = windows.find(w => w.id === id);
+    if (!win || win.maximized) return;
+    dragRef.current = { id, dx: event.clientX - win.x, dy: event.clientY - win.y };
+  };
 
-  // Window dragging
   useEffect(() => {
-    const onMove = (e: MouseEvent) => {
+    const onMove = (event: MouseEvent) => {
       if (!dragRef.current) return;
       const { id, dx, dy } = dragRef.current;
-      setWindows((prev) => prev.map(w => {
+      setWindows(prev => prev.map(w => {
         if (w.id !== id || w.maximized) return w;
-        const nx = e.clientX - dx;
-        const ny = e.clientY - dy;
         const vw = window.innerWidth;
-        const vh = window.innerHeight - 48; // taskbar
-        const clampedX = Math.min(Math.max(0, nx), Math.max(0, vw - w.w));
-        const clampedY = Math.min(Math.max(0, ny), Math.max(0, vh - w.h));
-        return { ...w, x: clampedX, y: clampedY, restore: { x: clampedX, y: clampedY, w: w.w, h: w.h } };
+        const vh = window.innerHeight - 48;
+        const nx = Math.min(Math.max(0, event.clientX - dx), Math.max(0, vw - w.w));
+        const ny = Math.min(Math.max(0, event.clientY - dy), Math.max(0, vh - w.h));
+        return { ...w, x: nx, y: ny, restore: { x: nx, y: ny, w: w.w, h: w.h } };
       }));
     };
-    const onUp = () => { dragRef.current = null; };
+    const onUp = () => {
+      dragRef.current = null;
+    };
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
     return () => {
@@ -553,52 +703,386 @@ const DesktopChrome: React.FC<Win11DesktopProps> = ({ onReboot }) => {
     };
   }, []);
 
-  // Resizing handler
+  const handleBeginResize = (id: string, dir: ResizeDir, event: React.MouseEvent<HTMLDivElement>) => {
+    const win = windows.find(w => w.id === id);
+    if (!win || win.maximized) return;
+    resizeRef.current = {
+      id,
+      dir,
+      startX: event.clientX,
+      startY: event.clientY,
+      startW: win.w,
+      startH: win.h,
+      startL: win.x,
+      startT: win.y,
+    };
+  };
+
   useEffect(() => {
-    const onMove = (e: MouseEvent) => {
+    const onMove = (event: MouseEvent) => {
       if (!resizeRef.current) return;
       const { id, dir, startX, startY, startW, startH, startL, startT } = resizeRef.current;
-      const dx = e.clientX - startX;
-      const dy = e.clientY - startY;
-      const minW = 420, minH = 260;
+      const dx = event.clientX - startX;
+      const dy = event.clientY - startY;
+      const minW = 420;
+      const minH = 260;
       setWindows(prev => prev.map(w => {
         if (w.id !== id || w.maximized) return w;
-        let x = startL, y = startT, width = startW, height = startH;
+        let x = startL;
+        let y = startT;
+        let width = startW;
+        let height = startH;
         if (dir.includes('e')) width = Math.max(minW, startW + dx);
         if (dir.includes('s')) height = Math.max(minH, startH + dy);
-        if (dir.includes('w')) { width = Math.max(minW, startW - dx); x = startL + (startW - width); }
-        if (dir.includes('n')) { height = Math.max(minH, startH - dy); y = startT + (startH - height); }
-        const vw = window.innerWidth, vh = window.innerHeight - 48;
-        width = Math.min(width, vw - x); height = Math.min(height, vh - y);
+        if (dir.includes('w')) {
+          width = Math.max(minW, startW - dx);
+          x = startL + (startW - width);
+        }
+        if (dir.includes('n')) {
+          height = Math.max(minH, startH - dy);
+          y = startT + (startH - height);
+        }
+        const vw = window.innerWidth;
+        const vh = window.innerHeight - 48;
+        width = Math.min(width, vw - x);
+        height = Math.min(height, vh - y);
         return { ...w, x, y, w: width, h: height, restore: { x, y, w: width, h: height } };
       }));
     };
-    const onUp = () => { resizeRef.current = null; };
+    const onUp = () => {
+      resizeRef.current = null;
+    };
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
-    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
   }, []);
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if ((e.ctrlKey && e.altKey && e.key.toLowerCase() === 'delete') || e.key === 'F9') {
-        e.preventDefault();
+    const onMove = (event: MouseEvent) => {
+      if (!iconDragRef.current) return;
+      const { idx, offsetX, offsetY } = iconDragRef.current;
+      setDesktopIcons(prev => {
+        const icon = prev[idx];
+        if (!icon) return prev;
+        const snap = (value: number) => Math.round(value / DESKTOP_GRID_SIZE) * DESKTOP_GRID_SIZE;
+        const maxX = Math.max(16, window.innerWidth - 120);
+        const maxY = Math.max(16, window.innerHeight - 140);
+        const nx = Math.min(Math.max(snap(event.clientX - offsetX), 16), maxX);
+        const ny = Math.min(Math.max(snap(event.clientY - offsetY), 16), maxY);
+        const copy = [...prev];
+        copy[idx] = { ...icon, x: nx, y: ny };
+        return copy;
+      });
+    };
+    const onUp = () => {
+      if (autoArrange) arrangeIcons();
+      iconDragRef.current = null;
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+  }, [autoArrange]);
+
+  useEffect(() => {
+    if (phase !== 'splash') return;
+    if (typeof window === 'undefined') return;
+    const audioCtor = window.AudioContext ?? (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!audioCtor) {
+      const fallback = window.setTimeout(() => setPhase('lock'), 1200);
+      return () => window.clearTimeout(fallback);
+    }
+    const audio = new audioCtor();
+    const gains: GainNode[] = [];
+    const oscs: OscillatorNode[] = [];
+    const freqs = [587, 784, 880];
+    freqs.forEach((freq, idx) => {
+      const osc = audio.createOscillator();
+      const gain = audio.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      osc.connect(gain);
+      gain.connect(audio.destination);
+      const startTime = audio.currentTime;
+      gain.gain.setValueAtTime(0.0001, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.15 / (idx + 1), startTime + 0.08 + idx * 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 1.4 + idx * 0.02);
+      osc.start();
+      osc.stop(startTime + 1.5 + idx * 0.02);
+      gains.push(gain);
+      oscs.push(osc);
+    });
+    const timer = window.setTimeout(() => setPhase('lock'), 1800);
+    return () => {
+      gains.forEach(g => g.disconnect());
+      oscs.forEach(o => o.disconnect());
+      window.clearTimeout(timer);
+    };
+  }, [phase]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const timer = window.setInterval(() => setClock(new Date().toLocaleTimeString()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if ((event.ctrlKey && event.altKey && event.key.toLowerCase() === 'delete') || event.key === 'F9') {
+        event.preventDefault();
         onReboot('restart');
       }
-      if (e.key === 'Meta' || e.key === 'Escape') { setStartOpen(false); setStartPowerOpen(false); }
-      // Ctrl+Shift+Esc -> Task Manager
-      if (e.ctrlKey && e.shiftKey && (e.key === 'Escape' || e.key === 'Esc')) {
-        e.preventDefault();
+      if (event.key === 'Escape') {
+        setStartOpen(false);
+        setStartPowerOpen(false);
+        setQsOpen(false);
+        setNcOpen(false);
+        closeContextMenu();
+        setRenameId(null);
+      }
+      if (event.ctrlKey && event.shiftKey && (event.key === 'Escape' || event.key === 'Esc')) {
+        event.preventDefault();
         openApp('taskmgr');
+      }
+      if (phase !== 'desktop') return;
+      if (!selectedIcons.length) return;
+      const primaryId = selectedIcons[selectedIcons.length - 1];
+      const primaryIcon = desktopIcons.find(icon => icon.id === primaryId);
+      if (!primaryIcon) return;
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        openApp(primaryIcon.app);
+      }
+      if (event.key === 'F2') {
+        event.preventDefault();
+        setRenameId(primaryIcon.id);
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'c') {
+        event.preventDefault();
+        copyToClipboard(APP_META[primaryIcon.app].path);
+      }
+      if (event.key === 'Delete') {
+        event.preventDefault();
+        showToast('Deleting system icons is disabled in this demo');
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onReboot]);
+  }, [phase, selectedIcons, desktopIcons, onReboot]);
 
-  const { themeMode, accentColor, transparency } = useWin11Theme();
-  // Taskbar live preview state
-  const [tbPreview, setTbPreview] = useState<{ windowId: string; x: number; y: number } | null>(null);
+  const showTaskbarPreview = (appId: AppId, targetEl: HTMLElement) => {
+    const liveWin = [...windows].reverse().find(w => w.app === appId && !w.minimized);
+    if (!liveWin) {
+      setTbPreview(null);
+      return;
+    }
+    const rect = targetEl.getBoundingClientRect();
+    const desiredWidth = 236;
+    const desiredHeight = 160;
+    const x = rect.left + rect.width / 2 - desiredWidth / 2;
+    const y = window.innerHeight - 48 - (desiredHeight + 16);
+    const clampedX = Math.max(8, Math.min(x, window.innerWidth - desiredWidth - 8));
+    const clampedY = Math.max(8, y);
+    setTbPreview({ windowId: liveWin.id, x: clampedX, y: clampedY });
+  };
+
+  const hideTaskbarPreview = () => setTbPreview(null);
+
+  const handleSelectIcon = (id: string, event: React.MouseEvent) => {
+    closeContextMenu();
+    setRenameId(null);
+    setSelectedIcons(prev => {
+      if (event.shiftKey && prev.length) {
+        const lastId = prev[prev.length - 1];
+        const startIndex = desktopIcons.findIndex(icon => icon.id === lastId);
+        const endIndex = desktopIcons.findIndex(icon => icon.id === id);
+        if (startIndex < 0 || endIndex < 0) return [id];
+        const [from, to] = startIndex < endIndex ? [startIndex, endIndex] : [endIndex, startIndex];
+        return desktopIcons.slice(from, to + 1).map(icon => icon.id);
+      }
+      if (event.ctrlKey || event.metaKey) {
+        if (prev.includes(id)) {
+          return prev.filter(item => item !== id);
+        }
+        return [...prev, id];
+      }
+      return [id];
+    });
+  };
+
+  const handleRenameSubmit = (id: string, nextLabel: string) => {
+    const trimmed = nextLabel.trim() || 'Untitled';
+    setDesktopIcons(prev => prev.map(icon => (icon.id === id ? { ...icon, label: trimmed } : icon)));
+    setRenameId(null);
+    showToast(`Renamed to “${trimmed}”`);
+  };
+
+  const buildIconMenu = (icon: DesktopIconItem): ContextMenuItem[] => {
+    const meta = APP_META[icon.app];
+    const pinned = startPinned.includes(icon.app);
+    const togglePin = () => {
+      setStartPinned(prev => {
+        if (prev.includes(icon.app)) {
+          showToast(`${meta.label} removed from Start`);
+          return prev.filter(app => app !== icon.app);
+        }
+        showToast(`${meta.label} pinned to Start`);
+        return [...prev, icon.app];
+      });
+    };
+    const shareItem = async () => {
+      const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+      if (!canShare) {
+        showToast('Sharing not supported');
+        return;
+      }
+      try {
+        await navigator.share({
+          title: icon.label,
+          text: `Check out ${icon.label}`,
+        });
+        showToast('Shared successfully');
+      } catch (err) {
+        const aborted = err instanceof DOMException && err.name === 'AbortError';
+        if (!aborted) {
+          showToast('Share cancelled');
+        }
+      }
+    };
+    return [
+      { id: 'open', label: 'Open', icon: <IconGlyph name={meta.icon} className="w-5 h-5 text-black/70" />, onSelect: () => openApp(icon.app) },
+      { id: 'share', label: 'Share with', icon: MENU_ICONS.share, onSelect: shareItem },
+      { id: 'run-admin', label: 'Run as administrator', icon: MENU_ICONS.shield, onSelect: () => showToast(`Pretending to elevate ${icon.label}`) },
+      { id: 'run-trusted', label: 'Run as trustedinstaller', icon: MENU_ICONS.shieldStar, onSelect: () => showToast('TrustedInstaller privileges granted (not really)') },
+      { id: 'open-location', label: 'Open file location', icon: <IconGlyph name="explorer" className="w-5 h-5 text-black/70" />, onSelect: () => { openApp('explorer'); showToast('Opening file location'); } },
+      { id: 'pin-start', label: pinned ? 'Unpin from Start' : 'Pin to Start', icon: MENU_ICONS.pin, onSelect: togglePin },
+      { id: 'favorites', label: 'Add to Favorites', icon: MENU_ICONS.star, onSelect: () => showToast(`${icon.label} added to Favorites`) },
+      { id: 'divider-ic-1', divider: true },
+      { id: 'compress', label: 'Compress to...', icon: MENU_ICONS.archive, onSelect: () => showToast('Launching compression wizard...') },
+      { id: 'copy-path', label: 'Copy as path', icon: MENU_ICONS.copy, shortcut: 'Ctrl+Shift+C', onSelect: () => copyToClipboard(meta.path) },
+      { id: 'rename', label: 'Rename', icon: MENU_ICONS.rename, shortcut: 'F2', onSelect: () => setRenameId(icon.id) },
+      { id: 'properties', label: 'Properties', icon: MENU_ICONS.info, shortcut: 'Alt+Enter', onSelect: () => showToast('Properties dialog unavailable in demo') },
+      { id: 'edit-notepad', label: 'Edit in Notepad', icon: <IconGlyph name="notepad" className="w-5 h-5 text-black/70" />, onSelect: () => openApp('notepad') },
+      {
+        id: 'winrar',
+        label: 'WinRAR',
+        icon: MENU_ICONS.archive,
+        children: [
+          { id: 'winrar-add', label: `Add to "${icon.label}.rar"`, onSelect: () => showToast('Archive created') },
+          { id: 'winrar-zip', label: `Add to "${icon.label}.zip"`, onSelect: () => showToast('Zip file ready') },
+          { id: 'winrar-email', label: 'Add and email...', onSelect: () => showToast('Sending archive via imaginary email') },
+        ],
+      },
+      { id: 'divider-ic-2', divider: true },
+      { id: 'more', label: 'Show more options', icon: MENU_ICONS.more, onSelect: () => showToast('Classic context menu summoned (in your mind)') },
+    ];
+  };
+
+  const buildDesktopMenu = (): ContextMenuItem[] => [
+    {
+      id: 'view',
+      label: 'View',
+      icon: MENU_ICONS.grid,
+      children: [
+        { id: 'view-large', label: 'Large icons', accessory: iconSize === 'large' ? CHECK_ICON : undefined, onSelect: () => setIconSize('large') },
+        { id: 'view-medium', label: 'Medium icons', accessory: iconSize === 'medium' ? CHECK_ICON : undefined, onSelect: () => setIconSize('medium') },
+        { id: 'view-small', label: 'Small icons', accessory: iconSize === 'small' ? CHECK_ICON : undefined, onSelect: () => setIconSize('small') },
+        {
+          id: 'view-auto-arrange',
+          label: 'Auto arrange icons',
+          accessory: autoArrange ? CHECK_ICON : undefined,
+          onSelect: () => setAutoArrange(prev => {
+            const next = !prev;
+            if (next) arrangeIcons();
+            showToast(next ? 'Auto arrange enabled' : 'Auto arrange disabled');
+            return next;
+          }),
+        },
+        {
+          id: 'view-show-icons',
+          label: 'Show desktop icons',
+          accessory: showDesktopIcons ? CHECK_ICON : undefined,
+          onSelect: () => setShowDesktopIcons(prev => {
+            const next = !prev;
+            showToast(next ? 'Desktop icons visible' : 'Desktop icons hidden');
+            return next;
+          }),
+        },
+      ],
+    },
+    {
+      id: 'sort',
+      label: 'Sort by',
+      icon: MENU_ICONS.sort,
+      children: [
+        { id: 'sort-name', label: 'Name', onSelect: () => sortDesktopIcons('name') },
+        { id: 'sort-type', label: 'Item type', onSelect: () => sortDesktopIcons('type') },
+      ],
+    },
+    { id: 'refresh', label: 'Refresh', icon: MENU_ICONS.refresh, onSelect: () => { arrangeIcons(); showToast('Refreshed'); } },
+    { id: 'divider-d-1', divider: true },
+    {
+      id: 'new',
+      label: 'New',
+      icon: MENU_ICONS.plus,
+      children: [
+        { id: 'new-folder', label: 'Folder', icon: MENU_ICONS.folder, onSelect: () => showToast('Folder creation not enabled in demo') },
+        { id: 'new-shortcut', label: 'Shortcut', icon: MENU_ICONS.link, onSelect: () => showToast('Shortcut wizard unavailable') },
+        { id: 'new-text', label: 'Text Document', icon: MENU_ICONS.doc, onSelect: () => showToast('Use Notepad to create documents') },
+      ],
+    },
+    { id: 'display', label: 'Display settings', icon: MENU_ICONS.monitor, onSelect: () => openApp('settings') },
+    { id: 'personalize', label: 'Personalize', icon: MENU_ICONS.palette, onSelect: () => openApp('settings') },
+  ];
+
+  const handleIconContextMenu = (event: React.MouseEvent, icon: DesktopIconItem) => {
+    event.preventDefault();
+    setSelectedIcons(prev => (prev.includes(icon.id) ? prev : [icon.id]));
+    setRenameId(null);
+    setStartOpen(false);
+    setStartPowerOpen(false);
+    setQsOpen(false);
+    setNcOpen(false);
+    setContextMenu({
+      open: true,
+      x: event.clientX,
+      y: event.clientY,
+      targetType: 'icon',
+      targetId: icon.id,
+      items: buildIconMenu(icon),
+    });
+  };
+
+  const handleDesktopContextMenu = (event: React.MouseEvent) => {
+    const target = event.target as HTMLElement;
+    if (target.closest('[data-window-frame="true"]') || target.closest('[data-taskbar="true"]') || target.closest('[data-context-keep="true"]')) {
+      return;
+    }
+    event.preventDefault();
+    setSelectedIcons([]);
+    setRenameId(null);
+    setStartOpen(false);
+    setStartPowerOpen(false);
+    setQsOpen(false);
+    setNcOpen(false);
+    setContextMenu({
+      open: true,
+      x: event.clientX,
+      y: event.clientY,
+      targetType: 'desktop',
+      items: buildDesktopMenu(),
+    });
+  };
+
+  useEffect(() => {
+    if (!autoArrange) return;
+    arrangeIcons();
+  }, [iconSize]);
 
   const LiveDomPreview: React.FC<{ windowId: string; width?: number; height?: number }> = ({ windowId, width = 236, height = 160 }) => {
     const hostRef = useRef<HTMLDivElement | null>(null);
@@ -613,7 +1097,11 @@ const DesktopChrome: React.FC<Win11DesktopProps> = ({ onReboot }) => {
         const clone = el.cloneNode(true) as HTMLElement;
         clone.style.pointerEvents = 'none';
         clone.style.userSelect = 'none';
-        clone.querySelectorAll('*').forEach(n => { (n as HTMLElement).style.pointerEvents = 'none'; (n as HTMLElement).setAttribute('disabled','true'); });
+        clone.querySelectorAll('*').forEach(node => {
+          const element = node as HTMLElement;
+          element.style.pointerEvents = 'none';
+          element.setAttribute('disabled', 'true');
+        });
         const scale = Math.max(0.1, Math.min(width / rect.width, height / rect.height));
         clone.style.transformOrigin = 'top left';
         clone.style.transform = `scale(${scale})`;
@@ -622,32 +1110,41 @@ const DesktopChrome: React.FC<Win11DesktopProps> = ({ onReboot }) => {
         host.appendChild(clone);
       };
       render();
-      const i = window.setInterval(render, 500);
-      return () => { const host = hostRef.current; if (host) host.innerHTML = ''; window.clearInterval(i); };
+      const interval = window.setInterval(render, 500);
+      return () => {
+        const host = hostRef.current;
+        if (host) host.innerHTML = '';
+        window.clearInterval(interval);
+      };
     }, [windowId, width, height]);
-    return <div ref={hostRef} style={{ width, height, overflow: 'hidden', borderRadius: 10 }} />;
+    return <div ref={hostRef} style={{ width, height, overflow: 'hidden', borderRadius: 12 }} />;
   };
 
-  const showTaskbarPreview = (appId: AppId, targetEl: HTMLElement) => {
-    const liveWin = [...windows].reverse().find(w => w.app === appId && !w.minimized);
-    if (!liveWin) { setTbPreview(null); return; }
-    const rect = targetEl.getBoundingClientRect();
-    const desiredWidth = 236, desiredHeight = 160;
-    const x = rect.left + rect.width / 2 - desiredWidth / 2;
-    const y = window.innerHeight - 48 - (desiredHeight + 16);
-    const clampedX = Math.max(8, Math.min(x, window.innerWidth - desiredWidth - 8));
-    const clampedY = Math.max(8, y);
-    setTbPreview({ windowId: liveWin.id, x: clampedX, y: clampedY });
-  };
-  const hideTaskbarPreview = () => setTbPreview(null);
+  const rootStyle = useMemo<React.CSSProperties>(
+    () =>
+      ({
+        '--accent': accentColor,
+        '--panelBG': transparency ? 'rgba(255,255,255,0.6)' : '#f5f5f5',
+        '--panelBGDark': transparency ? 'rgba(0,0,0,0.35)' : '#111827',
+      }) as React.CSSProperties,
+    [accentColor, transparency]
+  );
 
   return (
-    <div className={`fixed inset-0 ${themeMode==='dark' ? 'dark' : ''}`} style={{
-      // Accent via CSS variable used across UI pieces
-      ['--accent' as any]: accentColor,
-      ['--panelBG' as any]: transparency ? 'rgba(255,255,255,0.6)' : '#f5f5f5',
-      ['--panelBGDark' as any]: transparency ? 'rgba(0,0,0,0.35)' : '#111827',
-    }}>
+    <div
+      className={`fixed inset-0 ${themeMode === 'dark' ? 'dark' : ''}`}
+      style={rootStyle}
+      onMouseDown={(event) => {
+        if (event.button !== 0) return;
+        const target = event.target as HTMLElement;
+        if (target.closest('[data-window-frame="true"]') || target.closest('[data-taskbar="true"]') || target.closest('[data-context-keep="true"]') || target.closest('[data-icon-node="true"]')) {
+          return;
+        }
+        setSelectedIcons([]);
+        setRenameId(null);
+        closeContextMenu();
+      }}
+    >
       {phase === 'splash' && (
         <div className="w-full h-full bg-black flex flex-col items-center justify-center select-none">
           <div className="text-white text-2xl">Windows</div>
@@ -655,165 +1152,181 @@ const DesktopChrome: React.FC<Win11DesktopProps> = ({ onReboot }) => {
         </div>
       )}
 
-      {phase === 'lock' && (
-        <LockScreen onUnlock={() => setPhase('desktop')} />
-      )}
+      {phase === 'lock' && <LockScreen onUnlock={() => setPhase('desktop')} />}
 
       {phase === 'desktop' && (
-        <div className="w-full h-full bg-[url('https://images.unsplash.com/photo-1472214103451-9374bd1c798e?q=80&w=2069&auto=format&fit=crop')] bg-cover">
-          {/* Desktop icons (draggable) */}
-          <div className="absolute inset-0 text-white select-none">
-            {desktopIcons.map((ic, idx) => (
-              <div
-                key={`${ic.app}-${idx}`}
-                className="absolute flex flex-col items-center w-20 cursor-default"
-                style={{ left: ic.x, top: ic.y }}
-                onDoubleClick={() => openApp(ic.app)}
-                onMouseDown={(e) => startDragIcon(idx, e)}
-              >
-                <div className="w-12 h-12 flex items-center justify-center">
-                  <Icon name={ic.app === 'explorer' ? 'pc' : APP_META[ic.app].icon} className="w-10 h-10 text-white/90 drop-shadow" />
-                </div>
-                <div className="text-center text-xs mt-1 drop-shadow">{ic.app === 'explorer' ? 'This PC' : APP_META[ic.app].label}</div>
-              </div>
-            ))}
-          </div>
+        <div
+          className="w-full h-full bg-[url('https://images.unsplash.com/photo-1472214103451-9374bd1c798e?q=80&w=2069&auto=format&fit=crop')] bg-cover"
+          onContextMenu={handleDesktopContextMenu}
+          data-context-keep="true"
+        >
+          {showDesktopIcons && (
+            <DesktopIconGrid
+              icons={desktopIcons}
+              selectedIds={selectedIcons}
+              renameId={renameId}
+              iconSize={iconSize}
+              onRenameSubmit={handleRenameSubmit}
+              onRenameCancel={() => setRenameId(null)}
+              onDoubleClick={(icon) => openApp(icon.app)}
+              onSelect={handleSelectIcon}
+              onStartDrag={(index, event) => {
+                if (event.button !== 0 || autoArrange) {
+                  if (autoArrange) showToast('Disable auto arrange to move icons');
+                  return;
+                }
+                const icon = desktopIcons[index];
+                if (!icon) return;
+                iconDragRef.current = {
+                  id: icon.id,
+                  idx: index,
+                  offsetX: event.clientX - icon.x,
+                  offsetY: event.clientY - icon.y,
+                };
+              }}
+              onContextMenu={handleIconContextMenu}
+            />
+          )}
 
-          {/* Windows */}
-          {windows.map((w) => (
-            <div
-              key={w.id}
-              className={
-                'absolute bg-white rounded shadow-xl border border-black/10 overflow-hidden ' +
-                (w.maximized ? 'inset-0' : '') + (w.minimized ? ' hidden' : '')
+          {windows.map(win => (
+            <WindowFrame
+              key={win.id}
+              win={win}
+              themeMode={themeMode}
+              onFocus={focusWindow}
+              onClose={closeWindow}
+              onToggleMinimize={toggleMinimize}
+              onToggleMaximize={toggleMaximize}
+              onStartDrag={handleWindowDragStart}
+              onBeginResize={handleBeginResize}
+              renderContent={(windowSpec) =>
+                windowSpec.app === 'settings' ? <SettingsApp /> : <AppContent app={windowSpec.app} openApp={openApp} />
               }
-              style={w.maximized ? { zIndex: w.z } : { left: w.x, top: w.y, width: w.w, height: w.h, zIndex: w.z }}
-              onMouseDown={() => focusWindow(w.id)}
-            >
-              <div
-                className="h-10 flex items-center justify-between px-3 select-none cursor-move"
-                style={{
-                  background: themeMode==='dark' ? 'rgba(255,255,255,0.08)' : '#e6e6e6',
-                  borderBottom: themeMode==='dark' ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(0,0,0,0.08)'
-                }}
-                onMouseDown={(e) => {
-                  // Ignore when clicking buttons
-                  const target = e.target as HTMLElement;
-                  if (target.closest('button')) return;
-                  dragRef.current = { id: w.id, dx: e.clientX - w.x, dy: e.clientY - w.y };
-                }}
-                onDoubleClick={() => toggleMaximize(w.id)}
-              >
-                <div className="text-sm text-black">{w.title}</div>
-                <div className="flex items-center gap-1">
-                  <button aria-label="minimize" className="w-9 h-9 flex items-center justify-center rounded hover:bg-black/10 text-black" onClick={() => toggleMinimize(w.id)}>
-                    <svg viewBox="0 0 24 24" className="w-4 h-4"><rect x="5" y="12" width="14" height="2" fill="currentColor"/></svg>
-                  </button>
-                  <button aria-label="maximize" className="w-9 h-9 flex items-center justify-center rounded hover:bg-black/10 text-black" onClick={() => toggleMaximize(w.id)}>
-                    <svg viewBox="0 0 24 24" className="w-4 h-4"><rect x="6" y="6" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2"/></svg>
-                  </button>
-                  <button aria-label="close" className="w-9 h-9 flex items-center justify-center rounded hover:bg-red-600 hover:text-white text-black" onClick={() => closeWindow(w.id)}>
-                    <svg viewBox="0 0 24 24" className="w-4 h-4"><path d="M6 6 18 18M18 6 6 18" stroke="currentColor" strokeWidth="2"/></svg>
-                  </button>
-                </div>
-              </div>
-              <div id={`window-content-${w.id}`} className="w-full h-[calc(100%-40px)] relative">
-                {w.app === 'settings' ? (
-                  <SettingsApp />
-                ) : (
-                  <AppContent app={w.app} openApp={openApp} />
-                )}
-                {!w.maximized && (
-                  <>
-                    <div className="absolute inset-x-0 top-0 h-1.5 cursor-n-resize" onMouseDown={(e) => { (resizeRef as any).current = { id: w.id, dir: 'n', startX: e.clientX, startY: e.clientY, startW: w.w, startH: w.h, startL: w.x, startT: w.y }; }} />
-                    <div className="absolute inset-x-0 bottom-0 h-1.5 cursor-s-resize" onMouseDown={(e) => { (resizeRef as any).current = { id: w.id, dir: 's', startX: e.clientX, startY: e.clientY, startW: w.w, startH: w.h, startL: w.x, startT: w.y }; }} />
-                    <div className="absolute inset-y-0 left-0 w-1.5 cursor-w-resize" onMouseDown={(e) => { (resizeRef as any).current = { id: w.id, dir: 'w', startX: e.clientX, startY: e.clientY, startW: w.w, startH: w.h, startL: w.x, startT: w.y }; }} />
-                    <div className="absolute inset-y-0 right-0 w-1.5 cursor-e-resize" onMouseDown={(e) => { (resizeRef as any).current = { id: w.id, dir: 'e', startX: e.clientX, startY: e.clientY, startW: w.w, startH: w.h, startL: w.x, startT: w.y }; }} />
-                    <div className="absolute left-0 top-0 w-2 h-2 cursor-nw-resize" onMouseDown={(e) => { (resizeRef as any).current = { id: w.id, dir: 'nw', startX: e.clientX, startY: e.clientY, startW: w.w, startH: w.h, startL: w.x, startT: w.y }; }} />
-                    <div className="absolute right-0 top-0 w-2 h-2 cursor-ne-resize" onMouseDown={(e) => { (resizeRef as any).current = { id: w.id, dir: 'ne', startX: e.clientX, startY: e.clientY, startW: w.w, startH: w.h, startL: w.x, startT: w.y }; }} />
-                    <div className="absolute left-0 bottom-0 w-2 h-2 cursor-sw-resize" onMouseDown={(e) => { (resizeRef as any).current = { id: w.id, dir: 'sw', startX: e.clientX, startY: e.clientY, startW: w.w, startH: w.h, startL: w.x, startT: w.y }; }} />
-                    <div className="absolute right-0 bottom-0 w-2 h-2 cursor-se-resize" onMouseDown={(e) => { (resizeRef as any).current = { id: w.id, dir: 'se', startX: e.clientX, startY: e.clientY, startW: w.w, startH: w.h, startL: w.x, startT: w.y }; }} />
-                  </>
-                )}
-              </div>
-            </div>
+            />
           ))}
 
-          {/* Taskbar */}
-          <div style={{
-            background: 'var(--panelBG)',
-            backdropFilter: transparency ? 'blur(10px)' : 'none',
-            borderTop: themeMode==='dark' ? '1px solid rgba(255,255,255,0.3)' : '1px solid rgba(0,0,0,0.2)'
-          }} className="absolute left-0 right-0 bottom-0 h-12 flex items-center justify-center gap-3">
-            <button aria-label="start" className={`w-10 h-10 rounded hover:bg-white/60 flex items-center justify-center ${startOpen ? 'bg-white/60' : ''}`} onClick={() => setStartOpen((o) => !o)}>
-              <Icon name="start" className="w-7 h-7 text-black/70" />
-            </button>
-            {taskbarPinned.map((a) => {
-              const running = windows.some(w => w.app === a && !w.minimized);
-              return (
-                <button key={a} className="relative w-10 h-10 rounded hover:bg-white/60 flex items-center justify-center" onClick={() => openApp(a)} aria-label={APP_META[a].label}
-                  onMouseEnter={(e)=> showTaskbarPreview(a, e.currentTarget)}
-                  onMouseLeave={hideTaskbarPreview}
-                >
-                  <Icon name={APP_META[a].icon} className="w-6 h-6 text-black/70" />
-                  {running && <span className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-black/60" />}
-                </button>
-              );
-            })}
-            {/* Right cluster: tray + clock */}
-            <div className="absolute right-3 flex items-center gap-2">
-              <button className="w-8 h-8 rounded hover:bg-white/60 flex items-center justify-center" onClick={() => { setQsOpen(v => !v); setNcOpen(false); }} aria-label="Quick Settings">
-                <WifiIcon on={wifiOn && !airplaneOn} className="w-5 h-5 text-black/70" />
-              </button>
-              <button className="w-8 h-8 rounded hover:bg-white/60 flex items-center justify-center" onClick={() => { setQsOpen(v => !v); setNcOpen(false); }} aria-label="Volume">
-                <VolumeIcon muted={muted} className="w-5 h-5 text-black/70" />
-              </button>
-              <button className="w-8 h-8 rounded hover:bg-white/60 flex items-center justify-center" onClick={() => { setQsOpen(v => !v); setNcOpen(false); }} aria-label="Battery">
-                <BatteryIcon level={batteryLevel / 100} className="w-7 h-4 text-black/70" />
-              </button>
-              <button className="px-2 h-10 rounded hover:bg-white/60 text-xs text-black/80 leading-4 text-right" onClick={() => { setNcOpen(v => !v); setQsOpen(false); }} aria-label="Clock">
-                <div>{clock}</div>
-                <div>{new Date().toLocaleDateString()}</div>
-              </button>
-            </div>
-          </div>
+          <Taskbar
+            pinnedApps={taskbarPinned}
+            windows={windows}
+            startOpen={startOpen}
+            themeMode={themeMode === 'dark' ? 'dark' : 'light'}
+            transparency={transparency}
+            onToggleStart={() => {
+              setStartOpen(prev => !prev);
+              setStartPowerOpen(false);
+              closeContextMenu();
+            }}
+            onLaunchApp={openApp}
+            onHoverApp={showTaskbarPreview}
+            onLeaveHover={hideTaskbarPreview}
+            tray={{
+              clock,
+              date: new Date().toLocaleDateString(),
+              wifiOn: wifiOn && !airplaneOn,
+              muted,
+              batteryLevel,
+              onQuickSettings: () => {
+                setQsOpen(prev => !prev);
+                setNcOpen(false);
+                closeContextMenu();
+              },
+              onClock: () => {
+                setNcOpen(prev => !prev);
+                setQsOpen(false);
+                closeContextMenu();
+              },
+            }}
+          />
 
-          {/* Quick Settings Panel */}
           {qsOpen && (
-            <div className="absolute right-2 bottom-14 w-[380px] rounded-xl shadow-2xl p-3" style={{
-              background: themeMode==='dark' ? 'var(--panelBGDark)' : 'var(--panelBG)',
-              border: themeMode==='dark' ? '1px solid rgba(255,255,255,0.2)' : '1px solid rgba(0,0,0,0.1)',
-              backdropFilter: transparency ? 'blur(10px)' : 'none',
-              color: themeMode==='dark' ? 'white' : 'black'
-            }}>
+            <div
+              className="absolute right-2 bottom-14 w-[380px] rounded-xl shadow-2xl p-3"
+              style={{
+                background: themeMode === 'dark' ? 'var(--panelBGDark)' : 'var(--panelBG)',
+                border: themeMode === 'dark' ? '1px solid rgba(255,255,255,0.2)' : '1px solid rgba(0,0,0,0.1)',
+                backdropFilter: transparency ? 'blur(10px)' : 'none',
+                color: themeMode === 'dark' ? 'white' : 'black',
+              }}
+              data-context-keep="true"
+            >
               {(() => {
                 const accent = accentColor;
-                const btnStyle = (active: boolean) => ({
-                  background: active ? accent : (themeMode==='dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'),
-                  color: active ? 'white' : (themeMode==='dark' ? 'white' : 'black'),
-                  border: themeMode==='dark' ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(0,0,0,0.12)'
-                } as React.CSSProperties);
+                const btnStyle = (active: boolean) =>
+                  ({
+                    background: active ? accent : themeMode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+                    color: active ? 'white' : themeMode === 'dark' ? 'white' : 'black',
+                    border: themeMode === 'dark' ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(0,0,0,0.12)',
+                  } as React.CSSProperties);
                 return (
                   <>
                     <div className="grid grid-cols-3 gap-2">
-                      <button className="h-16 rounded-lg text-sm" style={btnStyle(wifiOn)} onClick={() => setWifiOn(v => !v)}>Wi‑Fi</button>
-                      <button className="h-16 rounded-lg text-sm" style={btnStyle(btOn)} onClick={() => setBtOn(v => !v)}>Bluetooth</button>
-                      <button className="h-16 rounded-lg text-sm" style={btnStyle(airplaneOn)} onClick={() => setAirplaneOn(v => !v)}>Airplane</button>
-                      <button className="h-16 rounded-lg text-sm" style={btnStyle(energySaver)} onClick={() => setEnergySaver(v => !v)}>Energy saver</button>
-                      <button className="h-16 rounded-lg text-sm" style={btnStyle(accessibilityOn)} onClick={() => setAccessibilityOn(v => !v)}>Accessibility</button>
-                      <button className="h-16 rounded-lg text-sm" style={btnStyle(hotspotOn)} onClick={() => setHotspotOn(v => !v)}>Mobile hotspot</button>
+                      <button className="h-16 rounded-lg text-sm" style={btnStyle(wifiOn && !airplaneOn)} onClick={() => setWifiOn(v => !v)}>
+                        Wi‑Fi
+                      </button>
+                      <button className="h-16 rounded-lg text-sm" style={btnStyle(btOn)} onClick={() => setBtOn(v => !v)}>
+                        Bluetooth
+                      </button>
+                      <button className="h-16 rounded-lg text-sm" style={btnStyle(airplaneOn)} onClick={() => setAirplaneOn(v => !v)}>
+                        Airplane
+                      </button>
+                      <button className="h-16 rounded-lg text-sm" style={btnStyle(energySaver)} onClick={() => setEnergySaver(v => !v)}>
+                        Energy saver
+                      </button>
+                      <button className="h-16 rounded-lg text-sm" style={btnStyle(accessibilityOn)} onClick={() => setAccessibilityOn(v => !v)}>
+                        Accessibility
+                      </button>
+                      <button className="h-16 rounded-lg text-sm" style={btnStyle(hotspotOn)} onClick={() => setHotspotOn(v => !v)}>
+                        Mobile hotspot
+                      </button>
                     </div>
                     <div className="mt-3">
                       <div className="text-xs mb-1">Brightness</div>
-                      <input type="range" min={0} max={100} value={brightness} onChange={(e) => setBrightness(parseInt(e.target.value))} className="w-full" style={{ accentColor: accent }} />
+                      <input
+                        type="range"
+                        min={0}
+                        max={100}
+                        value={brightness}
+                        onChange={e => setBrightness(parseInt(e.target.value, 10))}
+                        className="w-full"
+                        style={{ accentColor: accent }}
+                      />
                     </div>
                     <div className="mt-2">
-                      <div className="text-xs mb-1 flex items-center gap-2"><VolumeIcon muted={muted} className="w-4 h-4"/> Volume</div>
-                      <input type="range" min={0} max={100} value={muted ? 0 : volume} onChange={(e) => { setMuted(false); setVolume(parseInt(e.target.value)); }} className="w-full" style={{ accentColor: accent }} />
+                      <div className="text-xs mb-1 flex items-center gap-2">
+                        <VolumeIcon muted={muted} className="w-4 h-4" />
+                        Volume
+                      </div>
+                      <input
+                        type="range"
+                        min={0}
+                        max={100}
+                        value={muted ? 0 : volume}
+                        onChange={e => {
+                          setMuted(false);
+                          setVolume(parseInt(e.target.value, 10));
+                        }}
+                        className="w-full"
+                        style={{ accentColor: accent }}
+                      />
                     </div>
-                    <div className="mt-2 text-xs flex items-center justify-between" style={{ color: themeMode==='dark' ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)' }}>
-                      <div className="flex items-center gap-2"><BatteryIcon level={batteryLevel/100} className="w-7 h-4"/> {batteryLevel}%</div>
-                      <button className="px-2 py-1 rounded" style={{ background: themeMode==='dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)', border: '1px solid rgba(0,0,0,0.12)' }} onClick={() => setQsOpen(false)}>Done</button>
+                    <div
+                      className="mt-2 text-xs flex items-center justify-between"
+                      style={{ color: themeMode === 'dark' ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)' }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <BatteryIcon level={batteryLevel / 100} className="w-7 h-4" />
+                        {batteryLevel}%
+                      </div>
+                      <button
+                        className="px-2 py-1 rounded"
+                        style={{
+                          background: themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
+                          border: '1px solid rgba(0,0,0,0.12)',
+                        }}
+                        onClick={() => setQsOpen(false)}
+                      >
+                        Done
+                      </button>
                     </div>
                   </>
                 );
@@ -821,9 +1334,8 @@ const DesktopChrome: React.FC<Win11DesktopProps> = ({ onReboot }) => {
             </div>
           )}
 
-          {/* Notification Center / Calendar */}
           {ncOpen && (
-            <div className="absolute right-2 bottom-14">
+            <div className="absolute right-2 bottom-14" data-context-keep="true">
               <CalendarPanel />
             </div>
           )}
@@ -831,10 +1343,14 @@ const DesktopChrome: React.FC<Win11DesktopProps> = ({ onReboot }) => {
           {startOpen && (
             <StartMenu
               open={startOpen}
-              pinned={startPinned.map((id)=>({ id, label: APP_META[id].label, icon: APP_META[id].icon }))}
-              onOpenApp={(id)=>openApp(id as AppId)}
-              onClose={()=>setStartOpen(false)}
-              renderIcon={(name, cls) => (<Icon name={name as any} className={cls || "w-8 h-8"} />)}
+              pinned={startPinned.map((id) => ({
+                id,
+                label: APP_META[id].label,
+                icon: APP_META[id].icon,
+              }))}
+              onOpenApp={(id) => openApp(id as AppId)}
+              onClose={() => setStartOpen(false)}
+              renderIcon={(name, cls) => <IconGlyph name={name} className={cls || 'w-8 h-8'} />}
               onReboot={onReboot}
               startPowerOpen={startPowerOpen}
               setStartPowerOpen={setStartPowerOpen}
@@ -843,9 +1359,37 @@ const DesktopChrome: React.FC<Win11DesktopProps> = ({ onReboot }) => {
           )}
 
           {tbPreview && (
-            <div className="absolute z-[9999]" style={{ left: tbPreview.x, top: tbPreview.y }} onMouseEnter={()=>{}} onMouseLeave={hideTaskbarPreview}>
-              <div className="rounded-xl shadow-2xl border" style={{ background: themeMode==='dark' ? 'rgba(0,0,0,0.85)' : '#ffffff', border: themeMode==='dark' ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(0,0,0,0.1)' }}>
+            <div
+              className="absolute z-[9999]"
+              style={{ left: tbPreview.x, top: tbPreview.y }}
+              onMouseLeave={hideTaskbarPreview}
+              data-context-keep="true"
+            >
+              <div
+                className="rounded-xl shadow-2xl border"
+                style={{
+                  background: themeMode === 'dark' ? 'rgba(0,0,0,0.85)' : '#ffffff',
+                  border: themeMode === 'dark' ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(0,0,0,0.1)',
+                }}
+              >
                 <LiveDomPreview windowId={tbPreview.windowId} />
+              </div>
+            </div>
+          )}
+
+          <DesktopContextMenu state={contextMenu} onClose={closeContextMenu} />
+
+          {toast && (
+            <div className="fixed bottom-16 right-8 z-[6000]" data-context-keep="true">
+              <div
+                className="px-4 py-3 rounded-2xl text-sm shadow-2xl border"
+                style={{
+                  background: themeMode === 'dark' ? 'rgba(17,24,39,0.9)' : 'rgba(255,255,255,0.94)',
+                  borderColor: themeMode === 'dark' ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.12)',
+                  backdropFilter: 'blur(18px)',
+                }}
+              >
+                {toast.message}
               </div>
             </div>
           )}

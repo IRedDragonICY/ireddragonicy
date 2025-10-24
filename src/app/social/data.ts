@@ -12,7 +12,8 @@ import {
   FaCertificate,
   FaGraduationCap,
   FaMusic,
-  FaFacebook
+  FaFacebook,
+  FaDatabase
 } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
 import { 
@@ -27,7 +28,7 @@ import {
   SiGitlab, 
   SiSteam, 
   SiEpicgames, 
-  SiBilibili 
+  SiBilibili
 } from 'react-icons/si';
 import { TbBrandBluesky, TbWorld } from 'react-icons/tb';
 import { MdForum } from 'react-icons/md';
@@ -277,6 +278,26 @@ export const socials: SocialItem[] = [
     accent: '#A6CE39',
     gradientFrom: '#A6CE39',
     gradientTo: '#7CB518',
+  },
+  {
+    id: 'datacite',
+    name: 'DataCite',
+    href: 'https://commons.datacite.org/orcid.org/0009-0001-4686-1928',
+    icon: FaDatabase,
+    description: 'Research data citations and persistent identifiers.',
+    accent: '#F26522',
+    gradientFrom: '#F26522',
+    gradientTo: '#D14D0F',
+  },
+  {
+    id: 'europepmc',
+    name: 'Europe PMC',
+    href: 'https://europepmc.org/authors/0009-0001-4686-1928',
+    icon: FaGraduationCap,
+    description: 'Open access biomedical and life sciences literature.',
+    accent: '#2C5F8D',
+    gradientFrom: '#2C5F8D',
+    gradientTo: '#1A3A5C',
   },
   {
     id: 'academia',

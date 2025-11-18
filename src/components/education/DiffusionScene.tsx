@@ -129,8 +129,8 @@ function BrainParticles({ count = 6000, isHovered }: BrainParticlesProps) {
   return (
     <points ref={mesh}>
       <bufferGeometry>
-        <bufferAttribute attach="attributes-position" count={particles.positions.length / 3} array={particles.positions} itemSize={3} args={[undefined]} />
-        <bufferAttribute attach="attributes-color" count={particles.colors.length / 3} array={particles.colors} itemSize={3} args={[undefined]} />
+        <bufferAttribute attach="attributes-position" count={particles.positions.length / 3} array={particles.positions} itemSize={3} args={[particles.positions, 3]} />
+        <bufferAttribute attach="attributes-color" count={particles.colors.length / 3} array={particles.colors} itemSize={3} args={[particles.colors, 3]} />
       </bufferGeometry>
       <PointMaterial transparent vertexColors size={0.04} sizeAttenuation={true} depthWrite={false} blending={THREE.AdditiveBlending} opacity={0.6} />
     </points>
@@ -173,6 +173,7 @@ function DataFlowParticles({ curve, count }: { curve: THREE.CatmullRomCurve3; co
     
     // Initial random positions along the curve (0..1)
     const progress = useMemo(() => new Float32Array(count).map(() => Math.random()), [count]);
+    const bufferPositions = useMemo(() => new Float32Array(count * 3), [count]);
 
     useFrame((state) => {
         if (!particles.current) return;
@@ -198,9 +199,9 @@ function DataFlowParticles({ curve, count }: { curve: THREE.CatmullRomCurve3; co
                 <bufferAttribute 
                     attach="attributes-position" 
                     count={count}
-                    array={new Float32Array(count * 3)}
+                    array={bufferPositions}
                     itemSize={3}
-                    args={[undefined]}
+                    args={[bufferPositions, 3]}
                 />
             </bufferGeometry>
             <PointMaterial 
@@ -327,7 +328,7 @@ function ActiveSynapse({ color }: { color: string }) {
                     count={2}
                     array={positions}
                     itemSize={3}
-                    args={[undefined]}
+                    args={[positions, 3]}
                 />
             </bufferGeometry>
             <lineBasicMaterial color={color} transparent opacity={0.8} linewidth={2} />

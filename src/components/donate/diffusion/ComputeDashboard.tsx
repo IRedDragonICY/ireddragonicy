@@ -5,7 +5,6 @@ import { motion } from 'framer-motion';
 import { IconType } from 'react-icons';
 import { FaServer, FaMemory, FaMicrochip, FaHdd } from 'react-icons/fa';
 import { BsGpuCard } from 'react-icons/bs';
-import { IconType } from 'react-icons';
 
 const RandomGraph = ({ color = '#22d3ee' }: { color?: string }) => {
   const [path, setPath] = useState('');

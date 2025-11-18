@@ -129,8 +129,8 @@ function BrainParticles({ count = 6000, isHovered }: BrainParticlesProps) {
   return (
     <points ref={mesh}>
       <bufferGeometry>
-        <bufferAttribute attach="attributes-position" args={[particles.positions, 3]} />
-        <bufferAttribute attach="attributes-color" args={[particles.colors, 3]} />
+        <bufferAttribute attach="attributes-position" count={particles.positions.length / 3} array={particles.positions} itemSize={3} args={[undefined]} />
+        <bufferAttribute attach="attributes-color" count={particles.colors.length / 3} array={particles.colors} itemSize={3} args={[undefined]} />
       </bufferGeometry>
       <PointMaterial transparent vertexColors size={0.04} sizeAttenuation={true} depthWrite={false} blending={THREE.AdditiveBlending} opacity={0.6} />
     </points>
@@ -197,7 +197,10 @@ function DataFlowParticles({ curve, count }: { curve: THREE.CatmullRomCurve3; co
             <bufferGeometry>
                 <bufferAttribute 
                     attach="attributes-position" 
-                    args={[new Float32Array(count * 3), 3]}
+                    count={count}
+                    array={new Float32Array(count * 3)}
+                    itemSize={3}
+                    args={[undefined]}
                 />
             </bufferGeometry>
             <PointMaterial 
@@ -211,11 +214,16 @@ function DataFlowParticles({ curve, count }: { curve: THREE.CatmullRomCurve3; co
     );
 }
 
-function SchoolNode({ data, onSelect, isSelected, index }: { data: any; onSelect: (data: any) => void; isSelected: boolean; index: number }) {
+function SchoolNode({ data, onSelect, isSelected, index }: { 
+    data: typeof SCHOOLS[0]; 
+    onSelect: (data: typeof SCHOOLS[0]) => void; 
+    isSelected: boolean; 
+    index: number 
+}) {
     const [hovered, setHover] = useState(false);
     
     return (
-        <group position={data.position}>
+        <group position={data.position as [number, number, number]}>
             {/* Connection to previous node (Straight line segment) */}
             {index > 0 && (
                 <Line 
@@ -312,12 +320,14 @@ function ActiveSynapse({ color }: { color: string }) {
     });
 
     return (
-        // @ts-ignore
-        <line ref={lineRef}>
+        <line ref={lineRef as any}>
             <bufferGeometry>
                 <bufferAttribute
                     attach="attributes-position"
-                    args={[positions, 3]}
+                    count={2}
+                    array={positions}
+                    itemSize={3}
+                    args={[undefined]}
                 />
             </bufferGeometry>
             <lineBasicMaterial color={color} transparent opacity={0.8} linewidth={2} />
@@ -379,10 +389,10 @@ function SchoolConstellation({ children }: { children: React.ReactNode }) {
     return <group ref={ref}>{children}</group>;
 }
 
-export default function DiffusionScene({ onSchoolSelect }: { onSchoolSelect: (school: any) => void }) {
-  const [selectedSchool, setSelected] = useState<any>(null);
-  
-  const handleSelect = (school: any) => {
+export default function DiffusionScene({ onSchoolSelect }: { onSchoolSelect: (data: any) => void }) {
+  const [selectedSchool, setSelected] = useState<typeof SCHOOLS[0] | null>(null);
+
+  const handleSelect = (school: typeof SCHOOLS[0]) => {
       if (selectedSchool?.id === school.id) {
           setSelected(null);
           onSchoolSelect(null);

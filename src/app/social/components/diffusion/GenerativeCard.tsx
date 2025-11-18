@@ -130,7 +130,7 @@ const GenerativeCard: React.FC<GenerativeCardProps> = memo(({ item, index, type 
       transition: {
         delay: Math.min(i * 0.05, 0.5),
         duration: 0.4,
-        ease: "easeOut"
+        ease: [0.4, 0.0, 0.2, 1]
       }
     })
   };

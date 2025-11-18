@@ -2,16 +2,6 @@
 
 body {
   @apply bg-[#0A0A0A] text-[#E0E0E0] antialiased;
-  background-image:
-    linear-gradient(rgba(12, 169, 236, 0.1) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(12, 169, 236, 0.1) 1px, transparent 1px);
-  background-size: 40px 40px;
-  animation: bg-pan 12s linear infinite;
-}
-
-@keyframes bg-pan {
-  0% { background-position: 0% 0%; }
-  100% { background-position: 100% 100%; }
 }
 
 ::selection {

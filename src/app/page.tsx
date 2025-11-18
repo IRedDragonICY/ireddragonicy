@@ -1,16 +1,16 @@
-// app/page.tsx
 'use client';
 
-import React, { useRef } from 'react';
-import { motion, useInView } from 'framer-motion';
-import { FaPython, FaReact, FaNodeJs, FaDocker, FaGitAlt, FaGithub, FaLinkedin, FaBrain } from 'react-icons/fa';
+import React from 'react';
+import { FaPython, FaReact, FaNodeJs, FaDocker, FaGitAlt, FaGithub, FaLinkedin } from 'react-icons/fa';
 import { SiTypescript, SiTailwindcss, SiNextdotjs, SiTensorflow, SiPytorch, SiScikitlearn, SiJupyter, SiPostgresql, SiOpenai, SiHuggingface } from 'react-icons/si';
-import { FiExternalLink, FiCode } from 'react-icons/fi';
-import { HiSparkles } from 'react-icons/hi';
+import { FiCode } from 'react-icons/fi';
 import Hero from '@/components/Hero';
-// Terminal is now a dedicated route at /terminal
 import Navigation from '@/components/Navigation';
 import CursorEffect from '@/components/CursorEffect';
+import DiffusionProfile from '@/components/home/DiffusionProfile';
+import GenerativeProjects from '@/components/home/GenerativeProjects';
+import TechStack from '@/components/home/TechStack';
+import AgencyFooter from '@/components/home/AgencyFooter';
 
 const portfolioData = {
   personalInfo: {
@@ -99,245 +99,7 @@ const portfolioData = {
   ],
 };
 
-const Section = ({ children, id, title }: { children: React.ReactNode, id: string, title: string }) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { once: true, amount: 0.2 });
-
-  return (
-    <motion.section
-      id={id}
-      ref={ref}
-      initial={{ opacity: 0, y: 50 }}
-      animate={isInView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.6 }}
-      className="w-full max-w-6xl mx-auto py-16 md:py-24 px-4"
-    >
-      {/* AI-themed section header */}
-      <div className="relative mb-12">
-        <motion.div
-          initial={{ scaleX: 0 }}
-          animate={isInView ? { scaleX: 1 } : {}}
-          transition={{ duration: 0.8 }}
-          className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-500/10 to-transparent"
-        />
-        <h2 className="relative text-3xl md:text-4xl font-bold text-center">
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600">
-            &lt;{title}/&gt;
-          </span>
-          {/* Neural network decoration */}
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-            className="absolute -right-12 top-1/2 -translate-y-1/2 opacity-20"
-          >
-            <FaBrain className="text-4xl text-cyan-400" />
-          </motion.div>
-        </h2>
-      </div>
-      {children}
-    </motion.section>
-  );
-};
-
-const IntelProfile = () => {
-    const competencyRef = useRef<HTMLDivElement>(null);
-    const isInView = useInView(competencyRef, { once: true, amount: 0.5 });
-
-    return (
-      <Section id="intel" title="AI_RESEARCHER_PROFILE">
-        <div ref={competencyRef} className="grid md:grid-cols-2 gap-12 items-start">
-          <motion.div
-            className="space-y-6"
-            initial={{ opacity: 0, x: -50 }}
-            animate={isInView ? { opacity: 1, x: 0 } : {}}
-            transition={{ duration: 0.6 }}
-          >
-            <div className="relative p-6 bg-gradient-to-br from-cyan-500/5 to-purple-500/5 rounded-xl border border-cyan-400/20">
-              <HiSparkles className="absolute top-4 right-4 text-2xl text-yellow-400 animate-pulse" />
-              <h3 className="text-xl font-semibold text-cyan-400 mb-4">AI SPECIALIST BRIEFING</h3>
-              <p className="text-gray-300 leading-relaxed">
-                Passionate about pushing the boundaries of artificial intelligence through innovative research and practical applications.
-                Specializing in transformer architectures, diffusion models, and neural network optimization.
-                My work focuses on making AI more efficient, accessible, and impactful for real-world applications.
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {['Generative AI', 'Computer Vision', 'NLP', 'MLOps'].map((tag) => (
-                  <span key={tag} className="px-3 py-1 bg-cyan-400/10 text-cyan-400 text-xs rounded-full border border-cyan-400/20">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            className="space-y-6"
-            initial={{ opacity: 0, x: 50 }}
-            animate={isInView ? { opacity: 1, x: 0 } : {}}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            <h3 className="text-xl font-semibold text-cyan-400">CORE AI COMPETENCIES</h3>
-            {portfolioData.competencies.map((comp, index) => (
-              <motion.div
-                key={comp.name}
-                initial={{ opacity: 0, y: 20 }}
-                animate={isInView ? { opacity: 1, y: 0 } : {}}
-                transition={{ delay: 0.3 + index * 0.1 }}
-              >
-                <div className="flex justify-between items-end mb-2">
-                  <span className="text-sm font-medium text-gray-200">{comp.name}</span>
-                  <span className="text-xs font-mono text-cyan-400">{comp.level}%</span>
-                </div>
-                <div className="relative w-full bg-gray-800 rounded-full h-3 overflow-hidden">
-                  <motion.div
-                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 rounded-full"
-                    initial={{ width: 0 }}
-                    animate={isInView ? { width: `${comp.level}%` } : {}}
-                    transition={{ duration: 1, delay: 0.5 + index * 0.1, ease: 'easeOut' }}
-                  />
-                  {/* Shimmer effect */}
-                  <motion.div
-                    className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                    animate={{ x: ['0%', '300%'] }}
-                    transition={{ duration: 2, delay: 1 + index * 0.1, repeat: Infinity, repeatDelay: 3 }}
-                  />
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </Section>
-    );
-};
-
-const Projects = () => {
-    const containerRef = useRef<HTMLDivElement>(null);
-    const isInView = useInView(containerRef, { once: true, amount: 0.1 });
-
-    return (
-      <Section id="projects" title="AI_PROJECTS">
-        <motion.div
-          ref={containerRef}
-          className="grid md:grid-cols-2 gap-8"
-        >
-          {portfolioData.projects.map((project, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 50 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ delay: index * 0.2 }}
-              whileHover={{ y: -5, transition: { duration: 0.2 } }}
-              className="group relative p-6 rounded-xl bg-gradient-to-br from-gray-900 to-black border border-cyan-400/20 hover:border-cyan-400/40 transition-all duration-300"
-            >
-              {/* Glow effect on hover */}
-              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-cyan-500/0 to-purple-500/0 group-hover:from-cyan-500/10 group-hover:to-purple-500/10 transition-all duration-300" />
-
-              <div className="relative">
-                <h3 className="text-xl font-bold mb-3 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
-                  {project.title}
-                </h3>
-                <p className="text-gray-300 mb-4">{project.description}</p>
-
-                {/* Metrics */}
-                {project.metrics && (
-                  <div className="flex gap-4 mb-4">
-                    {Object.entries(project.metrics).map(([key, value]) => (
-                      <div key={key} className="text-xs">
-                        <span className="text-gray-500">{key}: </span>
-                        <span className="text-cyan-400 font-mono font-bold">{value}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {project.tech.map((t) => (
-                    <span key={t} className="px-2.5 py-1 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 text-cyan-300 text-xs font-medium rounded-full border border-cyan-400/20">
-                      {t}
-                    </span>
-                  ))}
-                </div>
-
-                <div className="flex items-center gap-4 pt-4 border-t border-gray-800">
-                  <a href={project.live} className="flex items-center gap-2 text-gray-400 hover:text-cyan-400 transition-colors">
-                    <FiExternalLink /> Demo
-                  </a>
-                  <a href={project.code} className="flex items-center gap-2 text-gray-400 hover:text-cyan-400 transition-colors">
-                    <FiCode /> Code
-                  </a>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
-      </Section>
-    );
-};
-
-const Skills = () => {
-    const containerRef = useRef<HTMLDivElement>(null);
-    const isInView = useInView(containerRef, { once: true, amount: 0.2 });
-
-    return (
-      <Section id="skills" title="TECH_STACK">
-        <div className="space-y-12">
-          {portfolioData.skills.map((category, categoryIndex) => (
-            <div key={category.category}>
-              <motion.h3
-                initial={{ opacity: 0, x: -20 }}
-                animate={isInView ? { opacity: 1, x: 0 } : {}}
-                transition={{ delay: categoryIndex * 0.2 }}
-                className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600 mb-6 text-center"
-              >
-                {category.category}
-              </motion.h3>
-              <motion.div
-                ref={containerRef}
-                className="flex flex-wrap justify-center gap-4"
-              >
-                {category.items.map((skill, index) => (
-                  <motion.div
-                    key={skill.name}
-                    initial={{ scale: 0, rotate: -180 }}
-                    animate={isInView ? { scale: 1, rotate: 0 } : {}}
-                    transition={{ delay: categoryIndex * 0.1 + index * 0.05, type: 'spring' }}
-                    whileHover={{ scale: 1.1, rotate: 5 }}
-                    className="group relative"
-                  >
-                    <div className="relative p-4 w-32 h-32 flex flex-col items-center justify-center gap-3 rounded-xl bg-gradient-to-br from-gray-900 to-black border border-cyan-400/20 group-hover:border-cyan-400/40 transition-all duration-300">
-                      <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-cyan-500/0 to-purple-500/0 group-hover:from-cyan-500/10 group-hover:to-purple-500/10 transition-all duration-300" />
-                      <skill.icon className="text-4xl text-gray-400 group-hover:text-cyan-400 transition-colors relative z-10" />
-                      <span className="text-sm text-gray-300 group-hover:text-white transition-colors relative z-10">{skill.name}</span>
-                    </div>
-                  </motion.div>
-                ))}
-              </motion.div>
-            </div>
-          ))}
-        </div>
-      </Section>
-    );
-};
-
-const Footer = () => (
-    <footer className="relative w-full py-8 border-t border-cyan-400/10">
-        <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/5 to-transparent" />
-        <div className="relative text-center">
-            <p className="text-sm text-gray-500 font-mono">
-                &copy; {new Date().getFullYear()} | {portfolioData.personalInfo.alias}
-            </p>
-            <p className="text-xs text-gray-600 mt-2">
-                Powered by AI • Built with Next.js
-            </p>
-        </div>
-    </footer>
-);
-
-// StatusNotification removed as requested
-
 export default function Home() {
-    // Initial boot loader is globally handled by BootGate in layout
-    
     return (
         <>
             <style jsx global>{`
@@ -349,23 +111,6 @@ export default function Home() {
                     color: white;
                     overflow-x: hidden;
                 }
-                
-                /* Optional: custom cursor styling can be adjusted here */
-                
-                /* Neural network background pattern */
-                body::before {
-                    content: '';
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background-image: 
-                        radial-gradient(circle at 20% 80%, rgba(34, 211, 238, 0.05) 0%, transparent 50%),
-                        radial-gradient(circle at 80% 20%, rgba(168, 85, 247, 0.05) 0%, transparent 50%);
-                    pointer-events: none;
-                    z-index: 1;
-                }
             `}</style>
 
             <CursorEffect />
@@ -374,12 +119,10 @@ export default function Home() {
             {/* Floating launcher reflecting current OS */}
             <a
                 href={(typeof window !== 'undefined' && window.localStorage.getItem('os.current') === 'windows' && window.localStorage.getItem('os.power') !== 'off') ? '/windows' : '/terminal'}
-                className="fixed bottom-4 right-4 z-50 inline-flex items-center gap-2 px-4 py-2 bg-gray-900/90 border border-cyan-400/40 rounded-lg text-cyan-300 hover:text-white hover:bg-gradient-to-br hover:from-cyan-500/10 hover:to-purple-500/10 hover:border-cyan-400/60 transition-all"
+                className="fixed bottom-4 right-4 z-50 inline-flex items-center gap-2 px-4 py-2 bg-gray-900/90 border border-cyan-400/40 rounded-lg text-cyan-300 hover:text-white hover:bg-gradient-to-br hover:from-cyan-500/10 hover:to-purple-500/10 hover:border-cyan-400/60 transition-all backdrop-blur-md shadow-lg shadow-cyan-500/10"
                 title="Open System"
             >
-                {/* Icon shows Windows or Terminal depending on persisted OS */}
                 <span className="inline-flex items-center justify-center w-5 h-5">
-                  {/* using small svg for windows logo */}
                   {/* will show windows if os.current === 'windows' */}
                   <svg viewBox="0 0 48 48" className="w-4 h-4" style={{ display: typeof window !== 'undefined' && window.localStorage.getItem('os.current') === 'windows' && window.localStorage.getItem('os.power') !== 'off' ? 'block' : 'none' }}>
                     <rect x="2" y="2" width="20" height="20" fill="currentColor"/>
@@ -394,14 +137,12 @@ export default function Home() {
 
             <main className="relative bg-[#0A0A0A] z-10">
                 <Hero />
-                <IntelProfile />
-                <Projects />
-                <Skills />
+                <DiffusionProfile />
+                <GenerativeProjects projects={portfolioData.projects} />
+                <TechStack skills={portfolioData.skills} />
             </main>
 
-            <Footer />
-
-            {/* Terminal moved to dedicated route /terminal */}
+            <AgencyFooter />
         </>
     );
 }

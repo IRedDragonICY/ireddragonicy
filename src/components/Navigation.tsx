@@ -169,7 +169,7 @@ const Navigation = ({ personalInfo }: NavigationProps) => {
             onMouseLeave={handleLocalMouseLeave}
             style={{ rotateX: tiltXSmooth, rotateY: tiltYSmooth, transformPerspective: 900 }}
             className={`
-            relative bg-black/40 backdrop-blur-xl rounded-2xl border transition-all duration-300
+            relative bg-[#030305]/80 backdrop-blur-xl rounded-2xl border transition-all duration-300
             ${scrolled ? 'border-cyan-400/10' : 'border-cyan-400/20'}
             shadow-lg shadow-cyan-500/5
             overflow-hidden

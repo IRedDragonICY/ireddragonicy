@@ -1,315 +1,270 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useRef, useState, useEffect } from 'react';
+import { motion, useScroll, useSpring, AnimatePresence } from 'framer-motion';
 import Navigation from '@/components/Navigation';
 import CursorEffect from '@/components/CursorEffect';
-import { FaBrain, FaGraduationCap } from 'react-icons/fa';
+import DiffusionScene from '@/components/education/DiffusionScene';
+import { FaNetworkWired, FaServer, FaMicrochip, FaCodeBranch, FaGraduationCap } from 'react-icons/fa';
+import { BsGpuCard } from 'react-icons/bs';
+
+// --- Types ---
 
 type EducationItem = {
+  id: string;
   institution: string;
   program?: string;
   period: string;
-  location?: string;
+  status: string;
   highlight?: string;
+  icon: React.ElementType;
+  stats: { label: string; value: string }[];
+  description?: string;
+  logs: string[];
 };
 
 const personalInfo = {
   alias: 'IRedDragonICY',
 };
 
+// --- Data ---
+
 const educationData: EducationItem[] = [
   {
+    id: 'uad',
     institution: 'Universitas Ahmad Dahlan',
-    program: 'Informatics',
+    program: 'Informatics (S1)',
     period: '2022 – 2028',
+    status: 'FINE_TUNING',
+    icon: FaNetworkWired,
+    highlight: 'AI Specialization',
+    stats: [
+      { label: 'EPOCH', value: '6/8' },
+      { label: 'ACC', value: '98.5%' },
+      { label: 'GPA', value: '3.92' },
+    ],
+    description: "Advanced research in Deep Learning architectures. Specializing in diffusion models, generative adversarial networks, and computer vision pipelines.",
+    logs: [
+        "> Initializing U-Net architecture...",
+        "> Loading pre-trained weights...",
+        "> Optimizing loss function: CrossEntropy"
+    ]
   },
   {
-    institution: 'Universiti Malaysia Pahang Al-Sultan Abdullah',
-    program:
-      'Bachelor of Computer Science (Student Exchange – AIMS), Software Engineering (with Honours)',
+    id: 'ump',
+    institution: 'Universiti Malaysia Pahang',
+    program: 'Software Engineering (Exchange)',
     period: 'Oct 2024 – Feb 2025',
+    status: 'TRANSFER_LEARNING',
+    icon: FaServer,
+    highlight: 'AIMS Scholar',
+    stats: [
+      { label: 'DUR', value: '1 SEM' },
+      { label: 'TYPE', value: 'INTL' },
+      { label: 'RES', value: 'PASS' }
+    ],
+    description: "International exposure focusing on large-scale software systems and cross-cultural engineering practices. Adapting models to new domains.",
+    logs: [
+        "> Domain adaptation initiated...",
+        "> Transferring feature vectors...",
+        "> Cultural bias normalization complete"
+    ]
   },
   {
-    institution: 'SMA Negeri Cahaya Madani Banten',
+    id: 'cmb',
+    institution: 'SMA Cahaya Madani Banten',
     program: 'Science (IPA)',
     period: '2019 – 2022',
+    status: 'PRE_TRAINING',
+    icon: FaMicrochip,
+    highlight: 'Boarding Excellence',
+    stats: [
+      { label: 'FOCUS', value: 'STEM' },
+      { label: 'RANK', value: 'TOP 5%' }
+    ],
+    description: "Foundational embedding in mathematics, physics, and algorithmic thinking. Intensive boarding environment providing robust initial weights.",
+    logs: [
+        "> Setting random seeds...",
+        "> Establishing baseline parameters...",
+        "> Batch normalization active"
+    ]
   },
   {
-    institution: 'SMP Negeri 08 Tangerang Selatan',
+    id: 'smp',
+    institution: 'SMP Negeri 08 Tangsel',
+    program: 'Junior High',
     period: '2016 – 2019',
-  },
-  {
-    institution: 'SD Negeri Batan Indah',
-    period: '2010 – 2016',
-  },
-  {
-    institution: 'MTQ Dzarattul Mutmainnah',
-    period: '2012 – 2016',
-  },
-  {
-    institution: 'TK Bakti Atomita',
-    period: '2009 – 2010',
-  },
+    status: 'INITIALIZATION',
+    icon: FaCodeBranch,
+    highlight: 'Junior High',
+    stats: [
+      { label: 'BASE', value: 'STD' }
+    ],
+    description: "Early development of logical reasoning and structural thinking.",
+    logs: [
+        "> Allocating memory...",
+        "> System boot sequence..."
+    ]
+  }
 ];
 
-type Node = { id: number; x: number; y: number };
+// --- Components ---
 
-function useNeuralNodes(count = 22) {
-  const [nodes, setNodes] = useState<Node[]>([]);
+const DetailCard = ({ item, onClose }: { item: EducationItem; onClose: () => void }) => {
+    return (
+        <motion.div 
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 50 }}
+            className="fixed right-4 md:right-10 top-24 md:top-32 bottom-10 w-full max-w-md z-50 pointer-events-auto"
+        >
+            <div className="h-full bg-[#050507]/95 backdrop-blur-2xl border border-cyan-500/30 rounded-2xl overflow-hidden flex flex-col shadow-2xl relative">
+                
+                {/* Close Button */}
+                <button 
+                    onClick={onClose}
+                    className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors z-10"
+                >
+                    ✕ ESC
+                </button>
 
-  useEffect(() => {
-    const createNodes = () =>
-      Array.from({ length: count }).map((_, i) => ({
-        id: i,
-        x: Math.random() * 100,
-        y: Math.random() * 100,
-      }));
-    setNodes(createNodes());
+                {/* Header */}
+                <div className="p-6 border-b border-white/10 bg-gradient-to-r from-cyan-900/20 to-transparent">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-cyan-500/10 rounded-lg border border-cyan-500/20 text-cyan-400">
+                            <item.icon size={20} />
+                        </div>
+                        <span className="text-xs font-mono text-cyan-400 tracking-widest uppercase">{item.status}</span>
+                    </div>
+                    <h2 className="text-2xl font-bold text-white leading-tight">{item.institution}</h2>
+                    {item.program && <p className="text-sm text-purple-300 mt-1 font-mono">{item.program}</p>}
+                </div>
 
-    const interval = setInterval(() => {
-      setNodes((prev) =>
-        prev.map((n) => ({
-          ...n,
-          x: Math.max(0, Math.min(100, n.x + (Math.random() - 0.5) * 3)),
-          y: Math.max(0, Math.min(100, n.y + (Math.random() - 0.5) * 3)),
-        }))
-      );
-    }, 1800);
-    return () => clearInterval(interval);
-  }, [count]);
+                {/* Content Scroll */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                    {/* Stats */}
+                    {item.stats.length > 0 && (
+                        <div className="grid grid-cols-3 gap-3">
+                            {item.stats.map((stat, i) => (
+                                <div key={i} className="bg-black/40 rounded p-3 border border-white/5 text-center">
+                                    <div className="text-[10px] text-gray-500 font-mono uppercase tracking-wider mb-1">{stat.label}</div>
+                                    <div className="text-lg font-bold text-white">{stat.value}</div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
 
-  // Precompute edges between near neighbors
-  const edges = useMemo(() => {
-    const list: Array<[Node, Node]> = [];
-    for (let i = 0; i < nodes.length; i += 1) {
-      for (let j = i + 1; j < nodes.length; j += 1) {
-        const dx = nodes[i].x - nodes[j].x;
-        const dy = nodes[i].y - nodes[j].y;
-        const d2 = dx * dx + dy * dy;
-        if (d2 < 9 * 9) list.push([nodes[i], nodes[j]]); // threshold ~9% of container
-      }
-    }
-    return list;
-  }, [nodes]);
+                    {/* Description */}
+                    <div className="space-y-2">
+                        <h3 className="text-xs font-mono text-gray-500 uppercase">/Description</h3>
+                        <p className="text-sm text-gray-300 leading-relaxed border-l-2 border-cyan-500/30 pl-4">
+                            {item.description}
+                        </p>
+                    </div>
 
-  return { nodes, edges };
-}
+                    {/* System Logs */}
+                    <div className="space-y-2">
+                        <h3 className="text-xs font-mono text-gray-500 uppercase">/System_Logs</h3>
+                        <div className="bg-black rounded p-4 font-mono text-xs text-green-500/80 space-y-2 border border-white/10">
+                            {item.logs.map((log, i) => (
+                                <div key={i} className="truncate">
+                                    <span className="opacity-50 mr-2">{(i + 1).toString().padStart(2, '0')}</span>
+                                    {log}
+                                </div>
+                            ))}
+                            <div className="w-2 h-4 bg-green-500/50 animate-pulse inline-block" />
+                        </div>
+                    </div>
+                </div>
 
-const SectionHeader = ({ title }: { title: string }) => (
-  <div className="relative mb-12">
-    <motion.div
-      initial={{ scaleX: 0 }}
-      animate={{ scaleX: 1 }}
-      transition={{ duration: 0.8 }}
-      className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-500/10 to-transparent"
-    />
-    <h1 className="relative text-center text-3xl md:text-5xl font-extrabold tracking-tight">
-      <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600">
-        &lt;{title}/&gt;
-      </span>
-    </h1>
-  </div>
+                {/* Footer */}
+                <div className="p-4 border-t border-white/10 bg-black/20 text-[10px] font-mono text-gray-500 flex justify-between">
+                    <span>ID: {item.id.toUpperCase()}</span>
+                    <span>SYNCED</span>
+                </div>
+            </div>
+        </motion.div>
+    );
+};
+
+const InstructionOverlay = () => (
+    <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 2, duration: 1 }}
+        className="fixed bottom-10 left-1/2 -translate-x-1/2 pointer-events-none z-40 text-center space-y-2"
+    >
+        <div className="text-[10px] font-mono text-cyan-500 tracking-[0.3em] animate-pulse">
+            INTERACTIVE NEURAL INTERFACE
+        </div>
+        <div className="text-xs text-gray-500">
+            Drag to Rotate • Click Nodes to Explore
+        </div>
+    </motion.div>
 );
 
 export default function EducationPage() {
-  const { nodes, edges } = useNeuralNodes(26);
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001
+  });
+
+  const [selectedSchoolId, setSelectedSchoolId] = useState<string | null>(null);
+  const selectedItem = educationData.find(e => e.id === selectedSchoolId);
 
   return (
     <>
-      {/* Override global grid background on this page to avoid blue lines */}
       <style jsx global>{`
         body {
-          background-image: none !important;
-          animation: none !important;
+            background-color: #030305;
+            overflow: hidden; /* Lock scroll for 3D interaction focus */
         }
       `}</style>
-      {/* Global ambient visuals */}
+
       <CursorEffect />
       <Navigation personalInfo={personalInfo} />
-
-      <main className="relative min-h-screen pt-24 pb-16">
-        {/* Layered sci‑fi background */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          {/* Modern aurora blurs */}
-          <motion.div
-            className="absolute -top-32 -left-32 w-[520px] h-[520px] rounded-full blur-3xl"
-            style={{
-              background: 'radial-gradient(circle at 30% 30%, rgba(34,211,238,0.35), transparent 60%)',
-            }}
-            animate={{ x: [-20, 20, -20], y: [0, 10, 0] }}
-            transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
-          />
-          <motion.div
-            className="absolute -bottom-40 -right-24 w-[600px] h-[600px] rounded-full blur-3xl"
-            style={{
-              background: 'radial-gradient(circle at 70% 70%, rgba(168,85,247,0.35), transparent 60%)',
-            }}
-            animate={{ x: [10, -10, 10], y: [0, -12, 0] }}
-            transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
-          />
-
-          {/* Rotating holographic ring */}
-          <motion.div
-            className="absolute inset-0"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}
-          >
-            <div
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] rounded-full opacity-20"
-              style={{
-                background:
-                  'conic-gradient(from 90deg, rgba(34,211,238,0.15), transparent 25%, rgba(168,85,247,0.15), transparent 50%, rgba(34,211,238,0.15))',
-                maskImage: 'radial-gradient(circle at center, black 40%, transparent 60%)',
-                WebkitMaskImage: 'radial-gradient(circle at center, black 40%, transparent 60%)',
-              }}
-            />
-          </motion.div>
-
-          {/* hex grid */}
-          <div className="absolute inset-0 opacity-10" style={{
-            backgroundImage:
-              "radial-gradient(rgba(34,211,238,0.18) 1px, transparent 1px), radial-gradient(rgba(168,85,247,0.14) 1px, transparent 1px)",
-            backgroundSize: '20px 20px, 34px 34px',
-            backgroundPosition: '0 0, 10px 17px',
-          }} />
-
-          {/* sweeping scanline removed per request */}
-
-          {/* neural network svg */}
-          <svg className="absolute inset-0 w-full h-full opacity-40" preserveAspectRatio="none">
-            {edges.map(([a, b], idx) => (
-              <motion.line
-                key={`l-${idx}`}
-                x1={`${a.x}%`} y1={`${a.y}%`} x2={`${b.x}%`} y2={`${b.y}%`}
-                stroke="url(#edgeGrad)" strokeWidth="1"
-                initial={{ opacity: 0.25 }}
-                animate={{ opacity: [0.15, 0.35, 0.15] }}
-                transition={{ duration: 3 + (idx % 5) * 0.4, repeat: Infinity }}
-              />
-            ))}
-            {nodes.map((n) => (
-              <motion.circle
-                key={n.id}
-                cx={`${n.x}%`} cy={`${n.y}%`} r="1.8"
-                fill="url(#nodeGrad)"
-                animate={{ r: [1.2, 2, 1.2] }}
-                transition={{ duration: 2.4, repeat: Infinity, delay: (n.id % 7) * 0.2 }}
-              />
-            ))}
-            <defs>
-              <linearGradient id="edgeGrad" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="rgba(34,211,238,0.45)" />
-                <stop offset="100%" stopColor="rgba(168,85,247,0.45)" />
-              </linearGradient>
-              <radialGradient id="nodeGrad">
-                <stop offset="0%" stopColor="rgba(255,255,255,0.9)" />
-                <stop offset="60%" stopColor="rgba(34,211,238,0.85)" />
-                <stop offset="100%" stopColor="transparent" />
-              </radialGradient>
-            </defs>
-          </svg>
-
-          {/* subtle grain */}
-          <div
-            className="absolute inset-0 opacity-[0.035]"
-            style={{
-              backgroundImage: 'radial-gradient(rgba(255,255,255,0.7) 1px, transparent 1px)',
-              backgroundSize: '3px 3px',
-              mixBlendMode: 'overlay',
-            }}
-          />
+      
+      <main className="relative w-full h-screen overflow-hidden">
+        
+        {/* 3D Scene is now the main content */}
+        <div className="absolute inset-0 z-10">
+            <DiffusionScene onSchoolSelect={(data: any) => setSelectedSchoolId(data?.id)} />
         </div>
 
-        <section className="relative w-full max-w-6xl mx-auto px-4">
-          <SectionHeader title="EDUCATION_HISTORY" />
+        {/* HUD / Title (Non-intrusive) */}
+        <div className="absolute top-24 left-8 md:left-16 z-20 pointer-events-none">
+            <motion.div 
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 1 }}
+            >
+                <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-white mb-2 mix-blend-difference">
+                    NEURAL
+                    <span className="block text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500">
+                        ARCHITECT
+                    </span>
+                </h1>
+                <div className="flex items-center gap-3 text-cyan-400/80 font-mono text-xs">
+                    <BsGpuCard />
+                    <span>LEARNING_RATE: ADAPTIVE</span>
+                    <span className="w-1 h-1 rounded-full bg-cyan-400" />
+                    <span>EPOCHS: 4</span>
+                </div>
+            </motion.div>
+        </div>
 
-          {/* Intro card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="relative mb-10 p-6 md:p-8 rounded-2xl bg-black/40 backdrop-blur-xl border border-cyan-400/20 shadow-lg shadow-cyan-500/10 overflow-hidden"
-          >
-            <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/0 via-cyan-500/10 to-purple-500/0 rounded-2xl" />
-            <div className="relative flex items-start gap-4">
-              <div className="p-3 rounded-xl bg-cyan-500/10 border border-cyan-400/30 text-cyan-300">
-                <FaBrain className="text-xl" />
-              </div>
-              <div>
-                <h2 className="text-xl md:text-2xl font-semibold text-cyan-300">Neural Timeline</h2>
-                <p className="mt-2 text-gray-300">
-                  A professional, AI-inspired education timeline. Each node represents a learning phase, interconnected like a
-                  neural network to form an evolving pattern of experiences — futuristic, dynamic, and modern.
-                </p>
-              </div>
-            </div>
-          </motion.div>
+        {/* Detail Card Overlay */}
+        <AnimatePresence>
+            {selectedItem && (
+                <DetailCard item={selectedItem} onClose={() => setSelectedSchoolId(null)} />
+            )}
+        </AnimatePresence>
 
-          {/* Timeline */}
-          <div className="relative">
-            {/* central axis */}
-            <div className="hidden md:block absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-cyan-500/40 via-cyan-500/10 to-transparent" />
+        <InstructionOverlay />
 
-            <ol className="space-y-6 md:space-y-10">
-              {educationData.map((item, index) => {
-                const isLeft = index % 2 === 0;
-                return (
-                  <motion.li
-                    key={index}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, amount: 0.2 }}
-                    transition={{ duration: 0.5, delay: index * 0.05 }}
-                    className="relative"
-                  >
-                    <div className={`grid md:grid-cols-2 gap-6 items-stretch`}>
-                      {/* Spacer for left/right alignment on desktop */}
-                      <div className={`hidden md:block ${isLeft ? '' : 'order-2'}`} />
-
-                      <div className={`${isLeft ? '' : 'md:order-1'}`}>
-                        <div className="relative h-full p-6 rounded-2xl bg-gradient-to-br from-gray-900/80 to-black/80 border border-cyan-400/20 hover:border-cyan-400/40 transition-all group overflow-hidden">
-                          {/* Glow on hover */}
-                          <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/0 to-purple-500/0 group-hover:from-cyan-500/10 group-hover:to-purple-500/10 transition-colors" />
-
-                          {/* Anchor dot for axis */}
-                          <div className="hidden md:block absolute top-6 -left-[9px] w-4 h-4 rounded-full bg-cyan-400/90 shadow-[0_0_12px_rgba(34,211,238,0.8)] border border-white/20" />
-
-                          <div className="relative flex items-start gap-4">
-                            <div className="shrink-0 p-3 rounded-xl bg-cyan-500/10 border border-cyan-400/30 text-cyan-300">
-                              <FaGraduationCap className="text-xl" />
-                            </div>
-                            <div className="min-w-0">
-                              <h3 className="text-lg md:text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-400 line-clamp-2">
-                                {item.institution}
-                              </h3>
-                              {item.program && (
-                                <p className="mt-1 text-sm md:text-base text-gray-300/90">{item.program}</p>
-                              )}
-                              <div className="mt-3 flex flex-wrap gap-3 items-center text-xs md:text-sm">
-                                <span className="px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-400/20 font-mono">
-                                  {item.period}
-                                </span>
-                                {item.highlight && (
-                                  <span className="px-3 py-1 rounded-full bg-purple-500/10 text-purple-300 border border-purple-400/20">
-                                    {item.highlight}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.li>
-                );
-              })}
-            </ol>
-          </div>
-        </section>
       </main>
     </>
   );
 }
-
-

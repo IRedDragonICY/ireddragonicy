@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import type { SocialStats } from './types';
 import { cacheUtils, formatUtils } from './utils';
 
-interface ApiHookConfig {
+export interface ApiHookConfig {
   service: string;
   identifier: string;
   endpoint: string;
@@ -11,7 +11,7 @@ interface ApiHookConfig {
 /**
  * Generic hook for fetching social media stats
  */
-function useSocialStats<T extends SocialStats>(config: ApiHookConfig): T {
+export function useSocialStats<T extends SocialStats>(config: ApiHookConfig): T {
   const [stats, setStats] = useState<T>({
     loading: true,
   } as T);

@@ -16,19 +16,20 @@ import {
   FaDatabase
 } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
-import { 
-  SiPixiv, 
-  SiXdadevelopers, 
-  SiThreads, 
-  SiTiktok, 
-  SiGooglecloud, 
-  SiGoogle, 
-  SiOrcid, 
-  SiKaggle, 
-  SiGitlab, 
-  SiSteam, 
-  SiEpicgames, 
-  SiBilibili
+import {
+  SiPixiv,
+  SiXdadevelopers,
+  SiThreads,
+  SiTiktok,
+  SiGooglecloud,
+  SiGoogle,
+  SiOrcid,
+  SiKaggle,
+  SiGitlab,
+  SiSteam,
+  SiEpicgames,
+  SiBilibili,
+  SiXiaomi
 } from 'react-icons/si';
 import { TbBrandBluesky, TbWorld } from 'react-icons/tb';
 import { MdForum } from 'react-icons/md';
@@ -168,6 +169,16 @@ export const socials: SocialItem[] = [
     accent: '#EA7100',
     gradientFrom: '#FF8C00',
     gradientTo: '#C75E00',
+  },
+  {
+    id: 'xiaomi-community',
+    name: 'Xiaomi Community',
+    href: 'https://c.mi.com/id/user/9848f866edb0e8e777c20a5b84a838d4/',
+    icon: SiXiaomi,
+    description: 'Xiaomi device discussions, tips, and community engagement.',
+    accent: '#FF6700',
+    gradientFrom: '#FF8C00',
+    gradientTo: '#FF6700',
   },
   {
     id: 'discord',

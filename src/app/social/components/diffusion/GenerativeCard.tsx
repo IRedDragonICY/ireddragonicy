@@ -59,7 +59,7 @@ const GenerativeCard: React.FC<GenerativeCardProps> = memo(({ item, index, type 
   const displayStats = useMemo(() => {
     if (!statsConfig || stats.loading) return null;
 
-    const items = [];
+    const items: { label: string; value: string }[] = [];
     const push = (label: string, key: keyof SocialStats, suffix = '') => {
       const val = stats[key];
       if (val !== undefined && val !== null) {
@@ -86,7 +86,7 @@ const GenerativeCard: React.FC<GenerativeCardProps> = memo(({ item, index, type 
 
   const handleCopy = (e: React.MouseEvent) => {
     e.preventDefault();
-    const textToCopy = 'uid' in item ? (item.uid || item.ign || '') : item.href;
+    const textToCopy = 'uid' in item ? (item.uid || item.ign || '') : ('href' in item ? item.href : '');
     navigator.clipboard.writeText(textToCopy);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -97,8 +97,8 @@ const GenerativeCard: React.FC<GenerativeCardProps> = memo(({ item, index, type 
 
   // Reduced complexity variants for smoother entering
   const cardVariants = {
-    hidden: { 
-      opacity: 0, 
+    hidden: {
+      opacity: 0,
       y: 20,
       // Removed heavy blur filter from initial state for performance
       scale: 0.95
@@ -110,7 +110,7 @@ const GenerativeCard: React.FC<GenerativeCardProps> = memo(({ item, index, type 
       transition: {
         delay: Math.min(i * 0.05, 0.5), // Cap delay to avoid long waits
         duration: 0.4,
-        ease: "easeOut"
+        ease: [0.4, 0.0, 0.2, 1] as [number, number, number, number]
       }
     })
   };

@@ -62,7 +62,7 @@ const portfolioData = {
       title: 'Neural Architecture Search System',
       description: 'Automated system for discovering optimal neural network architectures using evolutionary algorithms and reinforcement learning.',
       tech: ['PyTorch', 'AutoML', 'Ray', 'Optuna'],
-      metrics: { accuracy: '97.8%', speedup: '3.2x' },
+      metrics: { accuracy: '97.8%', speedup: '3.2x' } as Record<string, string>,
       live: '#',
       code: '#'
     },
@@ -70,7 +70,7 @@ const portfolioData = {
       title: 'Diffusion Model Framework',
       description: 'Custom implementation of stable diffusion with ControlNet for high-quality image generation and editing.',
       tech: ['Python', 'CUDA', 'Diffusers', 'Gradio'],
-      metrics: { fid_score: '12.4', inference: '0.8s' },
+      metrics: { fid_score: '12.4', inference: '0.8s' } as Record<string, string>,
       live: '#',
       code: '#'
     },
@@ -78,7 +78,7 @@ const portfolioData = {
       title: 'LLM Fine-tuning Pipeline',
       description: 'End-to-end pipeline for fine-tuning large language models with LoRA and QLoRA techniques.',
       tech: ['Transformers', 'PEFT', 'BitsAndBytes', 'Wandb'],
-      metrics: { params: '7B', memory: '-75%' },
+      metrics: { params: '7B', memory: '-75%' } as Record<string, string>,
       live: '#',
       code: '#'
     },
@@ -86,7 +86,7 @@ const portfolioData = {
       title: 'Real-time Vision Transformer',
       description: 'Optimized Vision Transformer for real-time object detection and segmentation on edge devices.',
       tech: ['TensorRT', 'ONNX', 'OpenVINO', 'C++'],
-      metrics: { fps: '60+', latency: '15ms' },
+      metrics: { fps: '60+', latency: '15ms' } as Record<string, string>,
       live: '#',
       code: '#'
     },

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { FaServer, FaMemory, FaMicrochip, FaHdd } from 'react-icons/fa';
 import { BsGpuCard } from 'react-icons/bs';
+import { IconType } from 'react-icons';
 
 const RandomGraph = ({ color = '#22d3ee' }: { color?: string }) => {
   const [path, setPath] = useState('');
@@ -58,7 +59,7 @@ const RandomGraph = ({ color = '#22d3ee' }: { color?: string }) => {
 interface StatModuleProps {
   label: string;
   value: string;
-  icon: React.ElementType;
+  icon: IconType;
   color?: string;
 }
 

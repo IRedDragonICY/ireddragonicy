@@ -52,7 +52,7 @@ const SCHOOLS = [
 
 // --- Components ---
 
-function BrainParticles({ count = 6000, isHovered }) {
+function BrainParticles({ count = 6000, isHovered }: { count?: number; isHovered: boolean }) {
   const mesh = useRef<THREE.Points>(null);
 
   const particles = useMemo(() => {
@@ -124,8 +124,8 @@ function BrainParticles({ count = 6000, isHovered }) {
   return (
     <points ref={mesh}>
       <bufferGeometry>
-        <bufferAttribute attach="attributes-position" count={particles.positions.length / 3} array={particles.positions} itemSize={3} />
-        <bufferAttribute attach="attributes-color" count={particles.colors.length / 3} array={particles.colors} itemSize={3} />
+        <bufferAttribute attach="attributes-position" count={particles.positions.length / 3} array={particles.positions} itemSize={3} args={undefined as any} />
+        <bufferAttribute attach="attributes-color" count={particles.colors.length / 3} array={particles.colors} itemSize={3} args={undefined as any} />
       </bufferGeometry>
       <PointMaterial transparent vertexColors size={0.04} sizeAttenuation={true} depthWrite={false} blending={THREE.AdditiveBlending} opacity={0.6} />
     </points>
@@ -152,17 +152,18 @@ function JourneyPath() {
     return (
         <group>
             {/* The Path Line */}
+            {/* @ts-ignore */}
             <line geometry={lineGeometry}>
                 <lineBasicMaterial color="#ffffff" opacity={0.15} transparent linewidth={1} />
             </line>
-            
+
             {/* Flowing Data Particles along the path */}
             <DataFlowParticles curve={curve} count={20} />
         </group>
     );
 }
 
-function DataFlowParticles({ curve, count }) {
+function DataFlowParticles({ curve, count }: { curve: THREE.CatmullRomCurve3; count: number }) {
     const particles = useRef<THREE.Points>(null);
     
     // Initial random positions along the curve (0..1)
@@ -189,29 +190,35 @@ function DataFlowParticles({ curve, count }) {
     return (
         <points ref={particles}>
             <bufferGeometry>
-                <bufferAttribute 
-                    attach="attributes-position" 
-                    count={count} 
-                    array={new Float32Array(count * 3)} 
-                    itemSize={3} 
+                <bufferAttribute
+                    attach="attributes-position"
+                    count={count}
+                    array={new Float32Array(count * 3)}
+                    itemSize={3}
+                    args={undefined as any}
                 />
             </bufferGeometry>
-            <PointMaterial 
-                color="#22d3ee" 
-                size={0.15} 
-                transparent 
-                opacity={0.8} 
+            <PointMaterial
+                color="#22d3ee"
+                size={0.15}
+                transparent
+                opacity={0.8}
                 blending={THREE.AdditiveBlending}
             />
         </points>
     );
 }
 
-function SchoolNode({ data, onSelect, isSelected, index }) {
+function SchoolNode({ data, onSelect, isSelected, index }: {
+    data: typeof SCHOOLS[0];
+    onSelect: (data: typeof SCHOOLS[0]) => void;
+    isSelected: boolean;
+    index: number
+}) {
     const [hovered, setHover] = useState(false);
     
     return (
-        <group position={data.position}>
+        <group position={data.position as [number, number, number]}>
             {/* Connection to previous node (Straight line segment) */}
             {index > 0 && (
                 <Line 
@@ -275,7 +282,7 @@ function SchoolNode({ data, onSelect, isSelected, index }) {
     );
 }
 
-function ActiveSynapse({ color }) {
+function ActiveSynapse({ color }: { color: string }) {
     const lineRef = useRef<THREE.Line>(null);
     // Allocate buffer for 2 points (start and end)
     const positions = useMemo(() => new Float32Array(6), []);
@@ -308,13 +315,14 @@ function ActiveSynapse({ color }) {
     });
 
     return (
-        <line ref={lineRef}>
+        <line ref={lineRef as any}>
             <bufferGeometry>
                 <bufferAttribute
                     attach="attributes-position"
                     count={2}
                     array={positions}
                     itemSize={3}
+                    args={undefined as any}
                 />
             </bufferGeometry>
             <lineBasicMaterial color={color} transparent opacity={0.8} linewidth={2} />
@@ -322,7 +330,7 @@ function ActiveSynapse({ color }) {
     );
 }
 
-function HolographicEarth({ coords, isVisible }) {
+function HolographicEarth({ coords, isVisible }: { coords: number[]; isVisible: boolean }) {
     const earthRef = useRef<THREE.Group>(null);
 
     useFrame(() => {
@@ -365,7 +373,7 @@ function HolographicEarth({ coords, isVisible }) {
 }
 
 // Main Scene Container that rotates slowly
-function SchoolConstellation({ children }) {
+function SchoolConstellation({ children }: { children: React.ReactNode }) {
     const ref = useRef<THREE.Group>(null);
     useFrame((state) => {
         if (ref.current) {
@@ -376,10 +384,10 @@ function SchoolConstellation({ children }) {
     return <group ref={ref}>{children}</group>;
 }
 
-export default function DiffusionScene({ onSchoolSelect }) {
-  const [selectedSchool, setSelected] = useState<any>(null);
-  
-  const handleSelect = (school) => {
+export default function DiffusionScene({ onSchoolSelect }: { onSchoolSelect: (data: any) => void }) {
+  const [selectedSchool, setSelected] = useState<typeof SCHOOLS[0] | null>(null);
+
+  const handleSelect = (school: typeof SCHOOLS[0]) => {
       if (selectedSchool?.id === school.id) {
           setSelected(null);
           onSchoolSelect(null);

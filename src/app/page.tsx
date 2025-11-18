@@ -59,36 +59,12 @@ const portfolioData = {
   ],
   projects: [
     {
-      title: 'Neural Architecture Search System',
-      description: 'Automated system for discovering optimal neural network architectures using evolutionary algorithms and reinforcement learning.',
-      tech: ['PyTorch', 'AutoML', 'Ray', 'Optuna'],
-      metrics: { accuracy: '97.8%', speedup: '3.2x' },
-      live: '#',
-      code: '#'
-    },
-    {
-      title: 'Diffusion Model Framework',
-      description: 'Custom implementation of stable diffusion with ControlNet for high-quality image generation and editing.',
-      tech: ['Python', 'CUDA', 'Diffusers', 'Gradio'],
-      metrics: { fid_score: '12.4', inference: '0.8s' },
-      live: '#',
-      code: '#'
-    },
-    {
-      title: 'LLM Fine-tuning Pipeline',
-      description: 'End-to-end pipeline for fine-tuning large language models with LoRA and QLoRA techniques.',
-      tech: ['Transformers', 'PEFT', 'BitsAndBytes', 'Wandb'],
-      metrics: { params: '7B', memory: '-75%' },
-      live: '#',
-      code: '#'
-    },
-    {
-      title: 'Real-time Vision Transformer',
-      description: 'Optimized Vision Transformer for real-time object detection and segmentation on edge devices.',
-      tech: ['TensorRT', 'ONNX', 'OpenVINO', 'C++'],
-      metrics: { fps: '60+', latency: '15ms' },
-      live: '#',
-      code: '#'
+      title: 'Vixevia',
+      description: 'Virtual Interactive and Xpressive Entertainment Visual Idol Avatar. An innovative AI-based Vtuber leveraging Google\'s Gemini for natural conversation, computer vision, and multimodal interaction.',
+      tech: ['Python', 'Gemini Pro', 'Google Cloud', 'OpenCV'],
+      metrics: { license: 'MIT', gpu: 'RTX 4050+', langs: 'ID/JP/EN/ZN' },
+      live: 'https://github.com/IRedDragonICY/vixevia',
+      code: 'https://github.com/IRedDragonICY/vixevia'
     },
   ],
   competencies: [

@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useMemo, memo } from 'react';
-import { motion, useMotionTemplate, useMotionValue } from 'framer-motion';
+import React, { useState, useMemo, memo, useRef, useEffect } from 'react';
+import { motion, useMotionTemplate, useMotionValue, useInView, Variants } from 'framer-motion';
 import { SocialItem, GameItem, SocialStats } from '../../types';
 import { FaExternalLinkAlt, FaCopy, FaCheck } from 'react-icons/fa';
 import { useSocialStats, ApiHookConfig } from '../../hooks';
@@ -13,25 +13,25 @@ interface GenerativeCardProps {
   type: 'social' | 'game';
 }
 
-// Configuration helper
-const getStatsConfig = (id: string): ApiHookConfig | null => {
-  const map: Record<string, ApiHookConfig> = {
-    'x': { service: 'x', identifier: 'ireddragonicy', endpoint: '/api/x-stats?u=ireddragonicy' },
-    'threads': { service: 'threads', identifier: 'ireddragonicy', endpoint: '/api/threads-stats?u=ireddragonicy' },
-    'pinterest': { service: 'pinterest', identifier: 'IRedDragonICY', endpoint: '/api/pinterest-stats?u=IRedDragonICY' },
-    'instagram': { service: 'instagram', identifier: 'ireddragonicy', endpoint: '/api/instagram-stats?u=ireddragonicy' },
-    'instagram-dev': { service: 'instagram', identifier: 'ireddragonicy.code', endpoint: '/api/instagram-stats?u=ireddragonicy.code' },
-    'youtube': { service: 'youtube', identifier: '@Ndik', endpoint: '/api/youtube-stats?c=@Ndik' },
-    'bluesky': { service: 'bluesky', identifier: 'ireddragonicy.bsky.social', endpoint: '/api/bluesky-stats?u=ireddragonicy.bsky.social' },
-    'tiktok': { service: 'tiktok', identifier: 'ireddragonicy', endpoint: '/api/tiktok-stats?u=ireddragonicy' },
-    'hoyolab': { service: 'hoyolab', identifier: '10849915', endpoint: '/api/hoyolab-stats?id=10849915' },
-    'strava': { service: 'strava', identifier: '164295314', endpoint: '/api/strava-stats?id=164295314' },
-  };
-  return map[id] || null;
+// Static configuration map to avoid recreation
+const STATS_CONFIG_MAP: Record<string, ApiHookConfig> = {
+  'x': { service: 'x', identifier: 'ireddragonicy', endpoint: '/api/x-stats?u=ireddragonicy' },
+  'threads': { service: 'threads', identifier: 'ireddragonicy', endpoint: '/api/threads-stats?u=ireddragonicy' },
+  'pinterest': { service: 'pinterest', identifier: 'IRedDragonICY', endpoint: '/api/pinterest-stats?u=IRedDragonICY' },
+  'instagram': { service: 'instagram', identifier: 'ireddragonicy', endpoint: '/api/instagram-stats?u=ireddragonicy' },
+  'instagram-dev': { service: 'instagram', identifier: 'ireddragonicy.code', endpoint: '/api/instagram-stats?u=ireddragonicy.code' },
+  'youtube': { service: 'youtube', identifier: '@Ndik', endpoint: '/api/youtube-stats?c=@Ndik' },
+  'bluesky': { service: 'bluesky', identifier: 'ireddragonicy.bsky.social', endpoint: '/api/bluesky-stats?u=ireddragonicy.bsky.social' },
+  'tiktok': { service: 'tiktok', identifier: 'ireddragonicy', endpoint: '/api/tiktok-stats?u=ireddragonicy' },
+  'hoyolab': { service: 'hoyolab', identifier: '10849915', endpoint: '/api/hoyolab-stats?id=10849915' },
+  'strava': { service: 'strava', identifier: '164295314', endpoint: '/api/strava-stats?id=164295314' },
 };
 
-// Use React.memo to prevent unnecessary re-renders of cards when parent state changes (e.g. search query filtering other items)
 const GenerativeCard: React.FC<GenerativeCardProps> = memo(({ item, index, type }) => {
+  const ref = useRef<HTMLAnchorElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const isInView = useInView(ref, { once: true, margin: "50px" });
+  
   const [isHovered, setIsHovered] = useState(false);
   const [copied, setCopied] = useState(false);
   
@@ -51,15 +51,31 @@ const GenerativeCard: React.FC<GenerativeCardProps> = memo(({ item, index, type 
     transparent 80%
   )`;
 
-  // Fetch stats if config exists
-  const statsConfig = useMemo(() => getStatsConfig(item.id), [item.id]);
+  // Only fetch stats when in view
+  const statsConfig = useMemo(() => {
+    if (!isInView) return null;
+    return STATS_CONFIG_MAP[item.id] || null;
+  }, [item.id, isInView]);
+
   const stats = useSocialStats(statsConfig || { service: '', identifier: '', endpoint: '' });
-  
+
+  // Optimize video playback
+  useEffect(() => {
+    if (!videoRef.current) return;
+    
+    if (isHovered) {
+      videoRef.current.play().catch(() => {}); // Ignore play errors
+    } else {
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
+    }
+  }, [isHovered]);
+
   // Format stats for display
   const displayStats = useMemo(() => {
     if (!statsConfig || stats.loading) return null;
 
-    const items = [];
+    const items: { label: string, value: string }[] = [];
     const push = (label: string, key: keyof SocialStats, suffix = '') => {
       const val = stats[key];
       if (val !== undefined && val !== null) {
@@ -86,7 +102,12 @@ const GenerativeCard: React.FC<GenerativeCardProps> = memo(({ item, index, type 
 
   const handleCopy = (e: React.MouseEvent) => {
     e.preventDefault();
-    const textToCopy = 'uid' in item ? (item.uid || item.ign || '') : item.href;
+    let textToCopy = '';
+    if ('uid' in item) {
+        textToCopy = item.uid || item.ign || '';
+    } else if ('href' in item) {
+        textToCopy = item.href;
+    }
     navigator.clipboard.writeText(textToCopy);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -96,11 +117,10 @@ const GenerativeCard: React.FC<GenerativeCardProps> = memo(({ item, index, type 
   const isSocial = 'description' in item;
 
   // Reduced complexity variants for smoother entering
-  const cardVariants = {
+  const cardVariants: Variants = {
     hidden: { 
       opacity: 0, 
       y: 20,
-      // Removed heavy blur filter from initial state for performance
       scale: 0.95
     },
     visible: (i: number) => ({
@@ -108,7 +128,7 @@ const GenerativeCard: React.FC<GenerativeCardProps> = memo(({ item, index, type 
       y: 0,
       scale: 1,
       transition: {
-        delay: Math.min(i * 0.05, 0.5), // Cap delay to avoid long waits
+        delay: Math.min(i * 0.05, 0.5),
         duration: 0.4,
         ease: "easeOut"
       }
@@ -117,33 +137,26 @@ const GenerativeCard: React.FC<GenerativeCardProps> = memo(({ item, index, type 
 
   return (
     <motion.a
+      ref={ref}
       href={'href' in item ? item.href : '#'}
       target="_blank"
       rel="noopener noreferrer"
       custom={index}
       initial="hidden"
-      animate="visible"
+      animate={isInView ? "visible" : "hidden"}
       variants={cardVariants}
-      // Optimize layout thrashing
       layoutId={`card-${item.id}`} 
       onMouseMove={handleMouseMove}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       className="group relative flex flex-col h-full overflow-hidden rounded-lg bg-black/40 border border-white/5 transition-colors duration-500"
-      // Removed backdrop-blur-sm from main container, added will-change via style
       style={{ willChange: 'transform, opacity' }}
     >
        {/* 
-          Optimization: Backdrop blur is expensive. 
-          Only apply it if really needed or use a static png fallback.
-          Here we keep it but maybe reduce intensity or area.
-          Actually, applying it to a small absolute div is better than the whole container if possible,
-          but Tailwind puts it on the element.
-          Let's try without blur on the container to see if it fixes 'lag', 
-          or use a very lightweight one. 
-          Re-adding backdrop-blur-sm but knowing it's a cost.
+          Optimization: Removed backdrop-blur-sm to improve scrolling performance.
+          Replaced with a static dark overlay if needed, but bg-black/40 is sufficient.
        */}
-      <div className="absolute inset-0 backdrop-blur-[2px] pointer-events-none" />
+      <div className="absolute inset-0 pointer-events-none bg-black/20" />
 
       {/* Hover Gradient Effect */}
       <motion.div
@@ -161,10 +174,11 @@ const GenerativeCard: React.FC<GenerativeCardProps> = memo(({ item, index, type 
             <div className="relative flex items-center justify-center w-10 h-10 rounded-md bg-white/5 border border-white/10 overflow-hidden group-hover:scale-110 transition-transform duration-500">
               {isGame && (item as GameItem).videoSrc ? (
                 <video 
+                  ref={videoRef}
                   src={(item as GameItem).videoSrc} 
-                  autoPlay 
                   muted 
                   loop 
+                  playsInline
                   className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
                 />
               ) : (
@@ -219,11 +233,11 @@ const GenerativeCard: React.FC<GenerativeCardProps> = memo(({ item, index, type 
             </div>
           )}
           
-          {statsConfig && stats.loading && (
-             <div className="mt-4 flex gap-2">
-                <div className="h-8 flex-1 rounded bg-white/5 animate-pulse" />
-                <div className="h-8 flex-1 rounded bg-white/5 animate-pulse" />
-             </div>
+          {statsConfig && stats.loading && isInView && (
+            <div className="mt-4 flex gap-2">
+               <div className="h-8 flex-1 rounded bg-white/5 animate-pulse" />
+               <div className="h-8 flex-1 rounded bg-white/5 animate-pulse" />
+            </div>
           )}
           
           {isGame && (

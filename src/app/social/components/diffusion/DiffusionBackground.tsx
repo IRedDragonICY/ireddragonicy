@@ -17,35 +17,30 @@ const DiffusionBackground = () => {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    // Hint to browser that we want to use GPU where possible (mostly for compositor)
-    // For 2D context, options are limited but we can ensure we don't read back pixel data
-    const ctx = canvas.getContext('2d', { alpha: false }); // Optimize: alpha false if opaque background (but we want transparent?) 
-    // Actually our design uses fixed inset-0 bg-[#030305] on the canvas container, but we clear with low opacity.
-    // So alpha must be true. Let's stick to standard context but optimize the loop.
+    
+    const ctx = canvas.getContext('2d', { alpha: true });
     if (!ctx) return;
 
     let animationFrameId: number;
     let particles: Particle[] = [];
-    // Reduce particle count slightly for performance safety, though 60 is usually fine.
-    const particleCount = 60; 
+    // Adjust particle count based on screen size for performance
+    const isMobile = window.innerWidth < 768;
+    const particleCount = isMobile ? 30 : 50; 
     const connectionDistance = 150;
-    const connectionDistanceSq = connectionDistance * connectionDistance; // Optimization: Avoid sqrt
+    const connectionDistanceSq = connectionDistance * connectionDistance;
     
     let mouseX = -1000;
     let mouseY = -1000;
-    let lastTime = 0;
-
+    
     const resize = () => {
-      // Handle DPI scaling for crispness (can affect perf, so maybe stick to 1x for heavy effects or detect device)
       const dpr = window.devicePixelRatio || 1;
-      // For max performance, maybe ignore DPR or cap it at 2
+      // Cap DPR at 2 for performance on high-res screens
       const scale = Math.min(dpr, 2);
       
       canvas.width = window.innerWidth * scale;
       canvas.height = window.innerHeight * scale;
       ctx.scale(scale, scale);
       
-      // Style width/height for CSS
       canvas.style.width = `${window.innerWidth}px`;
       canvas.style.height = `${window.innerHeight}px`;
       
@@ -78,27 +73,15 @@ const DiffusionBackground = () => {
     window.addEventListener('mousemove', handleMouseMove);
     resize();
 
-    const animate = (time: number) => {
-      const delta = time - lastTime;
-      // Cap frame update if needed, but usually requestAnimationFrame handles it.
-      lastTime = time;
-
+    const animate = () => {
       // 1. Clear / Trail Effect
-      // Using fillRect with opacity is expensive due to read-back-blend-write.
-      // Optimization: Use fully opaque clear if trail isn't critical, or use a fading buffer.
-      // For "Senior" quality we want trails, but maybe optimized?
-      // Let's try strictly additive blending or just standard clear if trails cause lag.
-      // Sticking to trail for now but minimizing area if possible (no, full screen).
-      ctx.fillStyle = 'rgba(3, 3, 5, 0.2)'; // Slightly faster fade
+      // Using a slightly lower opacity clear for longer trails but ensure it doesn't smear too much
+      ctx.fillStyle = 'rgba(3, 3, 5, 0.25)'; 
       const w = window.innerWidth;
       const h = window.innerHeight;
       ctx.fillRect(0, 0, w, h);
 
       // 2. Update Particles
-      // Batch drawing: It's hard with varying colors/positions, but we can minimize state changes.
-      // Let's group operations.
-      
-      // Move & Interact
       for (let i = 0; i < particleCount; i++) {
         const p = particles[i];
         p.x += p.vx;
@@ -109,43 +92,41 @@ const DiffusionBackground = () => {
 
         const dx = mouseX - p.x;
         const dy = mouseY - p.y;
-        // Fast distance check
+        
+        // Fast bounding box check for mouse interaction
         if (Math.abs(dx) < 200 && Math.abs(dy) < 200) {
              const distSq = dx * dx + dy * dy;
              if (distSq < 40000) { // 200^2
                 const dist = Math.sqrt(distSq);
-                p.vx -= (dx / dist) * 0.02;
-                p.vy -= (dy / dist) * 0.02;
+                // Gentle repulsion
+                p.vx -= (dx / dist) * 0.01;
+                p.vy -= (dy / dist) * 0.01;
              }
         }
       }
 
-      // 3. Draw Connections (Heaviest part)
-      // Optimization: Use a single Path for same-color lines? 
-      // They have varying opacity, so we can't batch into one stroke unless we use vertex colors (WebGL).
-      // In 2D Canvas, we must issue separate calls or batch by alpha bins.
-      // Optimization: Just draw lines. 60*59/2 = 1770 checks.
-      // Only draw if close.
-      
+      // 3. Draw Particles (Batched)
+      ctx.beginPath();
+      ctx.fillStyle = `rgba(34, 211, 238, 0.5)`;
+      for (let i = 0; i < particleCount; i++) {
+         const p = particles[i];
+         ctx.moveTo(p.x + p.size, p.y); 
+         ctx.arc(p.x, p.y, p.size, 0, 6.28);
+      }
+      ctx.fill();
+
+      // 4. Draw Connections
       ctx.lineWidth = 1;
-      
+      // We can't easily batch variable alpha lines in 2D canvas without multiple passes
+      // But we can optimize the loop
       for (let i = 0; i < particleCount; i++) {
         const p = particles[i];
         
-        // Draw particle
-        // Optimization: No path begin/close for rects? Arc is nicer.
-        ctx.beginPath();
-        ctx.fillStyle = `rgba(34, 211, 238, 0.5)`; // Constant alpha is faster than Math.sin
-        ctx.arc(p.x, p.y, p.size, 0, 6.28); // 2*PI
-        ctx.fill();
-
-        // Connections
         for (let j = i + 1; j < particleCount; j++) {
            const p2 = particles[j];
            const dx = p.x - p2.x;
            const dy = p.y - p2.y;
            
-           // Bounding box check first (very fast)
            if (dx > connectionDistance || dx < -connectionDistance || dy > connectionDistance || dy < -connectionDistance) continue;
 
            const distSq = dx * dx + dy * dy;
@@ -153,7 +134,6 @@ const DiffusionBackground = () => {
              const dist = Math.sqrt(distSq);
              const alpha = 1 - dist / connectionDistance;
              
-             // Threshold alpha to avoid drawing invisible lines
              if (alpha > 0.05) {
                 ctx.beginPath();
                 ctx.strokeStyle = `rgba(139, 92, 246, ${alpha * 0.15})`;
@@ -196,7 +176,6 @@ const DiffusionBackground = () => {
   return (
     <canvas
       ref={canvasRef}
-      // Promote to own composite layer with will-change
       style={{ willChange: 'transform' }}
       className="fixed inset-0 w-full h-full pointer-events-none z-0 bg-[#030305]"
     />

@@ -52,7 +52,12 @@ const SCHOOLS = [
 
 // --- Components ---
 
-function BrainParticles({ count = 6000, isHovered }) {
+interface BrainParticlesProps {
+  count?: number;
+  isHovered: boolean;
+}
+
+function BrainParticles({ count = 6000, isHovered }: BrainParticlesProps) {
   const mesh = useRef<THREE.Points>(null);
 
   const particles = useMemo(() => {
@@ -124,8 +129,8 @@ function BrainParticles({ count = 6000, isHovered }) {
   return (
     <points ref={mesh}>
       <bufferGeometry>
-        <bufferAttribute attach="attributes-position" count={particles.positions.length / 3} array={particles.positions} itemSize={3} />
-        <bufferAttribute attach="attributes-color" count={particles.colors.length / 3} array={particles.colors} itemSize={3} />
+        <bufferAttribute attach="attributes-position" args={[particles.positions, 3]} />
+        <bufferAttribute attach="attributes-color" args={[particles.colors, 3]} />
       </bufferGeometry>
       <PointMaterial transparent vertexColors size={0.04} sizeAttenuation={true} depthWrite={false} blending={THREE.AdditiveBlending} opacity={0.6} />
     </points>
@@ -152,7 +157,8 @@ function JourneyPath() {
     return (
         <group>
             {/* The Path Line */}
-            <line geometry={lineGeometry}>
+            <line>
+                <primitive object={lineGeometry} attach="geometry" />
                 <lineBasicMaterial color="#ffffff" opacity={0.15} transparent linewidth={1} />
             </line>
             
@@ -162,7 +168,7 @@ function JourneyPath() {
     );
 }
 
-function DataFlowParticles({ curve, count }) {
+function DataFlowParticles({ curve, count }: { curve: THREE.CatmullRomCurve3; count: number }) {
     const particles = useRef<THREE.Points>(null);
     
     // Initial random positions along the curve (0..1)
@@ -191,9 +197,7 @@ function DataFlowParticles({ curve, count }) {
             <bufferGeometry>
                 <bufferAttribute 
                     attach="attributes-position" 
-                    count={count} 
-                    array={new Float32Array(count * 3)} 
-                    itemSize={3} 
+                    args={[new Float32Array(count * 3), 3]}
                 />
             </bufferGeometry>
             <PointMaterial 
@@ -207,7 +211,7 @@ function DataFlowParticles({ curve, count }) {
     );
 }
 
-function SchoolNode({ data, onSelect, isSelected, index }) {
+function SchoolNode({ data, onSelect, isSelected, index }: { data: any; onSelect: (data: any) => void; isSelected: boolean; index: number }) {
     const [hovered, setHover] = useState(false);
     
     return (
@@ -275,7 +279,7 @@ function SchoolNode({ data, onSelect, isSelected, index }) {
     );
 }
 
-function ActiveSynapse({ color }) {
+function ActiveSynapse({ color }: { color: string }) {
     const lineRef = useRef<THREE.Line>(null);
     // Allocate buffer for 2 points (start and end)
     const positions = useMemo(() => new Float32Array(6), []);
@@ -308,13 +312,12 @@ function ActiveSynapse({ color }) {
     });
 
     return (
+        // @ts-ignore
         <line ref={lineRef}>
             <bufferGeometry>
                 <bufferAttribute
                     attach="attributes-position"
-                    count={2}
-                    array={positions}
-                    itemSize={3}
+                    args={[positions, 3]}
                 />
             </bufferGeometry>
             <lineBasicMaterial color={color} transparent opacity={0.8} linewidth={2} />
@@ -322,7 +325,7 @@ function ActiveSynapse({ color }) {
     );
 }
 
-function HolographicEarth({ coords, isVisible }) {
+function HolographicEarth({ coords, isVisible }: { coords: number[]; isVisible: boolean }) {
     const earthRef = useRef<THREE.Group>(null);
 
     useFrame(() => {
@@ -365,7 +368,7 @@ function HolographicEarth({ coords, isVisible }) {
 }
 
 // Main Scene Container that rotates slowly
-function SchoolConstellation({ children }) {
+function SchoolConstellation({ children }: { children: React.ReactNode }) {
     const ref = useRef<THREE.Group>(null);
     useFrame((state) => {
         if (ref.current) {
@@ -376,10 +379,10 @@ function SchoolConstellation({ children }) {
     return <group ref={ref}>{children}</group>;
 }
 
-export default function DiffusionScene({ onSchoolSelect }) {
+export default function DiffusionScene({ onSchoolSelect }: { onSchoolSelect: (school: any) => void }) {
   const [selectedSchool, setSelected] = useState<any>(null);
   
-  const handleSelect = (school) => {
+  const handleSelect = (school: any) => {
       if (selectedSchool?.id === school.id) {
           setSelected(null);
           onSchoolSelect(null);

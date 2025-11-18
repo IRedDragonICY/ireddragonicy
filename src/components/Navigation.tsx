@@ -1,4 +1,3 @@
-// components/Navigation.tsx
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -20,12 +19,12 @@ const HOME_SECTION_IDS: string[] = [
 ];
 
 interface NavigationProps {
-  personalInfo: {
+  personalInfo?: {
     alias: string;
   };
 }
 
-const Navigation = ({ personalInfo }: NavigationProps) => {
+const Navigation = ({ personalInfo = { alias: 'IRedDragonICY' } }: NavigationProps) => {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

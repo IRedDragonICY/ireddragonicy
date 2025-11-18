@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
 import BootGate from '@/components/BootGate';
+import Chatbot from '@/components/chatbot/Chatbot';
 import Script from "next/script";
 import type { ReactNode } from "react";
 import React from "react";
@@ -130,6 +131,7 @@ export default function RootLayout({
         />
         <BootGate>
           {children}
+          <Chatbot />
         </BootGate>
         <Analytics />
       </body>

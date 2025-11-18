@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 body {
   @apply bg-[#0A0A0A] text-[#E0E0E0] antialiased;

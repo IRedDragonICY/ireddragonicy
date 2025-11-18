@@ -17,6 +17,10 @@ export function useSocialStats<T extends SocialStats>(config: ApiHookConfig): T 
   } as T);
 
   useEffect(() => {
+    if (!config.service || !config.endpoint) {
+      return;
+    }
+
     let aborted = false;
     const controller = new AbortController();
 

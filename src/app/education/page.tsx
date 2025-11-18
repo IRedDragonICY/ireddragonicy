@@ -7,6 +7,7 @@ import CursorEffect from '@/components/CursorEffect';
 import DiffusionScene from '@/components/education/DiffusionScene';
 import { FaNetworkWired, FaServer, FaMicrochip, FaCodeBranch, FaGraduationCap } from 'react-icons/fa';
 import { BsGpuCard } from 'react-icons/bs';
+import { IconType } from 'react-icons';
 
 // --- Types ---
 
@@ -17,7 +18,7 @@ type EducationItem = {
   period: string;
   status: string;
   highlight?: string;
-  icon: React.ElementType;
+  icon: IconType;
   stats: { label: string; value: string }[];
   description?: string;
   logs: string[];

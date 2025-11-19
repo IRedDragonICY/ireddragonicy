@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, useScroll, useTransform, useInView, useMotionValue, useSpring } from 'framer-motion';
-import { FaFileAlt, FaRobot, FaBook, FaGithub, FaLinkedin, FaTwitter } from 'react-icons/fa';
+import { FaFileAlt, FaRobot, FaBook } from 'react-icons/fa';
 import { BsArrowDown, BsStars } from 'react-icons/bs';
 import TypewriterTextMod from './hero/TypewriterText';
 import StableDiffusionCard from './hero/stable/StableDiffusionInterface';
@@ -20,7 +20,6 @@ const LatentSpaceBackground = () => {
     if (!ctx) return;
 
     let animationFrameId: number;
-    let time = 0;
 
     const resize = () => {
       canvas.width = window.innerWidth;
@@ -28,24 +27,6 @@ const LatentSpaceBackground = () => {
     };
     window.addEventListener('resize', resize);
     resize();
-
-    const draw = () => {
-      time += 0.005;
-      ctx.fillStyle = '#000';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Create a "diffusion" noise effect
-      const imageData = ctx.createImageData(canvas.width, canvas.height);
-      const data = imageData.data;
-
-      // Optimization: Draw noise on a smaller offscreen canvas and scale up?
-      // For now, we'll do a simpler procedural pattern to save CPU.
-      // Instead of per-pixel noise, we'll draw shifting gradients/shapes.
-      
-      // Clear with very low opacity for trails
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    };
 
     // Better approach: Use canvas for moving "fog"
     const particles: {x: number, y: number, vx: number, vy: number, size: number, alpha: number}[] = [];
@@ -63,7 +44,7 @@ const LatentSpaceBackground = () => {
     }
 
     const animate = () => {
-      ctx.fillStyle = 'rgba(0, 0, 0, 1)'; // Hard clear for cleaner look, or use fade
+      ctx.fillStyle = 'rgba(0, 0, 0, 1)'; // Hard clear for cleaner look
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Draw "latent clouds"
@@ -81,7 +62,7 @@ const LatentSpaceBackground = () => {
         gradient.addColorStop(0.5, `rgba(139, 92, 246, ${p.alpha * 0.3})`); // Violet
         gradient.addColorStop(1, 'rgba(0,0,0,0)');
         
-          ctx.fillStyle = gradient;
+        ctx.fillStyle = gradient;
         ctx.fillRect(p.x - p.size, p.y - p.size, p.size * 2, p.size * 2);
       });
 
@@ -118,7 +99,7 @@ const TechBadge = ({ text, glowColor = "cyan" }: { text: string, glowColor?: "cy
     `}>
       <div className={`w-1.5 h-1.5 rounded-full ${glowColor === 'cyan' ? 'bg-cyan-400' : glowColor === 'purple' ? 'bg-purple-400' : 'bg-green-400'} animate-pulse`} />
       <span className="text-[10px] font-mono uppercase tracking-wider font-semibold">{text}</span>
-      </div>
+    </div>
   );
 };
 
@@ -147,6 +128,19 @@ const Hero = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const { clientX, clientY, innerWidth, innerHeight } = window;
+      const x = (clientX / innerWidth) - 0.5;
+      const y = (clientY / innerHeight) - 0.5;
+      mouseX.set(x);
+      mouseY.set(y);
+    };
+    
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, [mouseX, mouseY]);
+
   return (
     <section
       ref={heroRef}
@@ -164,18 +158,18 @@ const Hero = () => {
       <div className="relative z-10 w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 grid lg:grid-cols-2 gap-8 lg:gap-12 items-center h-full">
         
         {/* Left Column: Text & CTA */}
-      <motion.div
+        <motion.div
           style={{ y: y1, opacity }}
           className="flex flex-col items-start justify-center space-y-6 lg:space-y-8"
         >
           {/* Status Badge */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
           >
             <TechBadge text="System Online • v2.4.0" glowColor="green" />
-              </motion.div>
+          </motion.div>
 
           {/* Headline */}
           <div className="space-y-1">
@@ -208,46 +202,45 @@ const Hero = () => {
               <span>CURRENT_OBJECTIVE:</span>
             </div>
             <div className="h-24 sm:h-20">
-                    <TypewriterTextMod
+              <TypewriterTextMod
                 text="Architecting the future of Generative AI through research in Diffusion Models and Transformer Architectures."
-                      isInView={isInView}
-                      delay={500}
-                      showTokens={true}
+                isInView={isInView}
+                delay={500}
+                showTokens={true}
                 className="text-lg sm:text-xl text-gray-300 font-light leading-relaxed"
-                    />
-                  </div>
-                  </div>
+              />
+            </div>
+          </div>
 
           {/* CTAs */}
-              <motion.div
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8 }}
             className="flex flex-wrap gap-4"
           >
             <button className="group relative px-8 py-4 bg-white text-black font-bold text-sm uppercase tracking-widest overflow-hidden rounded-sm transition-all hover:scale-105 active:scale-95">
               <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 mix-blend-darken" />
               <span className="relative flex items-center gap-2">
-                    Explore Research
+                Explore Research
                 <BsStars className="text-lg group-hover:rotate-180 transition-transform duration-500" />
-                  </span>
+              </span>
             </button>
             
             <button className="group px-8 py-4 bg-transparent border border-white/20 text-white font-bold text-sm uppercase tracking-widest hover:bg-white/5 transition-all hover:border-white/40 rounded-sm backdrop-blur-sm">
               <span className="flex items-center gap-2">
-                    View Publications
+                View Publications
                 <FaBook className="text-gray-400 group-hover:text-white transition-colors" />
-                  </span>
+              </span>
             </button>
-              </motion.div>
+          </motion.div>
 
           {/* Tech Stack Chips */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             transition={{ delay: 1.2 }}
             className="pt-8 border-t border-white/10 w-full max-w-md"
-            // Layout optimized: static content
           >
             <p className="text-xs text-gray-500 font-mono mb-4 uppercase tracking-widest">Core Technologies</p>
             <div className="flex flex-wrap gap-3">
@@ -255,16 +248,16 @@ const Hero = () => {
                 <span 
                   key={tech}
                   className="px-3 py-1 text-[10px] font-mono text-cyan-300 bg-cyan-950/30 border border-cyan-900/50 rounded-sm hover:border-cyan-500/50 transition-colors cursor-default"
-                    >
-                      {tech}
+                >
+                  {tech}
                 </span>
-                  ))}
-                </div>
+              ))}
+            </div>
           </motion.div>
-              </motion.div>
+        </motion.div>
 
         {/* Right Column: Interactive Interface */}
-              <motion.div
+        <motion.div
           style={{ 
             y: y2,
             rotateX: useTransform(smoothMouseY, [-0.5, 0.5], [5, -5]),
@@ -279,22 +272,30 @@ const Hero = () => {
            </div>
 
            {/* The Card */}
-           <div className="relative w-full max-w-md lg:max-w-full z-10 transform transition-all duration-500 hover:scale-[1.02]">
+           <div className="relative w-full max-w-md lg:max-w-full z-10 transform transition-all duration-500">
              <StableDiffusionCard isInView={isInView} isMobile={isMobile} />
              
-             {/* Floating stats around the card */}
+             {/* Floating stats - Glass Style - ADJUSTED POSITION */}
              <motion.div 
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 1.5 }}
-                className="absolute -right-4 top-10 hidden xl:block"
+                className="absolute -right-4 top-16 hidden xl:block pointer-events-none"
              >
-               <div className="bg-black/80 backdrop-blur-md border border-cyan-500/30 p-3 rounded-lg shadow-lg">
-                 <div className="flex items-center gap-3 mb-1">
-                   <FaRobot className="text-cyan-400" />
-                   <span className="text-xs font-mono text-gray-400">MODELS_DEPLOYED</span>
-                 </div>
-                 <div className="text-2xl font-bold text-white">12</div>
+               <div className="group flex items-center gap-2">
+                  {/* Connecting Line */}
+                  <div className="w-6 h-[1px] bg-gradient-to-l from-cyan-500/50 to-transparent" />
+                  
+                  <div className="bg-black/60 backdrop-blur-xl border border-cyan-500/30 p-3 rounded-xl shadow-[0_0_30px_rgba(34,211,238,0.1)]">
+                    <div className="flex items-center gap-2 mb-1 border-b border-white/10 pb-1">
+                      <FaRobot className="text-cyan-400 text-xs" />
+                      <span className="text-[9px] font-mono text-gray-400 tracking-wider uppercase">Models Deployed</span>
+                    </div>
+                    <div className="flex items-baseline gap-1">
+                         <span className="text-2xl font-bold text-white tracking-tighter">12</span>
+                         <span className="text-[8px] text-cyan-500 font-mono">ACTIVE</span>
+                    </div>
+                  </div>
                </div>
               </motion.div>
 
@@ -302,25 +303,33 @@ const Hero = () => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 1.7 }}
-                className="absolute -left-8 bottom-20 hidden xl:block"
+                className="absolute -left-8 bottom-28 hidden xl:block pointer-events-none"
              >
-               <div className="bg-black/80 backdrop-blur-md border border-purple-500/30 p-3 rounded-lg shadow-lg">
-                 <div className="flex items-center gap-3 mb-1">
-                   <FaFileAlt className="text-purple-400" />
-                   <span className="text-xs font-mono text-gray-400">PAPERS_PUBLISHED</span>
-                 </div>
-                 <div className="text-2xl font-bold text-white">24+</div>
+               <div className="group flex items-center gap-2 flex-row-reverse">
+                  {/* Connecting Line */}
+                  <div className="w-6 h-[1px] bg-gradient-to-r from-purple-500/50 to-transparent" />
+
+                  <div className="bg-black/60 backdrop-blur-xl border border-purple-500/30 p-3 rounded-xl shadow-[0_0_30px_rgba(168,85,247,0.1)]">
+                    <div className="flex items-center gap-2 mb-1 border-b border-white/10 pb-1">
+                      <FaFileAlt className="text-purple-400 text-xs" />
+                      <span className="text-[9px] font-mono text-gray-400 tracking-wider uppercase">Research Papers</span>
+                    </div>
+                    <div className="flex items-baseline gap-1">
+                         <span className="text-2xl font-bold text-white tracking-tighter">24+</span>
+                         <span className="text-[8px] text-purple-500 font-mono">PUBLISHED</span>
+                    </div>
+                  </div>
                </div>
             </motion.div>
 
             </div>
         </motion.div>
-        </div>
+      </div>
 
-        {/* Scroll Indicator */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+      {/* Scroll Indicator */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
         transition={{ delay: 2, duration: 1 }}
         className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2"
       >

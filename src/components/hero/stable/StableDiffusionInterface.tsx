@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import Image from 'next/image';
 import NeuralNetworkVisualization from '../NeuralNetworkVisualization';
-import { CONTROLNET_PREPROCESSORS, CONTROLNET_TYPES, MODELS, SAMPLERS, type ControlNetType, type ModelName, type Sampler } from '../constants';
+import { CONTROLNET_TYPES, MODELS, SAMPLERS, type ControlNetType, type ModelName, type Sampler } from '../constants';
 import { createDepthMapDataURL, createSobelEdgeDataURL, createScribbleDataURL, generateTransparencyAwareNoise } from '../utils';
 
 type ControlNetState = {
@@ -46,7 +46,7 @@ const StableDiffusionInterface: React.FC<Props> = ({ isInView, isMobile: isMobil
     canny: { enabled: true, preprocessor: 'Canny (Medium)', weight: 1.0 },
     scribble: { enabled: false, preprocessor: 'Scribble (Medium)', weight: 1.0 },
   });
-  const [showControlNet, setShowControlNet] = useState(true); // Default to true for "complex" look
+  const [showControlNet, setShowControlNet] = useState(true);
   const imageRef = useRef<HTMLImageElement>(null);
 
   const totalSteps = 50;
@@ -55,7 +55,7 @@ const StableDiffusionInterface: React.FC<Props> = ({ isInView, isMobile: isMobil
 
   const { scrollY } = useScroll();
   const interfaceY = useTransform(scrollY, [0, 500], [0, -20]);
-  const interfaceScale = useTransform(scrollY, [0, 300], [1, 0.95]);
+  const interfaceScale = useTransform(scrollY, [0, 300], [1, 0.98]);
 
   // Reset animation when in view changes
   useEffect(() => {
@@ -124,7 +124,6 @@ const StableDiffusionInterface: React.FC<Props> = ({ isInView, isMobile: isMobil
   }, [seed, isMobileView, controlNet.canny.preprocessor, controlNet.scribble.preprocessor]);
 
   const randomizeControlNetScenario = useCallback(() => {
-    // 40% none, 30% single, 20% double, 10% all
     const r = Math.random();
     const enabled = { depth: false, canny: false, scribble: false } as Record<Exclude<ControlNetType, 'none'>, boolean>;
     const keys: Array<Exclude<ControlNetType, 'none'>> = ['depth', 'canny', 'scribble'];
@@ -185,183 +184,232 @@ const StableDiffusionInterface: React.FC<Props> = ({ isInView, isMobile: isMobil
   const maxInitialBlurPx = isMobile ? 8 : 20;
 
   return (
-    <motion.div style={{ y: interfaceY, scale: interfaceScale }} className="relative w-full h-full flex flex-col justify-center px-2 md:px-0">
-      <div className="h-full w-full max-w-[300px] sm:max-w-sm lg:max-w-[380px] mx-auto bg-[#0A0A0C]/90 backdrop-blur-2xl border border-cyan-500/30 rounded-xl overflow-hidden shadow-2xl flex flex-col relative group">
+    <motion.div style={{ y: interfaceY, scale: interfaceScale }} className="relative w-full flex flex-col items-center justify-center px-4 md:px-0 perspective-1000">
+      {/* Main Interface Container - Floating & Glassy - REDUCED WIDTH to 340px */}
+      <div className="relative w-full max-w-[340px] bg-[#030304]/80 backdrop-blur-xl border border-white/5 rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden ring-1 ring-white/5 group">
         
-        {/* Professional Header with Status */}
-        <div className="p-2 border-b border-cyan-500/20 bg-gradient-to-r from-cyan-900/20 to-blue-900/20 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-             <div className="flex gap-1.5">
-                <div className="w-2.5 h-2.5 rounded-full bg-red-500/80" />
-                <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/80" />
-                <div className="w-2.5 h-2.5 rounded-full bg-green-500/80" />
-             </div>
-             <div className="h-4 w-px bg-cyan-500/20 mx-1" />
-             <div className="flex items-center gap-2">
-              <span className="text-[10px] sm:text-xs font-mono font-bold text-cyan-400 tracking-wide">STABLE_DIFFUSION_WEBUI</span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-300 font-mono">{selectedModel}</span>
-             </div>
+        {/* Glowing decorative elements - Adjusted size */}
+        <div className="absolute -top-10 -right-10 w-32 h-32 bg-cyan-500/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+
+        {/* Header: System Status Bar - Compact */}
+        <div className="relative z-10 flex items-center justify-between px-3 py-2 border-b border-white/5 bg-white/[0.02]">
+          <div className="flex items-center gap-2.5">
+            <div className="flex gap-1 opacity-60">
+              <div className="w-2 h-2 rounded-full bg-red-500/20 border border-red-500/50" />
+              <div className="w-2 h-2 rounded-full bg-yellow-500/20 border border-yellow-500/50" />
+              <div className="w-2 h-2 rounded-full bg-green-500/20 border border-green-500/50" />
+            </div>
+            <div className="h-3 w-px bg-white/10" />
+            <div className="flex flex-col">
+              <span className="text-[9px] font-bold text-cyan-100 tracking-wider leading-none">DIFFUSION_ENGINE</span>
+              <span className="text-[7px] text-cyan-500/60 font-mono leading-none mt-0.5">V2.4.0 // RUNNING</span>
+            </div>
           </div>
-          <span className="text-[10px] font-mono text-gray-400 tabular-nums">
-            Step {currentStep.toString().padStart(2, '0')}/{totalSteps}
-          </span>
-        </div>
-
-        {/* Main Generation Area - FIXED ASPECT RATIO to prevent collapse */}
-        <div className="relative w-full aspect-square bg-[#050507] overflow-hidden group-hover:shadow-[inset_0_0_40px_rgba(34,211,238,0.05)] transition-all duration-500">
-          
-          {/* Grid Overlay for "Technical" feel */}
-          <div className="absolute inset-0 pointer-events-none z-10 opacity-20" 
-               style={{ backgroundImage: 'linear-gradient(rgba(34, 211, 238, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(34, 211, 238, 0.1) 1px, transparent 1px)', backgroundSize: '40px 40px' }} 
-          />
-
-          <AnimatePresence>
-            {showLatent && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 flex items-center justify-center z-20 bg-black/80 backdrop-blur-sm">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-cyan-500/20 blur-xl rounded-full animate-pulse" />
-                  <div className="w-32 h-32 rounded-lg overflow-hidden border border-cyan-500/50 shadow-[0_0_30px_rgba(34,211,238,0.2)] relative bg-black">
-                    <NeuralNetworkVisualization isActive={showLatent} progress={1} />
-                    <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-[8px] text-cyan-400 font-mono text-center py-1">
-                        LATENT_SPACE_TRAVERSAL
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {!isMobile && noiseDataUrl && currentStep >= 8 && (
-            <motion.div className="absolute inset-0 z-10" animate={{ opacity: Math.max(0, 1 - denoisingProgress * 1.5), filter: `contrast(${1 + denoisingProgress * 0.5})` }}>
-              <div className="relative w-full h-full">
-                <Image src={noiseDataUrl} alt="Noise" fill className="object-cover" style={{ mixBlendMode: denoisingProgress > 0.5 ? 'overlay' : 'normal', imageRendering: 'pixelated' }} unoptimized />
-              </div>
-            </motion.div>
-          )}
-
-          <motion.div className="absolute inset-0" animate={{ opacity: Math.min(1, denoisingProgress * 1.2), filter: `blur(${Math.max(0, (1 - denoisingProgress) * maxInitialBlurPx)}px) saturate(${0.5 + denoisingProgress * 0.5})`, scale: 1 + (1 - denoisingProgress) * 0.05 }}>
-            <Image ref={imageRef} src="/hero-image.png" alt="Generated" fill className="object-cover" quality={100} priority />
-          </motion.div>
-
-          {/* ControlNet overlays (depth + canny + scribble) - Visualized as scanning layers */}
-          {controlNet.canny.enabled && overlayData.canny && (
-            <motion.div className="absolute inset-0 z-20 pointer-events-none" style={{ opacity: 0.6 * (1 - denoisingProgress) * controlNet.canny.weight }}>
-              <Image src={overlayData.canny} alt="Canny" fill className="object-cover mix-blend-screen" unoptimized />
-              <div className="absolute top-2 left-2 text-[8px] bg-black/50 text-green-400 px-1 font-mono border border-green-500/30">CANNY_EDGE_DETECT</div>
-            </motion.div>
-          )}
-          {controlNet.depth.enabled && overlayData.depth && (
-            <motion.div className="absolute inset-0 z-20 pointer-events-none" style={{ opacity: 0.4 * (1 - denoisingProgress) * controlNet.depth.weight }}>
-              <Image src={overlayData.depth} alt="Depth" fill className="object-cover mix-blend-overlay" unoptimized />
-               <div className="absolute top-6 left-2 text-[8px] bg-black/50 text-blue-400 px-1 font-mono border border-blue-500/30">DEPTH_MAP_ESTIMATION</div>
-            </motion.div>
-          )}
-
-          {/* Scanning Effect */}
-          {currentStep >= 10 && currentStep < 40 && (
-            <>
-              <motion.div className="absolute inset-0 pointer-events-none z-30" animate={{ background: `radial-gradient(circle at 50% ${50 + Math.sin(currentStep * 0.2) * 10}%, transparent 0%, rgba(34, 211, 238, ${0.1 * (1 - denoisingProgress)}) 50%, transparent 100%)` }} />
-              <div className="absolute inset-0 pointer-events-none z-30 opacity-30">
-                <motion.div className="h-0.5 w-full bg-cyan-400 shadow-[0_0_10px_#22d3ee]" animate={{ top: [`0%`, `100%`] }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }} />
-              </div>
-            </>
-          )}
-
-          {/* Overlay UI inside Image */}
-          <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/90 via-black/60 to-transparent z-30">
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-[10px] font-mono items-end">
-                <div className="flex flex-col">
-                    <span className="text-gray-500 text-[8px] uppercase">Denoising Strength</span>
-                    <span className="text-cyan-400 font-bold">σ={(sigmaValue).toFixed(3)}</span>
-                </div>
-                <span className="text-green-400 font-bold text-lg">{(denoisingProgress * 100).toFixed(0)}%</span>
-              </div>
-              <div className="w-full h-1 bg-gray-800 rounded-full overflow-hidden">
-                <motion.div className="h-full bg-gradient-to-r from-cyan-500 to-green-400 shadow-[0_0_10px_rgba(34,211,238,0.5)]" style={{ width: `${denoisingProgress * 100}%` }} />
-              </div>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-cyan-950/30 border border-cyan-500/20">
+                <div className={`w-1 h-1 rounded-full ${isGenerating ? 'bg-cyan-400 animate-pulse' : 'bg-cyan-900'}`} />
+                <span className="text-[8px] font-mono text-cyan-300">{isGenerating ? 'BUSY' : 'IDLE'}</span>
             </div>
           </div>
         </div>
 
-        {/* Controls & Parameters - Collapsible/Scrollable */}
-         <div className="flex-1 overflow-y-auto min-h-[120px] max-h-[250px] bg-[#08080A] p-2 space-y-2 border-t border-cyan-500/10 no-scrollbar">
-          {/* Tech Parameters Grid */}
-          <div className="grid grid-cols-4 gap-1.5">
-            {[
-                { label: 'SAMPLER', value: 'DPM++ 2M', color: 'text-cyan-300' },
-                { label: 'STEPS', value: totalSteps, color: 'text-green-300' },
-                { label: 'CFG', value: cfgScale, color: 'text-yellow-300' },
-                { label: 'SEED', value: seed.toString().slice(0,4)+'...', color: 'text-purple-300' }
-            ].map((item, i) => (
-                <div key={i} className="bg-[#111]/80 rounded border border-white/5 p-1 flex flex-col gap-0.5 hover:border-cyan-500/30 transition-colors group/item">
-                    <span className="text-[7px] text-gray-500 font-mono">{item.label}</span>
-                    <span className={`text-[9px] font-mono font-medium ${item.color} truncate group-hover/item:text-white transition-colors`}>{item.value}</span>
-                </div>
-            ))}
-          </div>
-
-          {/* Prompt Box - Terminal Style */}
-          <div className="space-y-1.5 font-mono text-[9px]">
-            <div className="relative group/prompt">
-                <div className="absolute -left-1.5 top-0 bottom-0 w-0.5 bg-green-500/30 group-hover/prompt:bg-green-500 transition-colors" />
-                <div className="bg-black/40 p-1.5 rounded border border-white/5 text-gray-300 leading-relaxed line-clamp-2">
-                    <span className="text-green-500 mr-2">$ prompt --positive</span>
-                    {positivePrompt}
-                </div>
-            </div>
-            <div className="relative group/prompt">
-                <div className="absolute -left-1.5 top-0 bottom-0 w-0.5 bg-red-500/30 group-hover/prompt:bg-red-500 transition-colors" />
-                <div className="bg-black/40 p-1.5 rounded border border-white/5 text-gray-400 leading-relaxed line-clamp-1">
-                    <span className="text-red-500 mr-2">$ prompt --negative</span>
-                    {negativePrompt}
-                </div>
-            </div>
-          </div>
-
-          {/* Advanced Settings Toggle */}
-          <div className="pt-1.5 border-t border-white/5">
-            <button onClick={() => setShowControlNet((s) => !s)} className="w-full flex items-center justify-between text-[9px] text-cyan-400 hover:text-cyan-300 transition-colors group">
-              <span className="flex items-center gap-2 font-mono uppercase tracking-wider">
-                <span className="w-1.5 h-1.5 bg-cyan-500 rounded-sm group-hover:animate-pulse" />
-                ControlNet Pipeline
-              </span>
-              <span className="opacity-50 group-hover:opacity-100">{showControlNet ? '[-]' : '[+]'}</span>
-            </button>
+        {/* Main Content Area */}
+        <div className="relative z-10 p-1">
             
-            <AnimatePresence>
-              {showControlNet && (
-                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                  <div className="pt-1.5 space-y-1.5">
-                    {(CONTROLNET_TYPES.filter((t) => t !== 'none') as Array<Exclude<ControlNetType, 'none'>>).map((type) => (
-                        <div key={type} className="flex items-center gap-2 bg-[#151515] p-1 rounded border border-white/5">
-                            <input 
-                                type="checkbox" 
-                                checked={controlNet[type].enabled} 
-                                onChange={(e) => setControlNet((prev) => ({ ...prev, [type]: { ...prev[type], enabled: e.target.checked } }))}
-                                className="accent-cyan-500 bg-transparent border-gray-700 rounded h-2.5 w-2.5"
-                            />
-                            <span className="text-[9px] text-gray-300 font-mono uppercase w-14">{type}</span>
-                            <div className="flex-1 h-1 bg-gray-800 rounded-full overflow-hidden relative">
-                                <div className="absolute inset-y-0 left-0 bg-cyan-500/50" style={{ width: `${controlNet[type].weight * 50}%` }} />
-                            </div>
-                            <span className="text-[8px] text-gray-500 font-mono">{controlNet[type].weight.toFixed(1)}</span>
-                        </div>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+            {/* Viewport: The Image Area */}
+            <div className="relative aspect-square rounded-lg overflow-hidden bg-black border border-white/10 shadow-inner group-hover:border-cyan-500/30 transition-colors duration-500">
+                
+                {/* Technical Grid Overlay */}
+                <div className="absolute inset-0 z-20 pointer-events-none bg-[url('/grid-pattern.svg')] opacity-10 bg-[length:20px_20px]" />
+                <div className="absolute inset-0 z-20 pointer-events-none border-[0.5px] border-white/5 m-1.5 rounded-sm" />
+                
+                {/* Corner Markers - Smaller */}
+                <div className="absolute top-2.5 left-2.5 w-1.5 h-1.5 border-t border-l border-cyan-500/50 z-20" />
+                <div className="absolute top-2.5 right-2.5 w-1.5 h-1.5 border-t border-r border-cyan-500/50 z-20" />
+                <div className="absolute bottom-2.5 left-2.5 w-1.5 h-1.5 border-b border-l border-cyan-500/50 z-20" />
+                <div className="absolute bottom-2.5 right-2.5 w-1.5 h-1.5 border-b border-r border-cyan-500/50 z-20" />
 
-          {/* Status Footer */}
-          <div className="flex items-center justify-between pt-0.5 text-[8px] font-mono text-gray-500 uppercase tracking-widest">
-            <span>GPU: NVIDIA A100 [80GB]</span>
-            <span className="flex items-center gap-1">
-                <span className={`w-1.5 h-1.5 rounded-full ${isGenerating ? 'bg-green-500 animate-pulse' : 'bg-gray-500'}`} />
-                {isGenerating ? 'PROCESSING' : 'IDLE'}
-            </span>
-          </div>
+                {/* Model Badge Overlay - More Compact */}
+                <div className="absolute top-3 right-3 z-30 flex items-center gap-1.5 bg-black/60 backdrop-blur-md border border-white/10 px-1.5 py-0.5 rounded text-[8px] text-gray-300 font-mono">
+                    <span className="w-1.5 h-1.5 rounded bg-gradient-to-br from-cyan-400 to-blue-600 animate-spin-slow" />
+                    {selectedModel}
+                </div>
+
+                <AnimatePresence>
+                  {showLatent && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-10 bg-[#050507] flex items-center justify-center">
+                        <div className="relative w-full h-full flex items-center justify-center">
+                             <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-cyan-900/40 via-transparent to-transparent" />
+                             <NeuralNetworkVisualization isActive={showLatent} progress={1} />
+                        </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Noise & Image Layers */}
+                {!isMobile && noiseDataUrl && currentStep >= 8 && (
+                    <motion.div className="absolute inset-0 z-10" animate={{ opacity: Math.max(0, 1 - denoisingProgress * 1.5), filter: `contrast(${1 + denoisingProgress * 0.5})` }}>
+                        <Image src={noiseDataUrl} alt="Noise" fill className="object-cover" style={{ mixBlendMode: denoisingProgress > 0.5 ? 'overlay' : 'normal', imageRendering: 'pixelated' }} unoptimized />
+                    </motion.div>
+                )}
+
+                <motion.div className="absolute inset-0" animate={{ opacity: Math.min(1, denoisingProgress * 1.2), filter: `blur(${Math.max(0, (1 - denoisingProgress) * maxInitialBlurPx)}px) saturate(${0.5 + denoisingProgress * 0.5})`, scale: 1 + (1 - denoisingProgress) * 0.05 }}>
+                    <Image ref={imageRef} src="/hero-image.png" alt="Generated" fill className="object-cover" quality={100} priority />
+                </motion.div>
+
+                {/* Analysis Layers (Canny/Depth) - Holo Effect */}
+                {controlNet.canny.enabled && overlayData.canny && (
+                    <motion.div className="absolute inset-0 z-15 pointer-events-none mix-blend-screen" style={{ opacity: 0.5 * (1 - denoisingProgress) * controlNet.canny.weight }}>
+                        <Image src={overlayData.canny} alt="Canny" fill className="object-cover" unoptimized />
+                        <div className="absolute bottom-3 left-3 text-[7px] font-mono text-green-400/80 bg-black/80 px-1 rounded border border-green-500/20">CANNY_DETECT</div>
+                    </motion.div>
+                )}
+                
+                {/* Progress Overlay (Cyberpunk style) - Compact */}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-3 z-30">
+                     <div className="flex justify-between items-end mb-1">
+                        <div className="flex flex-col">
+                            <span className="text-[7px] text-cyan-500/60 font-mono uppercase mb-0.5">Denoising Loop</span>
+                            <div className="flex items-baseline gap-0.5">
+                                <span className="text-xl font-light text-white tracking-tighter">{Math.floor(denoisingProgress * 100)}</span>
+                                <span className="text-[8px] text-cyan-400 font-mono">%</span>
+                            </div>
+                        </div>
+                        <div className="flex flex-col items-end">
+                            <span className="text-[7px] text-gray-500 font-mono">STEP {currentStep}/{totalSteps}</span>
+                            <span className="text-[7px] text-cyan-500 font-mono">SIGMA: {sigmaValue.toFixed(2)}</span>
+                        </div>
+                     </div>
+                     {/* Progress Bar */}
+                     <div className="relative w-full h-0.5 bg-white/10 rounded-full overflow-hidden">
+                        <motion.div 
+                            className="absolute top-0 left-0 bottom-0 bg-cyan-500 shadow-[0_0_10px_#06b6d4]"
+                            style={{ width: `${denoisingProgress * 100}%` }}
+                        />
+                     </div>
+                </div>
+
+                {/* Scanner Beam */}
+                <motion.div 
+                    className="absolute left-0 right-0 h-[1px] bg-cyan-400/50 shadow-[0_0_15px_rgba(34,211,238,0.8)] z-20 pointer-events-none"
+                    animate={{ top: ["0%", "100%"], opacity: [0, 1, 0] }}
+                    transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
+                />
+            </div>
+        </div>
+
+        {/* Control Dashboard - Compact Padding */}
+        <div className="p-3 bg-[#050506] border-t border-white/5 space-y-3">
+            
+            {/* Parameter Stats */}
+            <div className="grid grid-cols-4 gap-1.5">
+                {[
+                    { label: 'SAMPLER', value: 'DPM++ 2M', color: 'text-cyan-200' },
+                    { label: 'STEPS', value: totalSteps, color: 'text-white' },
+                    { label: 'CFG', value: cfgScale, color: 'text-emerald-200' },
+                    { label: 'SEED', value: seed.toString().slice(0, 5), color: 'text-purple-200' }
+                ].map((stat, i) => (
+                    <div key={i} className="flex flex-col bg-white/[0.03] border border-white/5 p-1.5 rounded-md hover:bg-white/[0.05] transition-colors">
+                        <span className="text-[6px] font-mono text-gray-500 uppercase tracking-wider">{stat.label}</span>
+                        <span className={`text-[8px] font-mono ${stat.color} mt-0.5 truncate`}>{stat.value}</span>
+                    </div>
+                ))}
+            </div>
+
+            {/* Terminal Prompt - More Compact */}
+            <div className="bg-black/40 border border-white/10 rounded-md p-2 font-mono text-[9px] relative overflow-hidden group/terminal">
+                <div className="absolute top-0 left-0 w-0.5 h-full bg-gradient-to-b from-cyan-500 to-purple-600 opacity-50" />
+                <div className="flex flex-col gap-1.5">
+                    <div className="flex gap-2 text-gray-400 items-start">
+                        <span className="text-green-500 font-bold mt-[1px]">$</span>
+                        <div className="text-cyan-100 leading-tight flex-1">
+                            <span className="opacity-50 mr-1.5">prompt --pos</span>
+                            {positivePrompt}
+                            <span className="inline-block w-1 h-2.5 bg-cyan-500 ml-0.5 animate-pulse align-middle" />
+                        </div>
+                    </div>
+                    <div className="flex gap-2 text-gray-400 items-start border-t border-white/5 pt-1.5">
+                        <span className="text-red-500 font-bold mt-[1px]">$</span>
+                        <div className="text-gray-500 leading-tight flex-1 line-clamp-1">
+                            <span className="opacity-50 mr-1.5">prompt --neg</span>
+                            {negativePrompt}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* ControlNet Panel - Accordion */}
+            <div className="border border-white/5 rounded-md bg-white/[0.02] overflow-hidden">
+                <button 
+                    onClick={() => setShowControlNet(!showControlNet)}
+                    className="w-full flex items-center justify-between p-1.5 text-[8px] text-gray-400 hover:text-white hover:bg-white/5 transition-colors uppercase font-mono tracking-wider"
+                >
+                    <div className="flex items-center gap-1.5">
+                        <div className="w-1 h-1 bg-cyan-500 rounded-full" />
+                        ControlNet Pipeline
+                    </div>
+                    <span>{showControlNet ? '[-]' : '[+]'}</span>
+                </button>
+                
+                <AnimatePresence>
+                    {showControlNet && (
+                        <motion.div 
+                            initial={{ height: 0 }} 
+                            animate={{ height: "auto" }} 
+                            exit={{ height: 0 }}
+                            className="overflow-hidden"
+                        >
+                            <div className="p-1.5 pt-0 space-y-1.5">
+                                {(['depth', 'canny', 'scribble'] as const).map((type) => (
+                                    <div key={type} className="flex items-center gap-2 p-1 bg-black/20 rounded border border-white/5">
+                                        <div 
+                                            className={`w-2.5 h-2.5 rounded-sm flex items-center justify-center border cursor-pointer transition-colors ${controlNet[type].enabled ? 'border-cyan-500 bg-cyan-500/20' : 'border-gray-700 bg-transparent'}`}
+                                            onClick={() => setControlNet(prev => ({...prev, [type]: {...prev[type], enabled: !prev[type].enabled}}))}
+                                        >
+                                            {controlNet[type].enabled && <div className="w-1 h-1 bg-cyan-400 rounded-[0.5px]" />}
+                                        </div>
+                                        <span className="text-[8px] font-mono text-gray-300 uppercase w-12">{type}</span>
+                                        
+                                        {/* Custom Slider Visualization */}
+                                        <div className="flex-1 h-1 bg-black/40 rounded-full overflow-hidden relative">
+                                            <div className="absolute inset-0 opacity-20" 
+                                                 style={{ backgroundImage: 'linear-gradient(90deg, transparent 95%, rgba(255,255,255,0.1) 95%)', backgroundSize: '10% 100%' }} 
+                                            />
+                                            <motion.div 
+                                                className="h-full bg-cyan-500" 
+                                                initial={false}
+                                                animate={{ width: `${controlNet[type].weight * 50}%` }} 
+                                            />
+                                        </div>
+                                        <span className="text-[7px] font-mono text-cyan-500 w-5 text-right">{controlNet[type].weight.toFixed(1)}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
+
+            {/* Footer Metrics - Very Compact */}
+            <div className="flex items-center justify-between pt-1 border-t border-white/5 text-[7px] font-mono text-gray-600 uppercase tracking-widest">
+                <div className="flex items-center gap-2">
+                    <span className="flex items-center gap-1">
+                        <span className="w-1 h-1 bg-green-500 rounded-full animate-pulse" />
+                        A100
+                    </span>
+                    <span>VRAM: {isGenerating ? '92%' : '14%'}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <span className="text-cyan-900/50">74°C</span>
+                    <div className="flex gap-0.5">
+                        {[1,2,3,4,5].map(i => (
+                            <div key={i} className={`w-0.5 h-1.5 ${i < 3 ? 'bg-cyan-500/30' : 'bg-gray-800'}`} />
+                        ))}
+                    </div>
+                </div>
+            </div>
+
         </div>
       </div>
     </motion.div>

@@ -411,7 +411,7 @@ function SchoolNode({ data, onSelect, isSelected, index }: {
     );
 }
 
-function CertificateCluster({ certificates }: { certificates: Certificate[] }) {
+function CertificateCluster({ certificates, onSelect }: { certificates: Certificate[]; onSelect?: (cert: Certificate) => void }) {
     const groupRef = useRef<THREE.Group>(null);
 
     useFrame((state) => {
@@ -439,6 +439,7 @@ function CertificateCluster({ certificates }: { certificates: Certificate[] }) {
                         key={cert.id} 
                         cert={cert} 
                         position={[x, y, z]} 
+                        onSelect={onSelect}
                     />
                 );
             })}
@@ -446,7 +447,7 @@ function CertificateCluster({ certificates }: { certificates: Certificate[] }) {
     );
 }
 
-function CertificateNode({ cert, position }: { cert: Certificate; position: [number, number, number] }) {
+function CertificateNode({ cert, position, onSelect }: { cert: Certificate; position: [number, number, number]; onSelect?: (cert: Certificate) => void }) {
     const [hovered, setHover] = useState(false);
     const [visible, setVisible] = useState(false);
     const meshRef = useRef<THREE.Group>(null);
@@ -461,13 +462,22 @@ function CertificateNode({ cert, position }: { cert: Certificate; position: [num
         }
     });
 
+    const handleClick = (e: any) => {
+        e.stopPropagation();
+        if (onSelect) {
+            onSelect(cert);
+        } else {
+            window.open(cert.link, '_blank');
+        }
+    };
+
     return (
         <group position={position} ref={meshRef}>
             {/* The Dot (Always Visible) */}
             <mesh
                 onPointerOver={() => setHover(true)} 
                 onPointerOut={() => setHover(false)}
-                onClick={() => window.open(cert.link, '_blank')}
+                onClick={handleClick}
             >
                 <sphereGeometry args={[0.08, 8, 8]} />
                 <meshBasicMaterial 
@@ -507,7 +517,7 @@ function CertificateNode({ cert, position }: { cert: Certificate; position: [num
                         `}
                         onMouseEnter={() => setHover(true)}
                         onMouseLeave={() => setHover(false)}
-                        onClick={() => window.open(cert.link, '_blank')}
+                        onClick={handleClick}
                     >
                         <div className={`
                             w-40 bg-black/90 backdrop-blur-md border border-white/10 rounded-lg overflow-hidden p-2 flex flex-col items-center text-center shadow-2xl
@@ -545,10 +555,11 @@ function SchoolConstellation({ children }: { children: React.ReactNode }) {
 
 interface DiffusionSceneProps {
     onSchoolSelect: (data: any) => void;
+    onCertificateSelect?: (cert: Certificate) => void;
     certificates?: Certificate[];
 }
 
-export default function DiffusionScene({ onSchoolSelect, certificates = [] }: DiffusionSceneProps) {
+export default function DiffusionScene({ onSchoolSelect, onCertificateSelect, certificates = [] }: DiffusionSceneProps) {
   const [selectedSchool, setSelected] = useState<typeof SCHOOLS[0] | null>(null);
 
   const handleSelect = (school: typeof SCHOOLS[0]) => {
@@ -597,7 +608,7 @@ export default function DiffusionScene({ onSchoolSelect, certificates = [] }: Di
 
             {/* Certificates System (Outer Ring) */}
             {certificates.length > 0 && (
-                <CertificateCluster certificates={certificates} />
+                <CertificateCluster certificates={certificates} onSelect={onCertificateSelect} />
             )}
         </group>
 

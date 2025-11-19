@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { FaClock, FaEye, FaHeart } from 'react-icons/fa';
-import { BlogPost } from '@/data/blogPosts';
+import { BlogPost } from '@/lib/blog';
 
 interface BlogCardProps {
   post: BlogPost;

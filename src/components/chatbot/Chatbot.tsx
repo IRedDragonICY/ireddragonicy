@@ -91,31 +91,37 @@ export default function Chatbot() {
         onClick={() => setIsOpen(!isOpen)}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className={`fixed bottom-4 z-[60] p-3 rounded-full shadow-lg backdrop-blur-md border transition-all duration-300
+        className={`fixed bottom-6 right-6 z-[60] p-4 rounded-full shadow-lg backdrop-blur-md border transition-all duration-300 group
           ${isOpen 
-            ? 'bg-red-500/20 border-red-500/50 text-red-400 rotate-90 right-8' 
-            : 'bg-cyan-950/80 border-cyan-400/30 text-cyan-400 hover:bg-cyan-900/80 hover:border-cyan-400/60 right-40 sm:right-48'
+            ? 'bg-red-500/10 border-red-500/50 text-red-400' 
+            : 'bg-black/80 border-cyan-500/30 text-cyan-400 hover:border-cyan-400/60 hover:shadow-cyan-500/20'
           }
         `}
         title={isOpen ? "Close Terminal" : "Open Assistant"}
       >
-        {isOpen ? <BsX size={24} /> : <FaBrain size={24} />}
-        
-        {/* Status Dot */}
-        {!isOpen && (
-          <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.8)]" />
-        )}
+        <div className="relative">
+          {isOpen ? (
+             <BsX size={24} className="transition-transform duration-300" />
+          ) : (
+             <FaBrain size={24} className="group-hover:animate-pulse" />
+          )}
+          
+          {/* Status Dot */}
+          {!isOpen && (
+            <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse border-2 border-black" />
+          )}
+        </div>
       </motion.button>
 
       {/* Chat Window */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            initial={{ opacity: 0, y: 20, scale: 0.95, transformOrigin: 'bottom right' }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-20 right-4 sm:right-12 w-[90vw] sm:w-[400px] h-[500px] z-[60] flex flex-col"
+            className="fixed bottom-24 right-6 w-[90vw] sm:w-[380px] h-[500px] z-[60] flex flex-col shadow-2xl shadow-black/50"
           >
             {/* Glass Panel */}
             <div className="absolute inset-0 bg-[#030305]/90 backdrop-blur-xl rounded-2xl border border-cyan-500/20 shadow-2xl shadow-cyan-900/20 overflow-hidden" />

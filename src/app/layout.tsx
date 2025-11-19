@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
-import BootGate from '@/components/BootGate';
 import Chatbot from '@/components/chatbot/Chatbot';
 import Script from "next/script";
 import type { ReactNode } from "react";
@@ -129,10 +128,8 @@ export default function RootLayout({
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        <BootGate>
-          {children}
-          <Chatbot />
-        </BootGate>
+        {children}
+        <Chatbot />
         <Analytics />
       </body>
     </html>

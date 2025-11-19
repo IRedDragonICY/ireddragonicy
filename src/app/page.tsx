@@ -3,7 +3,6 @@
 import React from 'react';
 import { FaPython, FaReact, FaNodeJs, FaDocker, FaGitAlt, FaGithub, FaLinkedin } from 'react-icons/fa';
 import { SiTypescript, SiTailwindcss, SiNextdotjs, SiTensorflow, SiPytorch, SiScikitlearn, SiJupyter, SiPostgresql, SiOpenai, SiHuggingface } from 'react-icons/si';
-import { FiCode } from 'react-icons/fi';
 import Hero from '@/components/Hero';
 import Navigation from '@/components/Navigation';
 import CursorEffect from '@/components/CursorEffect';
@@ -91,25 +90,6 @@ export default function Home() {
 
             <CursorEffect />
             <Navigation personalInfo={portfolioData.personalInfo} />
-
-            {/* Floating launcher reflecting current OS */}
-            <a
-                href={(typeof window !== 'undefined' && window.localStorage.getItem('os.current') === 'windows' && window.localStorage.getItem('os.power') !== 'off') ? '/windows' : '/terminal'}
-                className="fixed bottom-4 right-4 z-50 inline-flex items-center gap-2 px-4 py-2 bg-gray-900/90 border border-cyan-400/40 rounded-lg text-cyan-300 hover:text-white hover:bg-gradient-to-br hover:from-cyan-500/10 hover:to-purple-500/10 hover:border-cyan-400/60 transition-all backdrop-blur-md shadow-lg shadow-cyan-500/10"
-                title="Open System"
-            >
-                <span className="inline-flex items-center justify-center w-5 h-5">
-                  {/* will show windows if os.current === 'windows' */}
-                  <svg viewBox="0 0 48 48" className="w-4 h-4" style={{ display: typeof window !== 'undefined' && window.localStorage.getItem('os.current') === 'windows' && window.localStorage.getItem('os.power') !== 'off' ? 'block' : 'none' }}>
-                    <rect x="2" y="2" width="20" height="20" fill="currentColor"/>
-                    <rect x="26" y="2" width="20" height="20" fill="currentColor"/>
-                    <rect x="2" y="26" width="20" height="20" fill="currentColor"/>
-                    <rect x="26" y="26" width="20" height="20" fill="currentColor"/>
-                  </svg>
-                  <FiCode style={{ display: typeof window !== 'undefined' && window.localStorage.getItem('os.current') === 'windows' && window.localStorage.getItem('os.power') !== 'off' ? 'none' : 'block' }} />
-                </span>
-                <span className="font-medium">{typeof window !== 'undefined' && window.localStorage.getItem('os.current') === 'windows' && window.localStorage.getItem('os.power') !== 'off' ? 'Windows' : 'Terminal'}</span>
-            </a>
 
             <main className="relative bg-[#0A0A0A] z-10">
                 <Hero />

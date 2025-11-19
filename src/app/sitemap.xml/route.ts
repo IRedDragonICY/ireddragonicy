@@ -94,7 +94,7 @@ function collectStaticRoutes(): string[] {
 async function getBlogPosts(): Promise<{ routes: string[], lastModified: Date }> {
   try {
     // Dynamic import to get blog posts data
-    const { getAllBlogPosts } = await import('../../data/blogPosts');
+    const { getAllBlogPosts } = await import('../../lib/blog');
     const posts = getAllBlogPosts();
     
     const routes = posts.map(post => `/blog/${post.slug}`);

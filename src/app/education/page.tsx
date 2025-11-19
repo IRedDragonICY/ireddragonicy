@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useRef, useState, useEffect } from 'react';
-import { motion, useScroll, useSpring, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Navigation from '@/components/Navigation';
 import CursorEffect from '@/components/CursorEffect';
-import DiffusionScene from '@/components/education/DiffusionScene';
-import { FaNetworkWired, FaServer, FaMicrochip, FaCodeBranch, FaGraduationCap } from 'react-icons/fa';
+import DiffusionScene, { Certificate } from '@/components/education/DiffusionScene';
+import { FaNetworkWired, FaServer, FaMicrochip, FaCodeBranch } from 'react-icons/fa';
 import { BsGpuCard } from 'react-icons/bs';
 import { IconType } from 'react-icons';
 
@@ -188,53 +188,55 @@ const DetailCard = ({ item, onClose }: { item: EducationItem; onClose: () => voi
     );
 };
 
-const InstructionOverlay = () => (
-    <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 2, duration: 1 }}
-        className="fixed bottom-10 left-1/2 -translate-x-1/2 pointer-events-none z-40 text-center space-y-2"
-    >
-        <div className="text-[10px] font-mono text-cyan-500 tracking-[0.3em] animate-pulse">
-            INTERACTIVE NEURAL INTERFACE
-        </div>
-        <div className="text-xs text-gray-500">
-            Drag to Rotate • Click Nodes to Explore
-        </div>
-    </motion.div>
-);
-
 export default function EducationPage() {
-  const { scrollYProgress } = useScroll();
-  const scaleX = useSpring(scrollYProgress, {
-    stiffness: 100,
-    damping: 30,
-    restDelta: 0.001
-  });
-
   const [selectedSchoolId, setSelectedSchoolId] = useState<string | null>(null);
+  const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const [certLoading, setCertLoading] = useState(true);
+  
   const selectedItem = educationData.find(e => e.id === selectedSchoolId);
+
+  // Fetch Certificates
+  useEffect(() => {
+    async function fetchCerts() {
+        try {
+            const res = await fetch('/api/certificates');
+            if (!res.ok) throw new Error('Network response was not ok');
+            const data = await res.json();
+            if (data.certificates) {
+                setCertificates(data.certificates);
+            }
+        } catch (e) {
+            console.error("Failed to fetch certificates", e);
+        } finally {
+            setCertLoading(false);
+        }
+    }
+    fetchCerts();
+  }, []);
 
   return (
     <>
       <style jsx global>{`
         body {
             background-color: #030305;
-            overflow: hidden; /* Lock scroll for 3D interaction focus */
+            overflow: hidden;
         }
       `}</style>
 
       <CursorEffect />
       <Navigation personalInfo={personalInfo} />
       
-      <main className="relative w-full h-screen overflow-hidden">
+      <main className="relative w-full h-screen">
         
-        {/* 3D Scene is now the main content */}
-        <div className="absolute inset-0 z-10">
-            <DiffusionScene onSchoolSelect={(data: any) => setSelectedSchoolId(data?.id)} />
+        {/* 3D Scene Fullscreen */}
+        <div className="absolute inset-0 z-0">
+            <DiffusionScene 
+                onSchoolSelect={(data: any) => setSelectedSchoolId(data?.id)} 
+                certificates={certificates}
+            />
         </div>
 
-        {/* HUD / Title (Non-intrusive) */}
+        {/* HUD / Title */}
         <div className="absolute top-24 left-8 md:left-16 z-20 pointer-events-none">
             <motion.div 
                 initial={{ opacity: 0, x: -50 }}
@@ -253,6 +255,29 @@ export default function EducationPage() {
                     <span className="w-1 h-1 rounded-full bg-cyan-400" />
                     <span>EPOCHS: 4</span>
                 </div>
+                
+                {/* Certificate Stats */}
+                <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 1 }}
+                    className="mt-6 p-3 bg-black/40 backdrop-blur-md border border-white/10 rounded-lg inline-flex items-center gap-4 pointer-events-auto"
+                >
+                    <div className="flex flex-col">
+                        <span className="text-[10px] text-gray-400 font-mono uppercase">Certificates</span>
+                        <span className="text-xl font-bold text-white">
+                            {certLoading ? '...' : certificates.length}
+                        </span>
+                    </div>
+                    <div className="h-8 w-px bg-white/10" />
+                    <div className="flex flex-col">
+                        <span className="text-[10px] text-gray-400 font-mono uppercase">Source</span>
+                        <span className="text-xs text-green-400 font-mono flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                            GOOGLE.SKILLS
+                        </span>
+                    </div>
+                </motion.div>
             </motion.div>
         </div>
 
@@ -263,7 +288,20 @@ export default function EducationPage() {
             )}
         </AnimatePresence>
 
-        <InstructionOverlay />
+        {/* Instruction Overlay */}
+        <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 3 }}
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 pointer-events-none text-center z-30"
+        >
+             <div className="text-[10px] font-mono text-cyan-500/50 tracking-widest mb-1">NAVIGATION CONTROL</div>
+             <div className="flex items-center gap-4 text-xs text-gray-500 font-mono">
+                <span>LMB: ROTATE</span>
+                <span>RMB: PAN</span>
+                <span>SCROLL: ZOOM</span>
+             </div>
+        </motion.div>
 
       </main>
     </>

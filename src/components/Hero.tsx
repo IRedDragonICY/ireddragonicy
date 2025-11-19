@@ -130,7 +130,8 @@ const Hero = () => {
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      const { clientX, clientY, innerWidth, innerHeight } = window;
+      const { clientX, clientY } = e;
+      const { innerWidth, innerHeight } = window;
       const x = (clientX / innerWidth) - 0.5;
       const y = (clientY / innerHeight) - 0.5;
       mouseX.set(x);

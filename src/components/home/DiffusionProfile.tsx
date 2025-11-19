@@ -13,33 +13,27 @@ const DiffusionProfile = () => {
   });
 
   const y = useTransform(scrollYProgress, [0, 1], [50, -50]);
-  const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0, 1, 1, 0]);
 
   return (
-    <section className="relative py-32 px-4 overflow-hidden" ref={containerRef}>
-      {/* Decorative Background Gradients */}
-      <div className="absolute top-1/2 left-0 w-1/3 h-1/2 bg-cyan-500/5 blur-[120px] rounded-full -translate-y-1/2 pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-purple-500/5 blur-[120px] rounded-full pointer-events-none" />
-
+    <section className="relative py-32 px-4 overflow-hidden border-t border-white/5 bg-[#050505]" ref={containerRef}>
       <div className="max-w-7xl mx-auto relative z-10">
-        {/* Section Header - Agency Style */}
-        <div className="mb-20 flex flex-col items-center">
+        {/* Section Header - Technical Style */}
+        <div className="mb-24 flex flex-col items-start border-l-2 border-white/10 pl-8">
           <motion.span 
-            initial={{ opacity: 0, y: 10 }}
-            animate={isInView ? { opacity: 1, y: 0 } : {}}
-            className="text-[10px] font-mono uppercase tracking-[0.4em] text-cyan-500 mb-4"
+            initial={{ opacity: 0, x: -20 }}
+            animate={isInView ? { opacity: 1, x: 0 } : {}}
+            className="text-[10px] font-mono uppercase tracking-[0.4em] text-gray-500 mb-2"
           >
-            // Model Architecture
+            // Entity_Configuration
           </motion.span>
           <motion.h2 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={isInView ? { opacity: 1, scale: 1 } : {}}
+            initial={{ opacity: 0 }}
+            animate={isInView ? { opacity: 1 } : {}}
             transition={{ delay: 0.1, duration: 0.8 }}
-            className="text-4xl md:text-6xl font-bold text-white text-center tracking-tight"
+            className="text-4xl md:text-5xl font-bold text-white tracking-tighter uppercase"
           >
-            Researcher <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500">Profile</span>
+            Researcher <span className="text-gray-500">Profile</span>
           </motion.h2>
-          <div className="h-px w-24 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent mt-8" />
         </div>
 
         {/* Main Content Grid */}
@@ -50,35 +44,35 @@ const DiffusionProfile = () => {
             style={{ y }}
             className="lg:col-span-4 space-y-6"
           >
-            <div className="p-1 rounded-2xl bg-gradient-to-b from-white/10 to-white/0">
-              <div className="bg-[#050505] rounded-xl p-6 border border-white/5 backdrop-blur-xl">
-                <div className="flex items-center gap-4 mb-6 pb-6 border-b border-white/5">
-                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center border border-cyan-500/30">
-                    <FaFingerprint className="text-xl text-cyan-400" />
+            <div className="p-px bg-white/10">
+              <div className="bg-[#080808] p-6">
+                <div className="flex items-center gap-4 mb-6 pb-6 border-b border-white/10">
+                  <div className="w-12 h-12 bg-white/5 flex items-center justify-center border border-white/10">
+                    <FaFingerprint className="text-xl text-white" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-white">System Identity</h3>
-                    <p className="text-xs text-gray-500 font-mono">ID: IRedDragonICY</p>
+                    <h3 className="text-lg font-bold text-white font-mono uppercase tracking-wider">Identity_Core</h3>
+                    <p className="text-[10px] text-gray-500 font-mono">ID: IRedDragonICY</p>
                   </div>
                 </div>
 
-                <div className="space-y-4 font-mono text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">ROLE</span>
-                    <span className="text-cyan-300">AI Research Scientist</span>
+                <div className="space-y-4 font-mono text-[10px] tracking-widest uppercase">
+                  <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                    <span className="text-gray-600">ROLE</span>
+                    <span className="text-white">AI Research Scientist</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">VERSION</span>
-                    <span className="text-purple-300">v2.4.0 (Stable)</span>
+                  <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                    <span className="text-gray-600">VERSION</span>
+                    <span className="text-white">v2.4.0 (Stable)</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">ARCHITECTURE</span>
-                    <span className="text-green-300">Transformer-based</span>
+                  <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                    <span className="text-gray-600">ARCH</span>
+                    <span className="text-white">Transformer</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">STATUS</span>
-                    <span className="text-white flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">STATUS</span>
+                    <span className="text-green-500 flex items-center gap-2">
+                      <span className="w-1 h-1 rounded-full bg-green-500 animate-pulse" />
                       Online
                     </span>
                   </div>
@@ -87,10 +81,9 @@ const DiffusionProfile = () => {
             </div>
 
             {/* Competency Radar (Stylized) */}
-            <div className="bg-[#050505] rounded-xl p-6 border border-white/5 backdrop-blur-xl relative overflow-hidden group">
-              <div className="absolute inset-0 bg-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <h4 className="text-xs font-mono uppercase tracking-widest text-gray-500 mb-4">Core_Parameters</h4>
-              <div className="space-y-3">
+            <div className="bg-[#080808] p-6 border border-white/10 relative overflow-hidden group">
+              <h4 className="text-[10px] font-mono uppercase tracking-widest text-gray-500 mb-6">Parametric_Optimization</h4>
+              <div className="space-y-4">
                 {[
                   { label: "Deep Learning", val: 95 },
                   { label: "Computer Vision", val: 92 },
@@ -98,16 +91,16 @@ const DiffusionProfile = () => {
                   { label: "System Arch", val: 85 }
                 ].map((stat, i) => (
                   <div key={i} className="group/bar">
-                    <div className="flex justify-between text-[10px] mb-1 text-gray-400 group-hover/bar:text-white transition-colors">
+                    <div className="flex justify-between text-[10px] mb-1 text-gray-400 font-mono">
                       <span>{stat.label}</span>
                       <span>{stat.val}%</span>
                     </div>
-                    <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                    <div className="h-0.5 bg-white/10 w-full">
                       <motion.div 
                         initial={{ width: 0 }}
                         whileInView={{ width: `${stat.val}%` }}
                         transition={{ duration: 1.5, delay: 0.5 + i * 0.1, ease: "circOut" }}
-                        className="h-full bg-gradient-to-r from-cyan-500 to-purple-500" 
+                        className="h-full bg-white" 
                       />
                     </div>
                   </div>
@@ -117,50 +110,50 @@ const DiffusionProfile = () => {
           </motion.div>
 
           {/* Right Column: Bio & Vision */}
-          <div className="lg:col-span-8 space-y-8">
+          <div className="lg:col-span-8 space-y-12">
             <motion.div 
               initial={{ opacity: 0, x: 20 }}
               whileInView={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6 }}
               className="relative"
             >
-              <h3 className="text-2xl md:text-3xl font-light text-white mb-6 leading-tight">
-                Architecting the <span className="text-cyan-400 font-normal">Latent Space</span> of Future Intelligence.
+              <h3 className="text-2xl md:text-4xl font-light text-white mb-8 leading-tight">
+                Architecting the <span className="font-bold border-b border-white/20 pb-1">Latent Space</span> of Future Intelligence.
               </h3>
-              <p className="text-gray-400 text-lg leading-relaxed font-light max-w-2xl">
+              <p className="text-gray-400 text-lg leading-relaxed font-light max-w-3xl border-l border-white/10 pl-6">
                 Specializing in the intersection of generative AI and practical application. My research focuses on optimizing diffusion models for real-time inference and designing transformer architectures that bridge the gap between theoretical capability and deployed utility.
               </p>
             </motion.div>
 
-            {/* 3-Column Features */}
-            <div className="grid md:grid-cols-3 gap-6 pt-8">
+            {/* 3-Column Features - Minimalist Cards */}
+            <div className="grid md:grid-cols-3 gap-px bg-white/10 border border-white/10">
               {[
                 {
                   icon: FaBrain,
                   title: "Neural Arch",
-                  desc: "Designing custom attention mechanisms for efficient scaling."
+                  desc: "Custom attention mechanisms."
                 },
                 {
                   icon: FaNetworkWired,
                   title: "Distributed Ops",
-                  desc: "Orchestrating large-scale training on multi-node clusters."
+                  desc: "Multi-node cluster orchestration."
                 },
                 {
                   icon: FaMicrochip,
                   title: "Edge Inference",
-                  desc: "Quantization & pruning for mobile deployment."
+                  desc: "Quantization & mobile deployment."
                 }
               ].map((feature, idx) => (
                 <motion.div
                   key={idx}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 + idx * 0.1 }}
-                  className="p-6 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-colors duration-300 group"
+                  className="bg-[#050505] p-8 hover:bg-[#0A0A0A] transition-colors duration-300 group relative"
                 >
-                  <feature.icon className="text-2xl text-gray-600 group-hover:text-cyan-400 transition-colors mb-4" />
-                  <h4 className="text-white font-medium mb-2">{feature.title}</h4>
-                  <p className="text-sm text-gray-500 leading-relaxed">
+                  <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-mono text-gray-600">
+                    0{idx + 1}
+                  </div>
+                  <feature.icon className="text-2xl text-gray-600 group-hover:text-white transition-colors mb-6" />
+                  <h4 className="text-white font-bold uppercase text-sm tracking-wider mb-3">{feature.title}</h4>
+                  <p className="text-xs text-gray-500 leading-relaxed font-mono">
                     {feature.desc}
                   </p>
                 </motion.div>
@@ -175,4 +168,3 @@ const DiffusionProfile = () => {
 };
 
 export default DiffusionProfile;
-

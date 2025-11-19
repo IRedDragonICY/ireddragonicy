@@ -2,71 +2,70 @@
 @plugin "@tailwindcss/typography";
 
 body {
-  @apply bg-[#0A0A0A] text-[#E0E0E0] antialiased;
+  @apply bg-[#050505] text-[#E0E0E0] antialiased;
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 100px 100px;
+  background-attachment: fixed;
 }
 
 ::selection {
-  @apply bg-[#00BFFF] text-black;
+  @apply bg-[#E2E8F0] text-black;
 }
 
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-[#111];
+  @apply bg-[#000];
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-[#00BFFF]/50 rounded-full;
-  border: 1px solid rgba(0, 191, 255, 0.2);
+  @apply bg-[#333] rounded-full;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-[#00BFFF]/80;
+  @apply bg-[#555];
 }
 
+/* Technical Glow - Subtler, more precise */
 .text-glow {
-  text-shadow: 0 0 8px rgba(0, 191, 255, 0.8), 0 0 20px rgba(0, 191, 255, 0.5);
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
 }
 
 .card-border {
-  border: 1px solid rgba(0, 191, 255, 0.2);
-  background: rgba(10, 10, 10, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(5, 5, 5, 0.8);
   transition: all 0.3s ease;
 }
 
 .card-border:hover {
-  border-color: rgba(0, 191, 255, 0.6);
-  box-shadow: 0 0 25px rgba(0, 191, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.05);
 }
 
-/* Add these styles to your global CSS */
-@keyframes blob {
+/* Animations */
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-spin-slow {
+  animation: spin-slow 8s linear infinite;
+}
+
+@keyframes scanline {
   0% {
-    transform: translate(0px, 0px) scale(1);
-  }
-  33% {
-    transform: translate(30px, -50px) scale(1.1);
-  }
-  66% {
-    transform: translate(-20px, 20px) scale(0.9);
+    transform: translateY(-100%);
   }
   100% {
-    transform: translate(0px, 0px) scale(1);
+    transform: translateY(100%);
   }
 }
-
-.animate-blob {
-  animation: blob 7s infinite;
-}
-
-.animation-delay-2000 {
-  animation-delay: 2s;
-}
-
-.animation-delay-4000 {
-  animation-delay: 4s;
+.animate-scanline {
+  animation: scanline 4s linear infinite;
 }
 
 /* Ensure no scrollbar appears on desktop, allow on mobile */
@@ -88,7 +87,7 @@ body {
   }
 }
 
-/* Line clamp utility */
+/* Utilities */
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -96,19 +95,17 @@ body {
   overflow: hidden;
 }
 
-/* Wrapping helpers */
 .break-words { word-break: break-word; overflow-wrap: anywhere; }
 
-/* Hide horizontal scrollbar for horizontally scrollable nav container */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
 .no-scrollbar {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-/* Glint effect for icon badges */
+/* Glint effect - White/Silver instead of colored */
 .glint::before {
   content: '';
   position: absolute;
@@ -116,7 +113,7 @@ body {
   left: -150%;
   width: 200%;
   height: 200%;
-  background: linear-gradient(115deg, transparent 40%, rgba(255,255,255,0.35) 50%, transparent 60%);
+  background: linear-gradient(115deg, transparent 40%, rgba(255,255,255,0.2) 50%, transparent 60%);
   transform: rotate(10deg);
   animation: glint-sweep 5s ease-in-out infinite;
 }
@@ -124,6 +121,18 @@ body {
 @keyframes glint-sweep {
   0%, 30% { transform: translate(-30%, -30%) rotate(10deg); opacity: 0; }
   40% { opacity: 1; }
-  60% { transform: translate(30%, 30%) rotate(10deg); opacity: 0.8; }
+  60% { transform: translate(30%, 30%) rotate(10deg); opacity: 0.5; }
   100% { transform: translate(60%, 60%) rotate(10deg); opacity: 0; }
 }
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.2);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.15);
+    border-radius: 2px;
+}
+

@@ -128,42 +128,40 @@ const DetailCard = ({ item, onClose }: { item: EducationItem; onClose: () => voi
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 50 }}
-            className="fixed right-4 md:right-10 top-24 md:top-32 bottom-10 w-full max-w-md z-50 pointer-events-auto"
+            className="fixed right-4 md:right-10 top-32 md:top-40 w-full max-w-md z-50 pointer-events-auto"
         >
-            <div className="h-full bg-[#050507]/95 backdrop-blur-2xl border border-cyan-500/30 rounded-2xl overflow-hidden flex flex-col shadow-2xl relative group">
+            <div className="bg-[#080808] border border-white/10 overflow-hidden flex flex-col shadow-2xl relative">
                 
                 {/* Close Button */}
                 <button 
                     onClick={onClose}
-                    className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors z-10 flex items-center gap-1 bg-black/20 px-2 py-1 rounded border border-white/10 hover:bg-red-500/20 hover:border-red-500/50"
+                    className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors z-10 flex items-center gap-1 bg-black/50 px-2 py-1 border border-white/10 hover:border-red-500/50 hover:text-red-400"
                 >
-                    <span className="text-[10px] font-mono">CLOSE</span>
+                    <span className="text-[10px] font-mono uppercase">Close_Panel</span>
                     <span className="text-xs">✕</span>
                 </button>
 
                 {/* Header */}
-                <div className="p-6 border-b border-white/10 bg-gradient-to-r from-cyan-900/20 to-transparent relative overflow-hidden">
-                    <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-10" />
-                    
-                    <div className="flex items-center gap-3 mb-2 relative z-10">
-                        <div className="p-2 bg-cyan-500/10 rounded-lg border border-cyan-500/20 text-cyan-400">
-                            <item.icon size={20} />
+                <div className="p-6 border-b border-white/10 bg-white/[0.02]">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 border border-white/10 text-gray-400 bg-black">
+                            <item.icon size={16} />
                         </div>
-                        <span className="text-xs font-mono text-cyan-400 tracking-widest uppercase">{item.status}</span>
+                        <span className="text-[10px] font-mono text-green-500 tracking-widest uppercase">{item.status}</span>
                     </div>
-                    <h2 className="text-2xl font-bold text-white leading-tight relative z-10">{item.institution}</h2>
-                    {item.program && <p className="text-sm text-purple-300 mt-1 font-mono relative z-10">{item.program}</p>}
+                    <h2 className="text-xl font-bold text-white leading-tight uppercase tracking-tight">{item.institution}</h2>
+                    {item.program && <p className="text-xs text-gray-500 mt-1 font-mono uppercase">{item.program}</p>}
                 </div>
 
                 {/* Content Scroll */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+                <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
                     {/* Stats */}
                     {item.stats.length > 0 && (
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-3 gap-2">
                             {item.stats.map((stat, i) => (
-                                <div key={i} className="bg-black/40 rounded p-3 border border-white/5 text-center hover:border-cyan-500/30 transition-colors group/stat">
-                                    <div className="text-[10px] text-gray-500 font-mono uppercase tracking-wider mb-1 group-hover/stat:text-cyan-400 transition-colors">{stat.label}</div>
-                                    <div className="text-lg font-bold text-white">{stat.value}</div>
+                                <div key={i} className="bg-black border border-white/10 p-2 text-center">
+                                    <div className="text-[8px] text-gray-600 font-mono uppercase tracking-wider mb-1">{stat.label}</div>
+                                    <div className="text-sm font-bold text-white font-mono">{stat.value}</div>
                                 </div>
                             ))}
                         </div>
@@ -171,11 +169,11 @@ const DetailCard = ({ item, onClose }: { item: EducationItem; onClose: () => voi
 
                     {/* Description */}
                     <div className="space-y-2">
-                        <h3 className="text-xs font-mono text-gray-500 uppercase flex items-center gap-2">
-                            <span className="w-1 h-1 bg-cyan-500 rounded-full" />
-                            /Description
+                        <h3 className="text-[10px] font-mono text-gray-500 uppercase flex items-center gap-2">
+                            <span className="w-1 h-1 bg-white rounded-full" />
+                            Node_Description
                         </h3>
-                        <p className="text-sm text-gray-300 leading-relaxed border-l-2 border-cyan-500/30 pl-4">
+                        <p className="text-xs text-gray-400 leading-relaxed font-mono border-l border-white/10 pl-3">
                             {item.description}
                         </p>
                     </div>
@@ -184,24 +182,24 @@ const DetailCard = ({ item, onClose }: { item: EducationItem; onClose: () => voi
                     {item.coordinates && (
                         <div className="space-y-2">
                             <div className="flex items-center justify-between">
-                                <h3 className="text-xs font-mono text-gray-500 uppercase flex items-center gap-2">
-                                    <span className="w-1 h-1 bg-cyan-500 rounded-full" />
-                                    /Geolocation_Lock
+                                <h3 className="text-[10px] font-mono text-gray-500 uppercase flex items-center gap-2">
+                                    <span className="w-1 h-1 bg-white rounded-full" />
+                                    Geo_Lock
                                 </h3>
                                 <a 
                                     href={item.locationUrl}
                                     target="_blank"
                                     rel="noopener noreferrer" 
-                                    className="text-[10px] text-cyan-500 hover:underline flex items-center gap-1"
+                                    className="text-[9px] text-cyan-500 hover:underline flex items-center gap-1 uppercase"
                                 >
-                                    OPEN_SATELLITE <FaExpand size={10} />
+                                    Open_Sat_Link <FaExpand size={8} />
                                 </a>
                             </div>
                             
-                            <div className="relative w-full h-48 rounded-lg overflow-hidden border border-white/10 group/map">
+                            <div className="relative w-full h-32 border border-white/10 grayscale contrast-125 brightness-75 invert overflow-hidden">
                                 {/* Scanning Overlay */}
-                                <div className="absolute inset-0 z-10 pointer-events-none bg-[linear-gradient(rgba(0,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,255,0.05)_1px,transparent_1px)] bg-[size:20px_20px] opacity-50" />
-                                <div className="absolute top-0 left-0 right-0 h-1 bg-cyan-500/50 z-10 animate-scan-line" />
+                                <div className="absolute inset-0 z-10 pointer-events-none bg-[linear-gradient(rgba(255,255,255,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[size:10px_10px] opacity-20" />
+                                <div className="absolute top-0 left-0 right-0 h-0.5 bg-white/50 z-10 animate-scan-line" />
                                 
                                 {/* Map Iframe */}
                                 <iframe
@@ -212,27 +210,7 @@ const DetailCard = ({ item, onClose }: { item: EducationItem; onClose: () => voi
                                     marginHeight={0}
                                     marginWidth={0}
                                     src={`https://maps.google.com/maps?q=${item.coordinates[0]},${item.coordinates[1]}&hl=en&z=16&output=embed`}
-                                    className="filter grayscale contrast-125 brightness-75 invert-[.9] hue-rotate-180"
-                                    style={{ pointerEvents: 'none' }} // Prevent interaction hijacking scroll
-                                />
-                                
-                                {/* Map UI Overlay (Fake UI) */}
-                                <div className="absolute bottom-2 left-2 z-20 flex items-center gap-2">
-                                    <div className="px-2 py-1 bg-black/80 border border-cyan-500/30 rounded text-[8px] font-mono text-cyan-400">
-                                        LAT: {item.coordinates[0].toFixed(4)}
-                                    </div>
-                                    <div className="px-2 py-1 bg-black/80 border border-cyan-500/30 rounded text-[8px] font-mono text-cyan-400">
-                                        LNG: {item.coordinates[1].toFixed(4)}
-                                    </div>
-                                </div>
-                                
-                                {/* Interaction Blocker/Enabler */}
-                                <a 
-                                    href={item.locationUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="absolute inset-0 z-30 bg-transparent hover:bg-cyan-500/5 transition-colors cursor-crosshair"
-                                    title="Click to open in Google Maps"
+                                    style={{ pointerEvents: 'none' }} 
                                 />
                             </div>
                         </div>
@@ -240,11 +218,11 @@ const DetailCard = ({ item, onClose }: { item: EducationItem; onClose: () => voi
 
                     {/* System Logs */}
                     <div className="space-y-2">
-                        <h3 className="text-xs font-mono text-gray-500 uppercase flex items-center gap-2">
+                        <h3 className="text-[10px] font-mono text-gray-500 uppercase flex items-center gap-2">
                             <span className="w-1 h-1 bg-green-500 rounded-full" />
-                            /System_Logs
+                            System_Logs
                         </h3>
-                        <div className="bg-black rounded p-4 font-mono text-xs text-green-500/80 space-y-2 border border-white/10 shadow-inner">
+                        <div className="bg-black p-3 font-mono text-[9px] text-green-500/80 space-y-1 border border-white/5">
                             {item.logs.map((log, i) => (
                                 <div key={i} className="truncate flex gap-2">
                                     <span className="opacity-30">{(i + 1).toString().padStart(2, '0')}</span>
@@ -253,18 +231,18 @@ const DetailCard = ({ item, onClose }: { item: EducationItem; onClose: () => voi
                             ))}
                             <div className="flex items-center gap-2 opacity-50">
                                 <span className="opacity-30">0{item.logs.length + 1}</span>
-                                <div className="w-2 h-4 bg-green-500/50 animate-pulse" />
+                                <div className="w-1.5 h-3 bg-green-500/50 animate-pulse" />
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Footer */}
-                <div className="p-4 border-t border-white/10 bg-black/20 text-[10px] font-mono text-gray-500 flex justify-between">
-                    <span>ID: {item.id.toUpperCase()}</span>
+                <div className="p-3 border-t border-white/10 bg-[#050505] text-[9px] font-mono text-gray-600 flex justify-between uppercase">
+                    <span>ID: {item.id}</span>
                     <div className="flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                        <span>SYNCED</span>
+                        <span className="w-1 h-1 rounded-full bg-green-500" />
+                        <span>Synced</span>
                     </div>
                 </div>
             </div>
@@ -303,18 +281,17 @@ export default function EducationPage() {
     <>
       <style jsx global>{`
         body {
-            background-color: #030305;
+            background-color: #050505;
             overflow: hidden;
         }
         .custom-scrollbar::-webkit-scrollbar {
-            width: 4px;
+            width: 2px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
-            background: rgba(0,0,0,0.2);
+            background: rgba(0,0,0,0.5);
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: rgba(34,211,238,0.2);
-            border-radius: 2px;
+            background: rgba(255,255,255,0.2);
         }
         @keyframes scan-line {
             0% { top: 0%; opacity: 0; }
@@ -322,14 +299,14 @@ export default function EducationPage() {
             100% { top: 100%; opacity: 0; }
         }
         .animate-scan-line {
-            animation: scan-line 3s linear infinite;
+            animation: scan-line 2s linear infinite;
         }
       `}</style>
 
       <CursorEffect />
       <Navigation personalInfo={personalInfo} />
       
-      <main className="relative w-full h-screen">
+      <main className="relative w-full h-screen bg-[#050505]">
         
         {/* 3D Scene Fullscreen */}
         <div className="absolute inset-0 z-0">
@@ -341,45 +318,39 @@ export default function EducationPage() {
         </div>
 
         {/* HUD / Title */}
-        <div className="absolute top-24 left-8 md:left-16 z-20 pointer-events-none">
+        <div className="absolute top-32 left-8 md:left-16 z-20 pointer-events-none">
             <motion.div 
                 initial={{ opacity: 0, x: -50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 1 }}
             >
-                <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-white mb-2 mix-blend-difference">
-                    NEURAL
-                    <span className="block text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500">
-                        ARCHITECT
+                <div className="flex items-center gap-2 mb-4">
+                    <div className="w-2 h-2 bg-white animate-pulse" />
+                    <span className="text-[10px] font-mono text-gray-500 uppercase tracking-[0.3em]">System_Architect</span>
+                </div>
+                <h1 className="text-5xl md:text-7xl font-bold tracking-tighter text-white uppercase leading-[0.9]">
+                    Neural <br />
+                    <span className="text-gray-600">
+                        Lattice
                     </span>
                 </h1>
-                <div className="flex items-center gap-3 text-cyan-400/80 font-mono text-xs">
-                    <BsGpuCard />
-                    <span>LEARNING_RATE: ADAPTIVE</span>
-                    <span className="w-1 h-1 rounded-full bg-cyan-400" />
-                    <span>EPOCHS: 4</span>
-                </div>
                 
                 {/* Certificate Stats */}
                 <motion.div 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 1 }}
-                    className="mt-6 p-3 bg-black/40 backdrop-blur-md border border-white/10 rounded-lg inline-flex items-center gap-4 pointer-events-auto"
+                    className="mt-8 p-4 bg-black/80 border border-white/10 inline-flex flex-col gap-2 pointer-events-auto backdrop-blur-md"
                 >
-                    <div className="flex flex-col">
-                        <span className="text-[10px] text-gray-400 font-mono uppercase">Certificates</span>
-                        <span className="text-xl font-bold text-white">
-                            {certLoading ? '...' : certificates.length}
+                    <div className="flex items-center justify-between w-48 border-b border-white/10 pb-2 mb-1">
+                        <span className="text-[9px] text-gray-500 font-mono uppercase tracking-wider">Certificates_Loaded</span>
+                        <span className="text-xl font-bold text-white font-mono">
+                            {certLoading ? '...' : certificates.length.toString().padStart(2, '0')}
                         </span>
                     </div>
-                    <div className="h-8 w-px bg-white/10" />
-                    <div className="flex flex-col">
-                        <span className="text-[10px] text-gray-400 font-mono uppercase">Source</span>
-                        <span className="text-xs text-green-400 font-mono flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                            GOOGLE.SKILLS
-                        </span>
+                    <div className="flex items-center justify-between w-48">
+                        <span className="text-[9px] text-gray-500 font-mono uppercase tracking-wider">Source</span>
+                        <span className="text-[9px] text-green-500 font-mono uppercase">Google.Cloud.Sync</span>
                     </div>
                 </motion.div>
             </motion.div>
@@ -409,11 +380,12 @@ export default function EducationPage() {
             transition={{ delay: 3 }}
             className="fixed bottom-8 left-1/2 -translate-x-1/2 pointer-events-none text-center z-30"
         >
-             <div className="text-[10px] font-mono text-cyan-500/50 tracking-widest mb-1">NAVIGATION CONTROL</div>
-             <div className="flex items-center gap-4 text-xs text-gray-500 font-mono">
-                <span>LMB: ROTATE</span>
-                <span>RMB: PAN</span>
-                <span>SCROLL: ZOOM</span>
+             <div className="flex items-center gap-6 text-[9px] text-gray-600 font-mono uppercase tracking-widest">
+                <span>LMB: Rotate</span>
+                <span className="w-1 h-1 bg-gray-800 rounded-full" />
+                <span>RMB: Pan</span>
+                <span className="w-1 h-1 bg-gray-800 rounded-full" />
+                <span>Scroll: Zoom</span>
              </div>
         </motion.div>
 

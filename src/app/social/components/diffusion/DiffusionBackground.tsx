@@ -23,10 +23,9 @@ const DiffusionBackground = () => {
 
     let animationFrameId: number;
     let particles: Particle[] = [];
-    // Adjust particle count based on screen size for performance
     const isMobile = window.innerWidth < 768;
-    const particleCount = isMobile ? 30 : 50; 
-    const connectionDistance = 150;
+    const particleCount = isMobile ? 40 : 80; // Increased count for denser, scientific feel
+    const connectionDistance = 120; // Shorter, tighter connections
     const connectionDistanceSq = connectionDistance * connectionDistance;
     
     let mouseX = -1000;
@@ -34,7 +33,6 @@ const DiffusionBackground = () => {
     
     const resize = () => {
       const dpr = window.devicePixelRatio || 1;
-      // Cap DPR at 2 for performance on high-res screens
       const scale = Math.min(dpr, 2);
       
       canvas.width = window.innerWidth * scale;
@@ -56,9 +54,9 @@ const DiffusionBackground = () => {
         particles.push({
           x: Math.random() * w,
           y: Math.random() * h,
-          vx: (Math.random() - 0.5) * 0.5,
-          vy: (Math.random() - 0.5) * 0.5,
-          size: Math.random() * 2 + 1,
+          vx: (Math.random() - 0.5) * 0.3, // Slower, more stable movement
+          vy: (Math.random() - 0.5) * 0.3,
+          size: Math.random() * 1.5 + 0.5, // Smaller particles
           life: Math.random() * 100
         });
       }
@@ -74,12 +72,16 @@ const DiffusionBackground = () => {
     resize();
 
     const animate = () => {
-      // 1. Clear / Trail Effect
-      // Using a slightly lower opacity clear for longer trails but ensure it doesn't smear too much
-      ctx.fillStyle = 'rgba(3, 3, 5, 0.25)'; 
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      ctx.fillRect(0, 0, w, h);
+      // 1. Clear (Technical Void)
+      ctx.fillStyle = '#050505'; 
+      ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+
+      // Draw faint grid lines
+      ctx.lineWidth = 0.5;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.02)';
+      const gridSize = 100;
+      for(let x=0; x<window.innerWidth; x+=gridSize) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,window.innerHeight); ctx.stroke(); }
+      for(let y=0; y<window.innerHeight; y+=gridSize) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(window.innerWidth,y); ctx.stroke(); }
 
       // 2. Update Particles
       for (let i = 0; i < particleCount; i++) {
@@ -87,38 +89,34 @@ const DiffusionBackground = () => {
         p.x += p.vx;
         p.y += p.vy;
 
-        if (p.x < 0 || p.x > w) p.vx *= -1;
-        if (p.y < 0 || p.y > h) p.vy *= -1;
+        if (p.x < 0 || p.x > window.innerWidth) p.vx *= -1;
+        if (p.y < 0 || p.y > window.innerHeight) p.vy *= -1;
 
         const dx = mouseX - p.x;
         const dy = mouseY - p.y;
         
-        // Fast bounding box check for mouse interaction
+        // Interaction
         if (Math.abs(dx) < 200 && Math.abs(dy) < 200) {
              const distSq = dx * dx + dy * dy;
-             if (distSq < 40000) { // 200^2
+             if (distSq < 40000) {
                 const dist = Math.sqrt(distSq);
-                // Gentle repulsion
-                p.vx -= (dx / dist) * 0.01;
-                p.vy -= (dy / dist) * 0.01;
+                p.vx -= (dx / dist) * 0.005; // Very subtle influence
+                p.vy -= (dy / dist) * 0.005;
              }
         }
       }
 
-      // 3. Draw Particles (Batched)
-      ctx.beginPath();
-      ctx.fillStyle = `rgba(34, 211, 238, 0.5)`;
+      // 3. Draw Particles (Monochrome)
+      ctx.fillStyle = `rgba(255, 255, 255, 0.5)`; // White/Grey
       for (let i = 0; i < particleCount; i++) {
          const p = particles[i];
-         ctx.moveTo(p.x + p.size, p.y); 
+         ctx.beginPath();
          ctx.arc(p.x, p.y, p.size, 0, 6.28);
+         ctx.fill();
       }
-      ctx.fill();
 
-      // 4. Draw Connections
-      ctx.lineWidth = 1;
-      // We can't easily batch variable alpha lines in 2D canvas without multiple passes
-      // But we can optimize the loop
+      // 4. Draw Connections (Structural Lines)
+      ctx.lineWidth = 0.5;
       for (let i = 0; i < particleCount; i++) {
         const p = particles[i];
         
@@ -127,16 +125,16 @@ const DiffusionBackground = () => {
            const dx = p.x - p2.x;
            const dy = p.y - p2.y;
            
-           if (dx > connectionDistance || dx < -connectionDistance || dy > connectionDistance || dy < -connectionDistance) continue;
+           if (Math.abs(dx) > connectionDistance || Math.abs(dy) > connectionDistance) continue;
 
            const distSq = dx * dx + dy * dy;
            if (distSq < connectionDistanceSq) {
-             const dist = Math.sqrt(distSq);
-             const alpha = 1 - dist / connectionDistance;
+             const alpha = (1 - Math.sqrt(distSq) / connectionDistance) * 0.15;
              
-             if (alpha > 0.05) {
+             if (alpha > 0.01) {
                 ctx.beginPath();
-                ctx.strokeStyle = `rgba(139, 92, 246, ${alpha * 0.15})`;
+                // Very faint white lines
+                ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
                 ctx.moveTo(p.x, p.y);
                 ctx.lineTo(p2.x, p2.y);
                 ctx.stroke();
@@ -150,10 +148,9 @@ const DiffusionBackground = () => {
         if (Math.abs(mdx) < connectionDistance && Math.abs(mdy) < connectionDistance) {
              const distSq = mdx*mdx + mdy*mdy;
              if (distSq < connectionDistanceSq) {
-                const dist = Math.sqrt(distSq);
-                const alpha = 1 - dist / connectionDistance;
+                const alpha = (1 - Math.sqrt(distSq) / connectionDistance) * 0.3;
                 ctx.beginPath();
-                ctx.strokeStyle = `rgba(34, 211, 238, ${alpha * 0.2})`;
+                ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
                 ctx.moveTo(p.x, p.y);
                 ctx.lineTo(mouseX, mouseY);
                 ctx.stroke();
@@ -177,7 +174,7 @@ const DiffusionBackground = () => {
     <canvas
       ref={canvasRef}
       style={{ willChange: 'transform' }}
-      className="fixed inset-0 w-full h-full pointer-events-none z-0 bg-[#030305]"
+      className="fixed inset-0 w-full h-full pointer-events-none z-0 bg-[#050505]"
     />
   );
 };

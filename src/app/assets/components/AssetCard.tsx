@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { motion, useMotionTemplate, useMotionValue } from 'framer-motion';
-import { FaExternalLinkAlt, FaExpand, FaImage } from 'react-icons/fa';
+import { FaExternalLinkAlt, FaExpand, FaImage, FaInfoCircle, FaDownload } from 'react-icons/fa';
 
 interface AssetCardProps {
   item: {
@@ -65,7 +65,7 @@ export const AssetCard: React.FC<AssetCardProps> = ({ item, onClick }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={onClick}
-      className="group relative break-inside-avoid rounded-xl bg-black/40 border border-white/10 overflow-hidden cursor-pointer transition-colors duration-500 hover:border-cyan-500/30"
+      className="group relative break-inside-avoid rounded-xl bg-[#0A0A0C] border border-white/5 overflow-hidden cursor-pointer transition-all duration-500 hover:border-cyan-500/40 hover:shadow-[0_0_30px_-10px_rgba(34,211,238,0.2)]"
     >
       {/* Hover Glow */}
       <motion.div
@@ -79,26 +79,38 @@ export const AssetCard: React.FC<AssetCardProps> = ({ item, onClick }) => {
           src={imgSrc}
           alt={item.title || 'Asset'}
           onError={handleError}
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
           loading="lazy"
         />
         
-        {/* Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-300" />
+        {/* Gradient Overlays */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0C] via-transparent to-transparent opacity-60 group-hover:opacity-90 transition-opacity duration-300" />
+        <div className="absolute inset-0 bg-cyan-900/20 opacity-0 group-hover:opacity-100 mix-blend-overlay transition-opacity duration-500" />
         
         {/* Technical Overlay Grid (Decoration) */}
-        <div className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-300 pointer-events-none bg-[linear-gradient(to_right,transparent_1px,rgba(34,211,238,0.1)_1px),linear-gradient(to_bottom,transparent_1px,rgba(34,211,238,0.1)_1px)] bg-[size:20px_20px]" />
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-30 transition-opacity duration-300 pointer-events-none bg-[linear-gradient(to_right,transparent_1px,rgba(34,211,238,0.2)_1px),linear-gradient(to_bottom,transparent_1px,rgba(34,211,238,0.2)_1px)] bg-[size:24px_24px]" />
 
-        {/* Top Right Action */}
-        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
-            <div className="p-2 rounded-lg bg-black/60 backdrop-blur-md border border-white/10 text-cyan-400">
+        {/* Top Right Action Badges */}
+        <div className="absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-4 group-hover:translate-x-0">
+            <div className="p-2 rounded-lg bg-black/60 backdrop-blur-md border border-white/10 text-cyan-400 hover:bg-cyan-500/20 hover:border-cyan-500/50 transition-colors" title="Expand">
                 <FaExpand size={12} />
             </div>
+            <div className="p-2 rounded-lg bg-black/60 backdrop-blur-md border border-white/10 text-cyan-400 hover:bg-cyan-500/20 hover:border-cyan-500/50 transition-colors" title="Details">
+                <FaInfoCircle size={12} />
+            </div>
+        </div>
+
+        {/* Status Indicator */}
+        <div className="absolute top-3 left-3">
+           <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/10">
+              <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+              <span className="text-[8px] font-mono text-gray-300 tracking-wider">LIVE</span>
+           </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="absolute inset-x-0 bottom-0 p-4">
+      <div className="absolute inset-x-0 bottom-0 p-4 transform transition-transform duration-300 translate-y-2 group-hover:translate-y-0">
         <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
                 <div className="flex items-center justify-center w-6 h-6 rounded bg-cyan-500/10 border border-cyan-500/20">
@@ -106,31 +118,32 @@ export const AssetCard: React.FC<AssetCardProps> = ({ item, onClick }) => {
                 </div>
                 <span className="text-[10px] font-mono text-cyan-300 tracking-wider uppercase">IMG_ASSET</span>
             </div>
-            <span className="text-[10px] font-mono text-gray-500">#{item.id}</span>
+            <span className="text-[10px] font-mono text-gray-500 group-hover:text-white transition-colors">#{item.id}</span>
         </div>
         
-        <h3 className="text-sm font-medium text-white truncate group-hover:text-cyan-400 transition-colors duration-300">
+        <h3 className="text-sm font-medium text-white truncate group-hover:text-cyan-400 transition-colors duration-300 mb-3">
             {item.title || 'Untitled Asset'}
         </h3>
         
-        <div className="mt-3 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-4 group-hover:translate-y-0">
-            <div className="flex gap-1">
-                <div className="h-1 w-8 bg-cyan-500/50 rounded-full" />
-                <div className="h-1 w-2 bg-gray-600 rounded-full" />
-            </div>
+        {/* Hidden Actions that slide up */}
+        <div className="grid grid-cols-2 gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-4 group-hover:translate-y-0 pb-1">
+            <button 
+                className="flex items-center justify-center gap-2 py-1.5 rounded bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 text-[10px] text-gray-300 hover:text-white transition-colors font-mono"
+                onClick={(e) => { e.stopPropagation(); onClick(); }}
+            >
+                VIEW
+            </button>
             <a 
                 href={item.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 text-[10px] text-gray-400 hover:text-white transition-colors"
+                className="flex items-center justify-center gap-2 py-1.5 rounded bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 hover:border-cyan-500/40 text-[10px] text-cyan-400 hover:text-cyan-300 transition-colors font-mono"
                 onClick={(e) => e.stopPropagation()}
             >
-                <span>SOURCE</span>
-                <FaExternalLinkAlt size={8} />
+                SOURCE <FaExternalLinkAlt size={8} />
             </a>
         </div>
       </div>
     </motion.div>
   );
 };
-

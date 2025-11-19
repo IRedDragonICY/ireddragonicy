@@ -2,14 +2,14 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, useScroll, useTransform, useInView, useMotionValue, useSpring } from 'framer-motion';
-import { FaFileAlt, FaRobot, FaBook } from 'react-icons/fa';
-import { BsArrowDown, BsStars } from 'react-icons/bs';
+import { FaFileAlt, FaRobot, FaBook, FaArrowRight } from 'react-icons/fa';
+import { BsArrowDown, BsTerminal } from 'react-icons/bs';
 import TypewriterTextMod from './hero/TypewriterText';
 import StableDiffusionCard from './hero/stable/StableDiffusionInterface';
 
 // --- Visual Components ---
 
-// A subtle noise texture that shifts, simulating the "latent space" of diffusion models
+// Technical Grid Background simulating latent space noise
 const LatentSpaceBackground = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -20,6 +20,7 @@ const LatentSpaceBackground = () => {
     if (!ctx) return;
 
     let animationFrameId: number;
+    let time = 0;
 
     const resize = () => {
       canvas.width = window.innerWidth;
@@ -28,43 +29,47 @@ const LatentSpaceBackground = () => {
     window.addEventListener('resize', resize);
     resize();
 
-    // Better approach: Use canvas for moving "fog"
-    const particles: {x: number, y: number, vx: number, vy: number, size: number, alpha: number}[] = [];
-    const particleCount = 50;
-    
-    for(let i=0; i<particleCount; i++) {
-      particles.push({
-        x: Math.random() * window.innerWidth,
-        y: Math.random() * window.innerHeight,
-        vx: (Math.random() - 0.5) * 0.2,
-        vy: (Math.random() - 0.5) * 0.2,
-        size: Math.random() * 200 + 100,
-        alpha: Math.random() * 0.1
-      });
-    }
-
+    // Static Noise + Moving Grid Lines
     const animate = () => {
-      ctx.fillStyle = 'rgba(0, 0, 0, 1)'; // Hard clear for cleaner look
+      time += 0.05;
+      ctx.fillStyle = '#050505';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Draw "latent clouds"
-      particles.forEach(p => {
-        p.x += p.vx;
-        p.y += p.vy;
-        
-        if(p.x < -p.size) p.x = canvas.width + p.size;
-        if(p.x > canvas.width + p.size) p.x = -p.size;
-        if(p.y < -p.size) p.y = canvas.height + p.size;
-        if(p.y > canvas.height + p.size) p.y = -p.size;
+      // Draw subtle grid
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+      ctx.lineWidth = 1;
+      const gridSize = 50;
+      
+      // Vertical lines
+      for(let x = 0; x <= canvas.width; x += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+      }
+      // Horizontal lines
+      for(let y = 0; y <= canvas.height; y += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+      }
 
-        const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
-        gradient.addColorStop(0, `rgba(34, 211, 238, ${p.alpha * 0.5})`); // Cyan
-        gradient.addColorStop(0.5, `rgba(139, 92, 246, ${p.alpha * 0.3})`); // Violet
-        gradient.addColorStop(1, 'rgba(0,0,0,0)');
-        
-        ctx.fillStyle = gradient;
-        ctx.fillRect(p.x - p.size, p.y - p.size, p.size * 2, p.size * 2);
-      });
+      // Draw "Digital Rain" / Data streams
+      const drops = 20;
+      for(let i=0; i<drops; i++) {
+          const x = (Math.tan(i * 132.1 + time * 0.02) * canvas.width + canvas.width) % canvas.width;
+          const h = Math.random() * 100 + 50;
+          const y = (Math.sin(i * 45.3 + time * 0.5) * canvas.height + canvas.height) % canvas.height;
+          
+          const grad = ctx.createLinearGradient(x, y, x, y + h);
+          grad.addColorStop(0, 'rgba(255, 255, 255, 0)');
+          grad.addColorStop(0.5, 'rgba(255, 255, 255, 0.1)');
+          grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+          
+          ctx.fillStyle = grad;
+          ctx.fillRect(x, y, 1, h);
+      }
 
       animationFrameId = requestAnimationFrame(animate);
     };
@@ -80,25 +85,16 @@ const LatentSpaceBackground = () => {
   return (
     <canvas
       ref={canvasRef}
-      className="absolute inset-0 w-full h-full pointer-events-none opacity-60"
+      className="absolute inset-0 w-full h-full pointer-events-none opacity-40"
     />
   );
 };
 
-const TechBadge = ({ text, glowColor = "cyan" }: { text: string, glowColor?: "cyan" | "purple" | "green" }) => {
-  const colors = {
-    cyan: "from-cyan-500/20 to-cyan-500/0 border-cyan-500/30 text-cyan-400",
-    purple: "from-purple-500/20 to-purple-500/0 border-purple-500/30 text-purple-400",
-    green: "from-green-500/20 to-green-500/0 border-green-500/30 text-green-400"
-  };
-
+const TechBadge = ({ text }: { text: string }) => {
   return (
-    <div className={`
-      inline-flex items-center gap-2 px-3 py-1 rounded-full 
-      border backdrop-blur-md bg-gradient-to-r ${colors[glowColor]}
-    `}>
-      <div className={`w-1.5 h-1.5 rounded-full ${glowColor === 'cyan' ? 'bg-cyan-400' : glowColor === 'purple' ? 'bg-purple-400' : 'bg-green-400'} animate-pulse`} />
-      <span className="text-[10px] font-mono uppercase tracking-wider font-semibold">{text}</span>
+    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-sm border border-white/10 bg-white/5 backdrop-blur-md">
+      <div className="w-1 h-1 rounded-full bg-white animate-pulse" />
+      <span className="text-[10px] font-mono uppercase tracking-widest text-gray-300 font-semibold">{text}</span>
     </div>
   );
 };
@@ -146,13 +142,13 @@ const Hero = () => {
     <section
       ref={heroRef}
       id="home"
-      className="relative w-full h-screen flex flex-col items-center justify-center overflow-hidden bg-[#030305] pt-16"
+      className="relative w-full h-screen flex flex-col items-center justify-center overflow-hidden bg-[#050505] pt-16 border-b border-white/5"
     >
       {/* 1. Background Layer */}
       <div className="absolute inset-0 z-0">
         {!isMobile && <LatentSpaceBackground />}
-        {/* Vignette */}
-        <div className="absolute inset-0 bg-radial-gradient from-transparent via-[#030305]/50 to-[#030305] pointer-events-none" />
+        {/* Vignette for focus */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#050505_90%)] pointer-events-none" />
       </div>
 
       {/* 2. Main Content Container */}
@@ -161,46 +157,39 @@ const Hero = () => {
         {/* Left Column: Text & CTA */}
         <motion.div
           style={{ y: y1, opacity }}
-          className="flex flex-col items-start justify-center space-y-6 lg:space-y-8"
+          className="flex flex-col items-start justify-center space-y-8"
         >
           {/* Status Badge */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <TechBadge text="System Online • v2.4.0" glowColor="green" />
+            <TechBadge text="System Online // v2.4.0" />
           </motion.div>
 
           {/* Headline */}
-          <div className="space-y-1">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tighter text-white leading-[1.1]">
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-500">
+          <div className="space-y-2">
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tighter text-white leading-[1.1] uppercase">
+              <span className="block text-gray-500">
                 Mohammad
               </span>
-              <span className="block relative">
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600">
-                  Farid
-                </span>
-                {/* Decorative line */}
-                <motion.div 
-                  initial={{ scaleX: 0 }}
-                  animate={{ scaleX: 1 }}
-                  transition={{ delay: 1, duration: 1 }}
-                  className="absolute -bottom-2 left-0 h-1 w-24 bg-cyan-500 rounded-full" 
-                />
+              <span className="block text-white relative inline-block">
+                Farid
+                {/* Technical bracket accent */}
+                <span className="absolute -right-8 top-0 text-sm font-mono text-gray-600 opacity-50 hidden lg:block">[01]</span>
               </span>
-              <span className="block text-white/90">
+              <span className="block text-gray-400">
                 Hendianto
               </span>
             </h1>
           </div>
 
           {/* Subheadline / Typewriter */}
-          <div className="max-w-xl">
-            <div className="flex items-center gap-2 text-cyan-400 font-mono text-sm mb-2">
-              <span className="inline-block w-2 h-2 bg-cyan-400 rounded-sm" />
-              <span>CURRENT_OBJECTIVE:</span>
+          <div className="max-w-xl border-l-2 border-white/10 pl-6">
+            <div className="flex items-center gap-2 text-gray-500 font-mono text-xs mb-2 uppercase tracking-wider">
+              <BsTerminal />
+              <span>Research_Objective</span>
             </div>
             <div className="h-24 sm:h-20">
               <TypewriterTextMod
@@ -220,35 +209,34 @@ const Hero = () => {
             transition={{ delay: 0.8 }}
             className="flex flex-wrap gap-4"
           >
-            <button className="group relative px-8 py-4 bg-white text-black font-bold text-sm uppercase tracking-widest overflow-hidden rounded-sm transition-all hover:scale-105 active:scale-95">
-              <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 mix-blend-darken" />
-              <span className="relative flex items-center gap-2">
+            <button className="group relative px-8 py-4 bg-white text-black font-bold text-xs uppercase tracking-[0.2em] transition-all hover:bg-gray-200">
+              <span className="relative flex items-center gap-3">
                 Explore Research
-                <BsStars className="text-lg group-hover:rotate-180 transition-transform duration-500" />
+                <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
               </span>
             </button>
             
-            <button className="group px-8 py-4 bg-transparent border border-white/20 text-white font-bold text-sm uppercase tracking-widest hover:bg-white/5 transition-all hover:border-white/40 rounded-sm backdrop-blur-sm">
-              <span className="flex items-center gap-2">
+            <button className="group px-8 py-4 bg-transparent border border-white/20 text-white font-bold text-xs uppercase tracking-[0.2em] hover:bg-white/5 transition-all hover:border-white/40 backdrop-blur-sm">
+              <span className="flex items-center gap-3">
                 View Publications
-                <FaBook className="text-gray-400 group-hover:text-white transition-colors" />
+                <FaBook className="text-gray-500 group-hover:text-white transition-colors" />
               </span>
             </button>
           </motion.div>
 
-          {/* Tech Stack Chips */}
+          {/* Tech Stack Chips - Minimalist */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.2 }}
-            className="pt-8 border-t border-white/10 w-full max-w-md"
+            className="pt-8 border-t border-white/5 w-full max-w-md"
           >
-            <p className="text-xs text-gray-500 font-mono mb-4 uppercase tracking-widest">Core Technologies</p>
-            <div className="flex flex-wrap gap-3">
+            <p className="text-[10px] text-gray-600 font-mono mb-4 uppercase tracking-widest">Core_Technologies</p>
+            <div className="flex flex-wrap gap-2">
               {['PyTorch', 'JAX', 'Diffusers', 'CUDA', 'LLMs'].map((tech, i) => (
                 <span 
                   key={tech}
-                  className="px-3 py-1 text-[10px] font-mono text-cyan-300 bg-cyan-950/30 border border-cyan-900/50 rounded-sm hover:border-cyan-500/50 transition-colors cursor-default"
+                  className="px-3 py-1 text-[10px] font-mono text-gray-400 bg-white/5 border border-white/5 hover:border-white/20 transition-colors cursor-default uppercase tracking-wider"
                 >
                   {tech}
                 </span>
@@ -261,22 +249,23 @@ const Hero = () => {
         <motion.div
           style={{ 
             y: y2,
-            rotateX: useTransform(smoothMouseY, [-0.5, 0.5], [5, -5]),
-            rotateY: useTransform(smoothMouseX, [-0.5, 0.5], [-5, 5]),
+            rotateX: useTransform(smoothMouseY, [-0.5, 0.5], [2, -2]), // Subtle tilt
+            rotateY: useTransform(smoothMouseX, [-0.5, 0.5], [-2, 2]),
           }}
           className="relative h-full w-full flex items-center justify-center perspective-1000"
         >
-           {/* Decorative background elements behind the card */}
+           {/* Technical Background behind card */}
            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="w-[120%] h-[120%] bg-gradient-to-tr from-cyan-500/10 via-purple-500/10 to-transparent blur-3xl rounded-full" />
-              <div className="absolute top-1/4 right-0 w-64 h-64 bg-blue-600/20 blur-[100px] rounded-full mix-blend-screen animate-pulse" />
+              {/* Subtle wireframe globe or circle instead of blob */}
+              <div className="w-[80%] h-[80%] border border-white/5 rounded-full opacity-20 animate-[spin_60s_linear_infinite]" />
+              <div className="absolute w-[60%] h-[60%] border border-dashed border-white/5 rounded-full opacity-20 animate-[spin_40s_linear_infinite_reverse]" />
            </div>
 
            {/* The Card */}
            <div className="relative w-full max-w-md lg:max-w-full z-10 transform transition-all duration-500">
              <StableDiffusionCard isInView={isInView} isMobile={isMobile} />
              
-             {/* Floating stats - Glass Style - ADJUSTED POSITION */}
+             {/* Floating stats - Technical Style */}
              <motion.div 
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -284,17 +273,19 @@ const Hero = () => {
                 className="absolute -right-4 top-16 hidden xl:block pointer-events-none"
              >
                <div className="group flex items-center gap-2">
-                  {/* Connecting Line */}
-                  <div className="w-6 h-[1px] bg-gradient-to-l from-cyan-500/50 to-transparent" />
+                  <div className="w-8 h-[1px] bg-white/20" />
                   
-                  <div className="bg-black/60 backdrop-blur-xl border border-cyan-500/30 p-3 rounded-xl shadow-[0_0_30px_rgba(34,211,238,0.1)]">
-                    <div className="flex items-center gap-2 mb-1 border-b border-white/10 pb-1">
-                      <FaRobot className="text-cyan-400 text-xs" />
-                      <span className="text-[9px] font-mono text-gray-400 tracking-wider uppercase">Models Deployed</span>
+                  <div className="bg-[#0A0A0A] border border-white/10 p-4 shadow-2xl">
+                    <div className="flex items-center gap-3 mb-2 border-b border-white/10 pb-2">
+                      <FaRobot className="text-white text-xs" />
+                      <span className="text-[9px] font-mono text-gray-500 tracking-widest uppercase">Models_Deployed</span>
                     </div>
-                    <div className="flex items-baseline gap-1">
-                         <span className="text-2xl font-bold text-white tracking-tighter">12</span>
-                         <span className="text-[8px] text-cyan-500 font-mono">ACTIVE</span>
+                    <div className="flex items-baseline gap-2">
+                         <span className="text-3xl font-bold text-white tracking-tighter">12</span>
+                         <span className="text-[8px] text-green-500 font-mono flex items-center gap-1">
+                            <span className="w-1 h-1 bg-green-500 rounded-full animate-pulse" />
+                            ACTIVE
+                         </span>
                     </div>
                   </div>
                </div>
@@ -307,17 +298,16 @@ const Hero = () => {
                 className="absolute -left-8 bottom-28 hidden xl:block pointer-events-none"
              >
                <div className="group flex items-center gap-2 flex-row-reverse">
-                  {/* Connecting Line */}
-                  <div className="w-6 h-[1px] bg-gradient-to-r from-purple-500/50 to-transparent" />
+                  <div className="w-8 h-[1px] bg-white/20" />
 
-                  <div className="bg-black/60 backdrop-blur-xl border border-purple-500/30 p-3 rounded-xl shadow-[0_0_30px_rgba(168,85,247,0.1)]">
-                    <div className="flex items-center gap-2 mb-1 border-b border-white/10 pb-1">
-                      <FaFileAlt className="text-purple-400 text-xs" />
-                      <span className="text-[9px] font-mono text-gray-400 tracking-wider uppercase">Research Papers</span>
+                  <div className="bg-[#0A0A0A] border border-white/10 p-4 shadow-2xl">
+                    <div className="flex items-center gap-3 mb-2 border-b border-white/10 pb-2">
+                      <FaFileAlt className="text-white text-xs" />
+                      <span className="text-[9px] font-mono text-gray-500 tracking-widest uppercase">Papers</span>
                     </div>
-                    <div className="flex items-baseline gap-1">
-                         <span className="text-2xl font-bold text-white tracking-tighter">24+</span>
-                         <span className="text-[8px] text-purple-500 font-mono">PUBLISHED</span>
+                    <div className="flex items-baseline gap-2">
+                         <span className="text-3xl font-bold text-white tracking-tighter">24+</span>
+                         <span className="text-[8px] text-gray-400 font-mono">PUBLISHED</span>
                     </div>
                   </div>
                </div>
@@ -327,15 +317,15 @@ const Hero = () => {
         </motion.div>
       </div>
 
-      {/* Scroll Indicator */}
+      {/* Scroll Indicator - Minimal */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 2, duration: 1 }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2"
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-3"
       >
-        <span className="text-[10px] font-mono text-gray-500 tracking-[0.2em] uppercase">Scroll to Explore</span>
-        <BsArrowDown className="text-cyan-500 animate-bounce" />
+        <div className="h-8 w-[1px] bg-gradient-to-b from-transparent via-white/30 to-transparent" />
+        <span className="text-[9px] font-mono text-gray-600 tracking-[0.3em] uppercase">Scroll</span>
       </motion.div>
 
     </section>

@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import Navigation from '@/components/Navigation';
 import CursorEffect from '@/components/CursorEffect';
 import DiffusionBackground from '@/app/social/components/diffusion/DiffusionBackground';
 import ComputeDashboard from '@/components/donate/diffusion/ComputeDashboard';
@@ -25,7 +24,6 @@ export default function DonatePage() {
   return (
     <>
       <CursorEffect />
-      <Navigation personalInfo={personalInfo} />
 
       <main className="relative min-h-screen bg-[#050505] text-white overflow-x-hidden selection:bg-white/20 selection:text-white">
         

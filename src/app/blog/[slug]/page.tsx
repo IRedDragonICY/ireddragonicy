@@ -76,13 +76,10 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           options={{
               mdxOptions: {
                   remarkPlugins: [
-                      // @ts-expect-error: remarkGfm type mismatch
                       remarkGfm
                   ],
                   rehypePlugins: [
-                      // @ts-expect-error: rehypeHighlight type mismatch
                       rehypeHighlight, 
-                      // @ts-expect-error: rehypeSlug type mismatch
                       rehypeSlug
                   ],
               }

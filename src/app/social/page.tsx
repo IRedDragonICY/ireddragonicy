@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import Navigation from '@/components/Navigation';
 import CursorEffect from '@/components/CursorEffect';
 import { personalInfo, socials, games } from './data';
 import { searchUtils } from './utils';
@@ -27,7 +26,6 @@ export default function SocialPage() {
   return (
     <>
       <CursorEffect />
-      <Navigation personalInfo={personalInfo} />
       
       <main className="relative min-h-screen bg-[#050505] text-white overflow-x-hidden selection:bg-white/20 selection:text-white">
         

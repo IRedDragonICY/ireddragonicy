@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Navigation from '@/components/Navigation';
 import CursorEffect from '@/components/CursorEffect';
 import DiffusionScene, { Certificate } from '@/components/education/DiffusionScene';
 import CertificateModal from '@/components/education/CertificateModal';
@@ -303,7 +302,6 @@ export default function EducationPage() {
       `}</style>
 
       <CursorEffect />
-      <Navigation personalInfo={personalInfo} />
       
       <main className="relative w-full h-screen bg-[#050505]">
         

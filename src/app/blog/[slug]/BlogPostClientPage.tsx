@@ -5,7 +5,6 @@ import { motion, useScroll, useSpring } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
 import { FaArrowLeft, FaCalendar, FaClock, FaTag, FaTwitter, FaLinkedin, FaLink } from 'react-icons/fa';
-import Navigation from '@/components/Navigation';
 import CursorEffect from '@/components/CursorEffect';
 import AgencyFooter from '@/components/home/AgencyFooter';
 import DiffusionBackground from '@/app/social/components/diffusion/DiffusionBackground';
@@ -28,7 +27,6 @@ export default function BlogPostClientPage({ post, relatedPosts, children }: Blo
   return (
     <>
       <CursorEffect />
-      <Navigation />
       
       <motion.div
         className="fixed top-0 left-0 right-0 h-0.5 bg-white origin-left z-50"

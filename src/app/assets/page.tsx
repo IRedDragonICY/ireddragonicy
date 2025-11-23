@@ -2,7 +2,6 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import Navigation from '@/components/Navigation';
 import DiffusionBackground from '@/app/social/components/diffusion/DiffusionBackground';
 import { AssetCard } from './components/AssetCard';
 import { AssetDashboard } from './components/AssetDashboard';
@@ -70,7 +69,6 @@ export default function AssetsPage() {
   return (
     <>
       <DiffusionBackground />
-      <Navigation personalInfo={{ alias: 'IRedDragonICY' }} />
       
       <main className="min-h-screen px-4 sm:px-6 lg:px-8 py-24 max-w-7xl mx-auto relative z-10">
         <AssetDashboard 

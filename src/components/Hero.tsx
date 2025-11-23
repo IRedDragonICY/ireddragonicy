@@ -148,7 +148,7 @@ const Hero = () => {
       <div className="absolute inset-0 z-0">
         {!isMobile && <LatentSpaceBackground />}
         {/* Vignette for focus */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#050505_90%)] pointer-events-none" />
+        <div className="absolute inset-0 bg-[#050505]/30 pointer-events-none" />
       </div>
 
       {/* 2. Main Content Container */}
@@ -209,12 +209,17 @@ const Hero = () => {
             transition={{ delay: 0.8 }}
             className="flex flex-wrap gap-4"
           >
-            <button className="group relative px-8 py-4 bg-white text-black font-bold text-xs uppercase tracking-[0.2em] transition-all hover:bg-gray-200">
+            <a 
+              href="https://github.com/ireddragonicy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group relative px-8 py-4 bg-white text-black font-bold text-xs uppercase tracking-[0.2em] transition-all hover:bg-gray-200"
+            >
               <span className="relative flex items-center gap-3">
-                Explore Research
+                Explore GitHub
                 <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
               </span>
-            </button>
+            </a>
             
             <button className="group px-8 py-4 bg-transparent border border-white/20 text-white font-bold text-xs uppercase tracking-[0.2em] hover:bg-white/5 transition-all hover:border-white/40 backdrop-blur-sm">
               <span className="flex items-center gap-3">
@@ -324,7 +329,7 @@ const Hero = () => {
         transition={{ delay: 2, duration: 1 }}
         className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-3"
       >
-        <div className="h-8 w-[1px] bg-gradient-to-b from-transparent via-white/30 to-transparent" />
+        <div className="h-8 w-[1px] bg-white/20" />
         <span className="text-[9px] font-mono text-gray-600 tracking-[0.3em] uppercase">Scroll</span>
       </motion.div>
 

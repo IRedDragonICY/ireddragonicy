@@ -3,7 +3,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { FaSearch, FaFilter, FaTerminal } from 'react-icons/fa';
-import Navigation from '@/components/Navigation';
 import CursorEffect from '@/components/CursorEffect';
 import AgencyFooter from '@/components/home/AgencyFooter';
 import DiffusionBackground from '@/app/social/components/diffusion/DiffusionBackground';
@@ -36,7 +35,6 @@ export default function BlogClientPage({ initialPosts }: BlogClientPageProps) {
   return (
     <>
       <CursorEffect />
-      <Navigation />
       
       <main className="relative min-h-screen bg-[#030305] text-white overflow-x-hidden selection:bg-cyan-500/30 selection:text-cyan-100">
         <div className="fixed inset-0 z-0 opacity-40 pointer-events-none">

@@ -9,7 +9,7 @@ const PROFILE_URL = 'https://www.skills.google/public_profiles/a0d99021-862b-40d
 
 // --- Simple In-Memory Cache ---
 let CACHE: {
-    data: unknown;
+    data: any;
     timestamp: number;
 } | null = null;
 

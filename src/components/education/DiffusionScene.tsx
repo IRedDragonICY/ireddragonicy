@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useMemo, useState } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Canvas, useFrame, useThree, ThreeEvent } from '@react-three/fiber';
 import { PointMaterial, Stars, Line, Html, OrbitControls, Billboard } from '@react-three/drei';
 import * as THREE from 'three';
 
@@ -356,7 +356,8 @@ function CertificateNode({ cert, position, onSelect }: { cert: Certificate; posi
         }
     });
 
-    const handleClick = (e: THREE.Event) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const handleClick = (e: any) => {
         e.stopPropagation();
         if (onSelect) {
             onSelect(cert);

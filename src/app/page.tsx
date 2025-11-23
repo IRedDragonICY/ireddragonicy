@@ -4,7 +4,6 @@ import React from 'react';
 import { FaPython, FaReact, FaNodeJs, FaDocker, FaGitAlt, FaGithub, FaLinkedin } from 'react-icons/fa';
 import { SiTypescript, SiTailwindcss, SiNextdotjs, SiTensorflow, SiPytorch, SiScikitlearn, SiJupyter, SiPostgresql, SiOpenai, SiHuggingface } from 'react-icons/si';
 import Hero from '@/components/Hero';
-import Navigation from '@/components/Navigation';
 import CursorEffect from '@/components/CursorEffect';
 import DiffusionProfile from '@/components/home/DiffusionProfile';
 import GenerativeProjects from '@/components/home/GenerativeProjects';
@@ -89,7 +88,6 @@ export default function Home() {
             `}</style>
 
             <CursorEffect />
-            <Navigation personalInfo={portfolioData.personalInfo} />
 
             <main className="relative bg-[#0A0A0A] z-10">
                 <Hero />

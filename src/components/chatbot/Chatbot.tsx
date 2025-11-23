@@ -12,14 +12,21 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   id: string;
+  typed?: boolean;
 }
 
 // Typewriter effect component for streaming text
-const TypewriterMessage = ({ content, onComplete }: { content: string, onComplete?: () => void }) => {
-  const [displayedContent, setDisplayedContent] = useState('');
-  const [currentIndex, setCurrentIndex] = useState(0);
+const TypewriterMessage = ({ content, shouldAnimate = true, onComplete }: { content: string, shouldAnimate?: boolean, onComplete?: () => void }) => {
+  const [displayedContent, setDisplayedContent] = useState(shouldAnimate ? '' : content);
+  const [currentIndex, setCurrentIndex] = useState(shouldAnimate ? 0 : content.length);
   
   useEffect(() => {
+    if (!shouldAnimate) {
+      setDisplayedContent(content);
+      setCurrentIndex(content.length);
+      return;
+    }
+
     if (currentIndex < content.length) {
       const timeout = setTimeout(() => {
         setDisplayedContent(prev => prev + content[currentIndex]);
@@ -29,7 +36,7 @@ const TypewriterMessage = ({ content, onComplete }: { content: string, onComplet
     } else {
       if (onComplete) onComplete();
     }
-  }, [currentIndex, content, onComplete]);
+  }, [currentIndex, content, onComplete, shouldAnimate]);
 
   return (
     <div className="whitespace-pre-wrap prose prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-black/50 prose-pre:border prose-pre:border-white/10 prose-code:text-cyan-300 prose-headings:text-cyan-100 prose-a:text-cyan-400 hover:prose-a:text-cyan-300">
@@ -43,26 +50,70 @@ const TypewriterMessage = ({ content, onComplete }: { content: string, onComplet
   );
 };
 
-export default function Chatbot() {
+export default function Chatbot({ 
+  isOpen: externalIsOpen, 
+  onToggle: externalOnToggle,
+  embedded = false 
+}: { 
+  isOpen?: boolean; 
+  onToggle?: () => void;
+  embedded?: boolean;
+}) {
   const pathname = usePathname();
-  const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: 'System initialized. How can I assist you with IRedDragonICY\'s portfolio today?', id: 'init' }
-  ]);
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
+  
+  const isControlled = typeof externalIsOpen !== 'undefined';
+  const isOpen = isControlled ? externalIsOpen : internalIsOpen;
+  const setIsOpen = (val: boolean) => {
+    if (isControlled) {
+      externalOnToggle?.();
+    } else {
+      setInternalIsOpen(val);
+    }
+  };
+
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [bootSequence, setBootSequence] = useState(false);
+  const hasInitialized = useRef(false);
 
-  // Boot sequence effect on open
+  // Initial greeting effect on open
   useEffect(() => {
-    if (isOpen) {
-      setBootSequence(true);
-      const timer = setTimeout(() => setBootSequence(false), 1500);
-      return () => clearTimeout(timer);
+    if (isOpen && !hasInitialized.current) {
+      hasInitialized.current = true;
+      setIsLoading(true);
+      
+      // Trigger initial AI greeting
+      (async () => {
+        try {
+          const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              messages: [{ 
+                role: 'user', 
+                content: 'Generate a short, high-tech, cyberpunk-style system greeting for a visitor to this AI research portfolio. Keep it under 20 words. Do not use quotes.' 
+              }],
+              pathname
+            }),
+          });
+
+          const data = await response.json();
+          if (data.content) {
+            setMessages([{ role: 'assistant', content: data.content, id: 'init' }]);
+          } else {
+            setMessages([{ role: 'assistant', content: 'Neural Interface Active. Awaiting input.', id: 'init' }]);
+          }
+        } catch (_) {
+          setMessages([{ role: 'assistant', content: 'System Online. Connection established.', id: 'init' }]);
+        } finally {
+          setIsLoading(false);
+        }
+      })();
     }
-  }, [isOpen]);
+  }, [isOpen, pathname]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -70,7 +121,7 @@ export default function Chatbot() {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isOpen, bootSequence]);
+  }, [messages, isOpen]);
 
   const handleStop = () => {
     if (abortControllerRef.current) {
@@ -78,6 +129,10 @@ export default function Chatbot() {
       abortControllerRef.current = null;
       setIsLoading(false);
     }
+  };
+
+  const handleMessageComplete = (id: string) => {
+    setMessages(prev => prev.map(m => m.id === id ? { ...m, typed: true } : m));
   };
 
   const handleSubmit = async (e?: React.FormEvent) => {
@@ -123,40 +178,45 @@ export default function Chatbot() {
 
   return (
     <>
-      {/* Toggle Button */}
-      <motion.button
-        onClick={() => setIsOpen(!isOpen)}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className={`fixed bottom-6 right-6 z-[60] p-4 rounded-full shadow-lg backdrop-blur-md border transition-all duration-300 group
-          ${isOpen 
-            ? 'bg-red-500/10 border-red-500/50 text-red-400' 
-            : 'bg-black/80 border-cyan-500/30 text-cyan-400 hover:border-cyan-400/60 hover:shadow-cyan-500/20'
-          }
-        `}
-        title={isOpen ? "Close Terminal" : "Open Assistant"}
-      >
-        <div className="relative">
-          {isOpen ? (
-             <BsX size={24} className="transition-transform duration-300" />
-          ) : (
-             <div className="relative">
-                <FaBrain size={24} className="group-hover:animate-pulse" />
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse border-2 border-black" />
-             </div>
-          )}
-        </div>
-      </motion.button>
+      {/* Toggle Button - Only show if not embedded */}
+      {!embedded && (
+        <motion.button
+          onClick={() => setIsOpen(!isOpen)}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className={`fixed bottom-6 right-6 z-[60] p-4 rounded-full shadow-lg backdrop-blur-md border transition-all duration-300 group
+            ${isOpen 
+              ? 'bg-red-500/10 border-red-500/50 text-red-400' 
+              : 'bg-black/80 border-cyan-500/30 text-cyan-400 hover:border-cyan-400/60 hover:shadow-cyan-500/20'
+            }
+          `}
+          title={isOpen ? "Close Terminal" : "Open Assistant"}
+        >
+          <div className="relative">
+            {isOpen ? (
+               <BsX size={24} className="transition-transform duration-300" />
+            ) : (
+               <div className="relative">
+                  <FaBrain size={24} className="group-hover:animate-pulse" />
+                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse border-2 border-black" />
+               </div>
+            )}
+          </div>
+        </motion.button>
+      )}
 
       {/* Chat Window */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95, transformOrigin: 'bottom right' }}
+            initial={{ opacity: 0, y: 20, scale: 0.95, transformOrigin: embedded ? 'top right' : 'bottom right' }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-24 right-6 w-[90vw] sm:w-[380px] h-[500px] z-[60] flex flex-col shadow-2xl shadow-black/50"
+            className={embedded 
+              ? "absolute top-full right-0 mt-4 w-[90vw] sm:w-[380px] h-[500px] z-[60] flex flex-col shadow-2xl shadow-black/50"
+              : "fixed bottom-24 right-6 w-[90vw] sm:w-[380px] h-[500px] z-[60] flex flex-col shadow-2xl shadow-black/50"
+            }
           >
             {/* Glass Panel */}
             <div className="absolute inset-0 bg-[#030305]/90 backdrop-blur-xl rounded-2xl border border-cyan-500/20 shadow-2xl shadow-cyan-900/20 overflow-hidden">
@@ -194,80 +254,70 @@ export default function Chatbot() {
 
             {/* Messages Area */}
             <div className="relative z-10 flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
-              {bootSequence ? (
-                <div className="h-full flex flex-col items-center justify-center text-cyan-500/50 font-mono text-xs space-y-1">
-                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}>&gt; INITIALIZING NEURAL LINK...</motion.div>
-                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>&gt; LOADING CONTEXT VECTORS...</motion.div>
-                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }}>&gt; ESTABLISHING SECURE HANDSHAKE...</motion.div>
-                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.0 }} className="text-green-400">&gt; SYSTEM READY.</motion.div>
-                </div>
-              ) : (
-                <>
-                  {messages.map((msg, idx) => (
-                    <motion.div
-                      key={msg.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                    >
-                      <div
-                        className={`max-w-[85%] p-3 rounded-lg text-sm font-light leading-relaxed relative group
-                          ${msg.role === 'user'
-                            ? 'bg-cyan-600/10 border border-cyan-500/30 text-cyan-100 rounded-br-none'
-                            : 'bg-white/5 border border-white/10 text-gray-300 rounded-bl-none'
-                          }
-                        `}
-                      >
-                        {/* Message Corner Accents */}
-                        <div className={`absolute top-0 w-2 h-2 border-t border-cyan-500/30 ${msg.role === 'user' ? 'right-0 border-r rounded-tr' : 'left-0 border-l rounded-tl'}`} />
-                        <div className={`absolute bottom-0 w-2 h-2 border-b border-cyan-500/30 ${msg.role === 'user' ? 'left-0 border-l rounded-bl' : 'right-0 border-r rounded-br'}`} />
+              {messages.map((msg) => (
+                <motion.div
+                  key={msg.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-[85%] p-3 rounded-lg text-sm font-light leading-relaxed relative group
+                      ${msg.role === 'user'
+                        ? 'bg-cyan-600/10 border border-cyan-500/30 text-cyan-100 rounded-br-none'
+                        : 'bg-white/5 border border-white/10 text-gray-300 rounded-bl-none'
+                      }
+                    `}
+                  >
+                    {/* Message Corner Accents */}
+                    <div className={`absolute top-0 w-2 h-2 border-t border-cyan-500/30 ${msg.role === 'user' ? 'right-0 border-r rounded-tr' : 'left-0 border-l rounded-tl'}`} />
+                    <div className={`absolute bottom-0 w-2 h-2 border-b border-cyan-500/30 ${msg.role === 'user' ? 'left-0 border-l rounded-bl' : 'right-0 border-r rounded-br'}`} />
 
-                        {msg.role === 'assistant' && (
-                          <div className="text-[9px] font-mono text-cyan-600 mb-1 uppercase flex items-center gap-2">
-                            <BsTerminal size={10} />
-                            System_Response
-                          </div>
-                        )}
-                        
-                        {msg.role === 'assistant' && idx === messages.length - 1 && isLoading ? (
-                           // Use typewriter for the very last message if it's still streaming (simulated here by just always using it for assistant)
-                           <TypewriterMessage content={msg.content} />
-                        ) : msg.role === 'assistant' ? (
-                           <TypewriterMessage content={msg.content} />
-                        ) : (
-                           <div className="whitespace-pre-wrap">{msg.content}</div>
-                        )}
+                    {msg.role === 'assistant' && (
+                      <div className="text-[9px] font-mono text-cyan-600 mb-1 uppercase flex items-center gap-2">
+                        <BsTerminal size={10} />
+                        System_Response
                       </div>
-                    </motion.div>
-                  ))}
-                  
-                  {isLoading && (
-                    <div className="flex justify-start">
-                      <div className="bg-white/5 border border-white/10 p-3 rounded-lg rounded-bl-none flex items-center gap-3">
-                        <div className="flex gap-1">
-                          <motion.span 
-                            className="w-1 h-3 bg-cyan-400" 
-                            animate={{ scaleY: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }} 
-                            transition={{ duration: 0.5, repeat: Infinity, delay: 0 }} 
-                          />
-                          <motion.span 
-                            className="w-1 h-3 bg-cyan-400" 
-                            animate={{ scaleY: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }} 
-                            transition={{ duration: 0.5, repeat: Infinity, delay: 0.1 }} 
-                          />
-                          <motion.span 
-                            className="w-1 h-3 bg-cyan-400" 
-                            animate={{ scaleY: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }} 
-                            transition={{ duration: 0.5, repeat: Infinity, delay: 0.2 }} 
-                          />
-                        </div>
-                        <span className="text-[10px] font-mono text-cyan-500 animate-pulse">PROCESSING...</span>
-                      </div>
+                    )}
+                    
+                    {msg.role === 'assistant' ? (
+                      <TypewriterMessage 
+                        content={msg.content} 
+                        shouldAnimate={!msg.typed}
+                        onComplete={() => handleMessageComplete(msg.id)}
+                      />
+                    ) : (
+                        <div className="whitespace-pre-wrap">{msg.content}</div>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+              
+              {isLoading && (
+                <div className="flex justify-start">
+                  <div className="bg-white/5 border border-white/10 p-3 rounded-lg rounded-bl-none flex items-center gap-3">
+                    <div className="flex gap-1">
+                      <motion.span 
+                        className="w-1 h-3 bg-cyan-400" 
+                        animate={{ scaleY: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }} 
+                        transition={{ duration: 0.5, repeat: Infinity, delay: 0 }} 
+                      />
+                      <motion.span 
+                        className="w-1 h-3 bg-cyan-400" 
+                        animate={{ scaleY: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }} 
+                        transition={{ duration: 0.5, repeat: Infinity, delay: 0.1 }} 
+                      />
+                      <motion.span 
+                        className="w-1 h-3 bg-cyan-400" 
+                        animate={{ scaleY: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }} 
+                        transition={{ duration: 0.5, repeat: Infinity, delay: 0.2 }} 
+                      />
                     </div>
-                  )}
-                  <div ref={messagesEndRef} />
-                </>
+                    <span className="text-[10px] font-mono text-cyan-500 animate-pulse">PROCESSING...</span>
+                  </div>
+                </div>
               )}
+              <div ref={messagesEndRef} />
             </div>
 
             {/* Input Area */}
@@ -278,7 +328,6 @@ export default function Chatbot() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Input command..."
-                  disabled={bootSequence}
                   className="flex-1 bg-black/50 border border-white/10 rounded-lg px-4 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500/50 focus:bg-cyan-950/10 transition-all font-mono disabled:opacity-50"
                 />
                 {isLoading ? (
@@ -293,7 +342,7 @@ export default function Chatbot() {
                 ) : (
                    <button
                      type="submit"
-                     disabled={!input.trim() || bootSequence}
+                     disabled={!input.trim()}
                      className="p-2 bg-cyan-500/10 border border-cyan-500/30 rounded-lg text-cyan-400 hover:bg-cyan-500/20 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed group"
                    >
                      <BsSend size={18} className="group-hover:translate-x-0.5 transition-transform" />

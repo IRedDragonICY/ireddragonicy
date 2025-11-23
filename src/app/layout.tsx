@@ -131,7 +131,6 @@ export default function RootLayout({
         />
         <Navigation />
         {children}
-        <Chatbot />
         <Analytics />
       </body>
     </html>

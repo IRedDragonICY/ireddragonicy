@@ -50,8 +50,9 @@ export async function POST(req: NextRequest) {
     const content = data.choices?.[0]?.message?.content;
 
     return NextResponse.json({ content });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Chat API Error:', error);
-    return NextResponse.json({ error: 'Failed to generate response', details: error.message }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: 'Failed to generate response', details: message }, { status: 500 });
   }
 }

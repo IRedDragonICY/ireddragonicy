@@ -8,6 +8,7 @@ import remarkGfm from 'remark-gfm';
 import 'highlight.js/styles/atom-one-dark.css'; 
 
 // Custom components map
+/* eslint-disable @typescript-eslint/no-explicit-any */
 const components = {
   h1: (props: any) => <h1 className="text-4xl font-bold mt-8 mb-4 text-cyan-50" {...props} />,
   h2: (props: any) => <h2 className="text-3xl font-bold mt-8 mb-4 text-cyan-100 border-b border-cyan-900/30 pb-2" {...props} />,
@@ -44,6 +45,7 @@ const components = {
   th: (props: any) => <th className="bg-black/40 px-4 py-3 text-cyan-400 font-bold border-b border-white/10 font-mono uppercase tracking-wider" {...props} />,
   td: (props: any) => <td className="px-4 py-3 border-b border-white/5 hover:bg-white/5 transition-colors" {...props} />,
 };
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = await params;
@@ -74,13 +76,13 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           options={{
               mdxOptions: {
                   remarkPlugins: [
-                      // @ts-ignore
+                      // @ts-expect-error: remarkGfm type mismatch
                       remarkGfm
                   ],
                   rehypePlugins: [
-                      // @ts-ignore
+                      // @ts-expect-error: rehypeHighlight type mismatch
                       rehypeHighlight, 
-                      // @ts-ignore
+                      // @ts-expect-error: rehypeSlug type mismatch
                       rehypeSlug
                   ],
               }

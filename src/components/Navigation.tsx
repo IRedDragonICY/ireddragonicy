@@ -1,19 +1,18 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { HiMenuAlt3, HiX } from 'react-icons/hi';
-import { FaBrain, FaGraduationCap, FaTerminal, FaGlobeAmericas, FaWifi, FaServer } from 'react-icons/fa';
+import { FaBrain, FaGraduationCap, FaGlobeAmericas, FaWifi, FaServer } from 'react-icons/fa';
 import {
   BiHomeAlt,
-  BiCodeAlt,
-  BiStats
+  BiCodeAlt
 } from 'react-icons/bi';
 import { RiArticleLine, RiShareLine } from 'react-icons/ri';
 import { TbBrain } from 'react-icons/tb';
-import { BsCpu, BsGpuCard } from 'react-icons/bs';
+import { BsCpu } from 'react-icons/bs';
 
 // Stable list of section ids used for scroll tracking on the homepage
 const HOME_SECTION_IDS: string[] = [
@@ -82,8 +81,9 @@ const Navigation = ({ personalInfo = { alias: 'IRedDragonICY' } }: NavigationPro
   const [activeSection, setActiveSection] = useState('home');
   const [scrollProgress, setScrollProgress] = useState(0);
 
-  const { scrollYProgress } = useScroll();
-  const headerY = useTransform(scrollYProgress, [0, 0.05], [0, -32]); // Hide top bar on scroll
+  const { scrollY } = useScroll();
+  const headerY = useTransform(scrollY, [0, 100], [0, -32]); // Hide top bar on scroll
+  const headerOpacity = useTransform(scrollY, [0, 100], [1, 0]);
 
   // Check if we're on the blog page
   const isBlogPage = pathname?.startsWith('/blog');
@@ -159,7 +159,7 @@ const Navigation = ({ personalInfo = { alias: 'IRedDragonICY' } }: NavigationPro
         {/* 1. Top Status Bar (Hides on Scroll) */}
         <motion.div 
           className="h-8 bg-[#050505] border-b border-white/5 flex items-center justify-between px-4 sm:px-6 lg:px-8 pointer-events-auto relative overflow-hidden"
-          style={{ y: headerY, opacity: useTransform(scrollYProgress, [0, 0.05], [1, 0]) }}
+          style={{ y: headerY, opacity: headerOpacity }}
         >
            <div className="flex items-center gap-4 md:gap-8 w-full">
               {/* Left Stats */}

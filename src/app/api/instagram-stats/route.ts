@@ -171,8 +171,9 @@ async function crawlInstagramStats(username: string): Promise<InstagramStats> {
   // 3) Last resort: use Puppeteer to render and extract DOM
   try {
     const isVercel = Boolean(process.env.VERCEL || process.env.VERCEL_ENV);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let puppeteer: any;
-    let browser: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let launchOptions: any = { headless: true };
 
     if (isVercel) {
@@ -181,6 +182,7 @@ async function crawlInstagramStats(username: string): Promise<InstagramStats> {
       chromium.setHeadlessMode = true;
       chromium.setGraphicsMode = false;
       puppeteer = await import('puppeteer-core');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const p: any = (puppeteer as any).default || puppeteer;
       launchOptions = {
         ...launchOptions,
@@ -191,10 +193,12 @@ async function crawlInstagramStats(username: string): Promise<InstagramStats> {
       puppeteer = p;
     } else {
       puppeteer = await import('puppeteer');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       puppeteer = (puppeteer as any).default || puppeteer;
     }
 
-    browser = await (puppeteer as any).launch(launchOptions);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const browser = await (puppeteer as any).launch(launchOptions);
     const page = await browser.newPage();
     await page.setUserAgent(
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
@@ -260,8 +264,9 @@ export async function GET(req: Request) {
     const res = NextResponse.json(stats, { status: ok ? 200 : 502 });
     res.headers.set('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
     return res;
-  } catch (err: any) {
-    const res = NextResponse.json({ error: err?.message || 'Failed to crawl Instagram' }, { status: 500 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Failed to crawl Instagram';
+    const res = NextResponse.json({ error: message }, { status: 500 });
     res.headers.set('Cache-Control', 'no-store');
     return res;
   }

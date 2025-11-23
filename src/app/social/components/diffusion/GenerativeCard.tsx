@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, memo, useRef, useEffect } from 'react';
 import { motion, useMotionTemplate, useMotionValue, useInView, Variants } from 'framer-motion';
-import { SocialItem, GameItem, SocialStats } from '../../types';
+import { SocialItem, GameItem, SocialStats, GitHubUser } from '../../types';
 import { FaExternalLinkAlt, FaCopy, FaCheck, FaCodeBranch, FaCircle } from 'react-icons/fa';
 import { useSocialStats, ApiHookConfig } from '../../hooks';
 import { formatUtils } from '../../utils';
@@ -24,10 +24,11 @@ const STATS_CONFIG_MAP: Record<string, ApiHookConfig> = {
   'tiktok': { service: 'tiktok', identifier: 'ireddragonicy', endpoint: '/api/tiktok-stats?u=ireddragonicy' },
   'hoyolab': { service: 'hoyolab', identifier: '10849915', endpoint: '/api/hoyolab-stats?id=10849915' },
   'strava': { service: 'strava', identifier: '164295314', endpoint: '/api/strava-stats?id=164295314' },
+  'github': { service: 'github', identifier: 'IRedDragonICY', endpoint: '/api/github-stats?username=IRedDragonICY' },
 };
 
 const GenerativeCard: React.FC<GenerativeCardProps> = memo(({ item, index, type }) => {
-  const ref = useRef<HTMLAnchorElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const isInView = useInView(ref, { once: true, margin: "50px" });
   
@@ -42,6 +43,15 @@ const GenerativeCard: React.FC<GenerativeCardProps> = memo(({ item, index, type 
     mouseX.set(clientX - left);
     mouseY.set(clientY - top);
   }
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest('a') || (e.target as HTMLElement).closest('button')) {
+      return;
+    }
+    if ('href' in item && item.href) {
+      window.open(item.href, '_blank', 'noopener,noreferrer');
+    }
+  };
 
   const background = useMotionTemplate`radial-gradient(
     400px circle at ${mouseX}px ${mouseY}px,
@@ -85,6 +95,14 @@ const GenerativeCard: React.FC<GenerativeCardProps> = memo(({ item, index, type 
     } else if (item.id === 'youtube') {
         push('Subs', 'subscribers');
         push('Views', 'views');
+    } else if (item.id === 'github') {
+        push('Repos', 'totalRepositories');
+        push('Stars', 'totalStars');
+        push('Commits', 'totalCommits');
+        push('PRs', 'totalPRs');
+        push('Contribs', 'totalContributed');
+        push('Followers', 'totalFollowers');
+        push('Following', 'totalFollowing');
     } else {
         push('Followers', 'followers');
         push('Following', 'following');
@@ -128,11 +146,8 @@ const GenerativeCard: React.FC<GenerativeCardProps> = memo(({ item, index, type 
   };
 
   return (
-    <motion.a
+    <motion.div
       ref={ref}
-      href={'href' in item ? item.href : '#'}
-      target="_blank"
-      rel="noopener noreferrer"
       custom={index}
       initial="hidden"
       animate={isInView ? "visible" : "hidden"}
@@ -141,7 +156,8 @@ const GenerativeCard: React.FC<GenerativeCardProps> = memo(({ item, index, type 
       onMouseMove={handleMouseMove}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="group relative flex flex-col h-full bg-[#080808] border border-white/10 overflow-hidden transition-colors duration-300 hover:border-white/30"
+      onClick={handleCardClick}
+      className="group relative flex flex-col h-full bg-[#080808] border border-white/10 overflow-hidden transition-colors duration-300 hover:border-white/30 cursor-pointer"
     >
       {/* Technical Corners */}
       <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-white/20 transition-colors group-hover:border-white/50" />
@@ -215,6 +231,53 @@ const GenerativeCard: React.FC<GenerativeCardProps> = memo(({ item, index, type 
               ))}
             </div>
           )}
+
+          {/* GitHub User Lists */}
+          {item.id === 'github' && !stats.loading && (
+            <div className="mt-4 space-y-4 border-t border-white/10 pt-4">
+              {stats.followersList && stats.followersList.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <span className="text-[9px] text-green-400 uppercase tracking-wider font-mono">Recent Followers</span>
+                  <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+                    {stats.followersList.map((user: GitHubUser, i: number) => (
+                      <a key={i} href={user.url} target="_blank" rel="noopener noreferrer" title={user.name} className="block">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={user.avatar} alt={user.username} className="w-6 h-6 rounded-full border border-green-500/30 hover:border-green-500 transition-colors" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {stats.followingList && stats.followingList.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <span className="text-[9px] text-blue-400 uppercase tracking-wider font-mono">Following</span>
+                  <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+                    {stats.followingList.map((user: GitHubUser, i: number) => (
+                      <a key={i} href={user.url} target="_blank" rel="noopener noreferrer" title={user.name} className="block">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={user.avatar} alt={user.username} className="w-6 h-6 rounded-full border border-blue-500/30 hover:border-blue-500 transition-colors" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {stats.notFollowingBack && stats.notFollowingBack.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <span className="text-[9px] text-red-400 uppercase tracking-wider font-mono">Not Following Back ({stats.notFollowingBack.length})</span>
+                  <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+                    {stats.notFollowingBack.map((user: GitHubUser, i: number) => (
+                      <a key={i} href={user.url} target="_blank" rel="noopener noreferrer" title={user.name} className="block">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={user.avatar} alt={user.username} className="w-6 h-6 rounded-full border border-red-500/30 hover:border-red-500 transition-colors" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
           
           {statsConfig && stats.loading && isInView && (
             <div className="grid grid-cols-2 gap-2">
@@ -251,8 +314,10 @@ const GenerativeCard: React.FC<GenerativeCardProps> = memo(({ item, index, type 
           <FaCircle size={4} className="text-gray-800 group-hover:text-green-500 transition-colors" />
         </div>
       </div>
-    </motion.a>
+    </motion.div>
   );
 });
+
+GenerativeCard.displayName = 'GenerativeCard';
 
 export default GenerativeCard;

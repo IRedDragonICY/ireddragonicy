@@ -1,10 +1,9 @@
 'use client';
 
-import React, { useRef, useMemo, useState, useEffect } from 'react';
+import React, { useRef, useMemo, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Points, PointMaterial, Stars, Line, Html, OrbitControls, Billboard } from '@react-three/drei';
+import { PointMaterial, Stars, Line, Html, OrbitControls, Billboard } from '@react-three/drei';
 import * as THREE from 'three';
-import { motion } from 'framer-motion';
 
 // --- Types ---
 export interface Certificate {
@@ -225,7 +224,7 @@ function DataFlowParticles({ curve, count }: { curve: THREE.CatmullRomCurve3; co
     const progress = useMemo(() => new Float32Array(count).map(() => Math.random()), [count]);
     const bufferPositions = useMemo(() => new Float32Array(count * 3), [count]);
 
-    useFrame((state) => {
+    useFrame(() => {
         if (!particles.current) return;
         const positions = particles.current.geometry.attributes.position.array as Float32Array;
         
@@ -357,7 +356,7 @@ function CertificateNode({ cert, position, onSelect }: { cert: Certificate; posi
         }
     });
 
-    const handleClick = (e: any) => {
+    const handleClick = (e: THREE.Event) => {
         e.stopPropagation();
         if (onSelect) {
             onSelect(cert);
@@ -425,6 +424,7 @@ function SchoolConstellation({ children }: { children: React.ReactNode }) {
 }
 
 interface DiffusionSceneProps {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onSchoolSelect: (data: any) => void;
     onCertificateSelect?: (cert: Certificate) => void;
     certificates?: Certificate[];

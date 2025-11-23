@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FaGoogle, FaShieldAlt, FaBarcode, FaServer, FaExternalLinkAlt, FaCheckCircle, FaTimes } from 'react-icons/fa';
+import { motion } from 'framer-motion';
+import { FaGoogle, FaShieldAlt, FaServer, FaExternalLinkAlt, FaCheckCircle, FaTimes } from 'react-icons/fa';
 
 interface Certificate {
   id: string;
@@ -112,6 +112,7 @@ const CertificateModal: React.FC<Props> = ({ certificate, onClose }) => {
                 {/* The Certificate Image */}
                 <div className="relative w-full aspect-[4/3] max-w-[300px]">
                      <div className="absolute inset-0 bg-cyan-500/20 blur-2xl rounded-full" />
+                     {/* eslint-disable-next-line @next/next/no-img-element */}
                      <img 
                         src={certificate.image} 
                         alt={certificate.title} 

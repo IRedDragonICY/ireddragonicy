@@ -9,7 +9,7 @@ const PROFILE_URL = 'https://www.skills.google/public_profiles/a0d99021-862b-40d
 
 // --- Simple In-Memory Cache ---
 let CACHE: {
-    data: any;
+    data: unknown;
     timestamp: number;
 } | null = null;
 
@@ -115,6 +115,7 @@ export async function GET(request: Request) {
           link: link.startsWith('http') ? link : `https://www.skills.google${link}`,
           id
         };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       }).filter((cert: any) => cert.title && cert.image);
     });
 

@@ -1,6 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { motion, useMotionTemplate, useMotionValue } from 'framer-motion';
-import { FaExternalLinkAlt, FaExpand, FaImage, FaInfoCircle, FaDownload } from 'react-icons/fa';
+import { FaExternalLinkAlt, FaExpand, FaImage, FaInfoCircle } from 'react-icons/fa';
 
 interface AssetCardProps {
   item: {
@@ -14,7 +14,6 @@ interface AssetCardProps {
 }
 
 export const AssetCard: React.FC<AssetCardProps> = ({ item, onClick }) => {
-  const [isHovered, setIsHovered] = useState(false);
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
@@ -62,8 +61,6 @@ export const AssetCard: React.FC<AssetCardProps> = ({ item, onClick }) => {
       viewport={{ once: true }}
       transition={{ duration: 0.4 }}
       onMouseMove={handleMouseMove}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       onClick={onClick}
       className="group relative break-inside-avoid rounded-xl bg-[#0A0A0C] border border-white/5 overflow-hidden cursor-pointer transition-all duration-500 hover:border-cyan-500/40 hover:shadow-[0_0_30px_-10px_rgba(34,211,238,0.2)]"
     >
@@ -75,6 +72,7 @@ export const AssetCard: React.FC<AssetCardProps> = ({ item, onClick }) => {
 
       {/* Image Container */}
       <div className="relative aspect-[3/4] w-full overflow-hidden bg-gray-900/50">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={imgSrc}
           alt={item.title || 'Asset'}

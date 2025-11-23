@@ -167,6 +167,7 @@ async function resolveArtworkDetails(ids: string[], concurrency: number): Promis
             // Look for illust data for this id
             const illustMap = parsed?.illust || parsed?.preload || {};
             const ill = illustMap?.[id] || Object.values(illustMap || {})[0];
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const urls = (ill as any)?.urls || {};
       const candidates: string[] = [urls.original, urls.regular, urls.small, urls.thumb, urls.thumb_mini, urls.mini].filter(Boolean);
       const chosen = candidates.find((u: string) => /pximg\.net/i.test(String(u))) || candidates[0];
@@ -261,7 +262,6 @@ export async function GET(req: Request) {
     const baseHost = 'www.pixiv.net';
     const basePath = `/en/users/${userId}/artworks`;
     let pageHtmls: string[] = [];
-    let html1 = '';
 
     // Use Jina.ai text proxy to fetch Pixiv pages
     const page1Url = `https://r.jina.ai/http://${baseHost}${basePath}`;
@@ -271,7 +271,6 @@ export async function GET(req: Request) {
     const pageUrls = pageNumbers.map(p => p === 1 ? page1Url : `https://r.jina.ai/http://${baseHost}${basePath}?p=${p}`);
     const htmls = await Promise.all(pageUrls.map(u => fetchHtml(u).catch(() => '')));
     
-    html1 = first;
     pageHtmls = htmls;
     let allItems = pageHtmls.flatMap(extractArtworksFromHtml);
 
@@ -354,8 +353,9 @@ export async function GET(req: Request) {
     // Cache at the CDN so subsequent users hit cache; allow long SWR
     res.headers.set('Cache-Control', 'public, s-maxage=21600, stale-while-revalidate=604800');
     return res;
-  } catch (err: any) {
-    const res = NextResponse.json({ error: err?.message || 'Failed to fetch Pixiv assets' }, { status: 500 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Failed to fetch Pixiv assets';
+    const res = NextResponse.json({ error: message }, { status: 500 });
     res.headers.set('Cache-Control', 'no-store');
     return res;
   }

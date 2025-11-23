@@ -53,8 +53,9 @@ export default function AssetsPage() {
         if (missing === 0) break;
         attempts += 1;
       }
-    } catch (e: any) {
-      setError(e?.message || 'Failed to load');
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Failed to load';
+      setError(message);
     } finally {
       if (latest) setData(latest);
       setLoading(false);

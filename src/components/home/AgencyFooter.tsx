@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { FaGithub, FaLinkedin, FaTwitter } from 'react-icons/fa';
+import { FaGithub, FaLinkedin } from 'react-icons/fa';
 import { SiHuggingface } from 'react-icons/si';
 
 const AgencyFooter = () => {

@@ -96,13 +96,13 @@ async function fetchText(url: string, userAgent: string = defaultUA): Promise<st
 }
 
 async function fetchTextWithRetry(url: string, userAgents: string[] = [defaultUA, botUA], attempts: number = 4): Promise<string> {
-  let error: any;
+  let error: unknown;
   // round-robin UA per attempt
   for (let i = 0; i < attempts; i++) {
     const ua = userAgents[i % userAgents.length];
     try {
       return await fetchText(url, ua);
-    } catch (e: any) {
+    } catch (e: unknown) {
       error = e;
       const backoffMs = 300 * Math.pow(2, i); // 300, 600, 1200, 2400
       await new Promise(r => setTimeout(r, backoffMs));
@@ -139,8 +139,9 @@ async function crawlThreadsStats(username: string): Promise<ThreadsStats> {
   try {
     if (process.env.ALLOW_PUPPETEER_THREADS === '1') {
       const isVercel = Boolean(process.env.VERCEL || process.env.VERCEL_ENV);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let puppeteer: any;
-      let browser: any;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let launchOptions: any = { headless: true };
 
       if (isVercel) {
@@ -148,6 +149,7 @@ async function crawlThreadsStats(username: string): Promise<ThreadsStats> {
         chromium.setHeadlessMode = true;
         chromium.setGraphicsMode = false;
         puppeteer = await import('puppeteer-core');
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const p: any = (puppeteer as any).default || puppeteer;
         launchOptions = {
           ...launchOptions,
@@ -158,10 +160,12 @@ async function crawlThreadsStats(username: string): Promise<ThreadsStats> {
         puppeteer = p;
       } else {
         puppeteer = await import('puppeteer');
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         puppeteer = (puppeteer as any).default || puppeteer;
       }
 
-      browser = await (puppeteer as any).launch(launchOptions);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const browser = await (puppeteer as any).launch(launchOptions);
       const page = await browser.newPage();
       await page.setUserAgent(defaultUA);
       await page.setExtraHTTPHeaders({ 'Accept-Language': 'en-US,en;q=0.9' });
@@ -191,9 +195,10 @@ export async function GET(req: Request) {
     const res = NextResponse.json(stats, { status: ok ? 200 : 502 });
     res.headers.set('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
     return res;
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Failed to crawl Threads stats';
     const res = NextResponse.json(
-      { error: err?.message || 'Failed to crawl Threads stats', username },
+      { error: message, username },
       { status: 500 },
     );
     res.headers.set('Cache-Control', 'no-store');

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FaExpand, FaCompress, FaDownload, FaTimes, FaSearchPlus, FaSearchMinus, FaUndo } from 'react-icons/fa';
+import { motion } from 'framer-motion';
+import { FaTimes, FaSearchPlus, FaSearchMinus, FaUndo } from 'react-icons/fa';
 
 interface AssetViewerProps {
   item: {
@@ -96,6 +96,7 @@ export const AssetViewer: React.FC<AssetViewerProps> = ({ item, onClose }) => {
         onMouseUp={onMouseUp}
         onMouseLeave={onMouseUp}
       >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={`/api/pixiv-img?src=${encodeURIComponent(item.thumb || '')}`}
           alt={item.title || ''}
@@ -137,6 +138,7 @@ export const AssetViewer: React.FC<AssetViewerProps> = ({ item, onClose }) => {
 
 import { FaExternalLinkAlt } from 'react-icons/fa';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const ControlBtn = ({ onClick, icon: Icon, label }: any) => (
   <button
     onClick={onClick}

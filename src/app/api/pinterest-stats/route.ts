@@ -155,8 +155,9 @@ export async function GET(req: Request) {
     const res = NextResponse.json(stats, { status: ok ? 200 : 502 });
     res.headers.set('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
     return res;
-  } catch (err: any) {
-    const res = NextResponse.json({ error: err?.message || 'Failed to crawl Pinterest' }, { status: 500 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Failed to crawl Pinterest';
+    const res = NextResponse.json({ error: message }, { status: 500 });
     res.headers.set('Cache-Control', 'no-store');
     return res;
   }

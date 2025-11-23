@@ -6,8 +6,7 @@ import Navigation from '@/components/Navigation';
 import CursorEffect from '@/components/CursorEffect';
 import DiffusionScene, { Certificate } from '@/components/education/DiffusionScene';
 import CertificateModal from '@/components/education/CertificateModal';
-import { FaNetworkWired, FaServer, FaMicrochip, FaCodeBranch, FaMapMarkerAlt, FaExpand } from 'react-icons/fa';
-import { BsGpuCard } from 'react-icons/bs';
+import { FaNetworkWired, FaServer, FaMicrochip, FaCodeBranch, FaExpand } from 'react-icons/fa';
 import { IconType } from 'react-icons';
 
 // --- Types ---
@@ -311,6 +310,7 @@ export default function EducationPage() {
         {/* 3D Scene Fullscreen */}
         <div className="absolute inset-0 z-0">
             <DiffusionScene 
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 onSchoolSelect={(data: any) => setSelectedSchoolId(data?.id)}
                 onCertificateSelect={setSelectedCertificate}
                 certificates={certificates}

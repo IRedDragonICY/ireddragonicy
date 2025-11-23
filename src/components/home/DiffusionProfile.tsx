@@ -24,7 +24,7 @@ const DiffusionProfile = () => {
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             className="text-[10px] font-mono uppercase tracking-[0.4em] text-gray-500 mb-2"
           >
-            // Entity_Configuration
+            {'// Entity_Configuration'}
           </motion.span>
           <motion.h2 
             initial={{ opacity: 0 }}

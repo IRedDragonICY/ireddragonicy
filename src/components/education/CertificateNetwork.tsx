@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { FaGoogle, FaExternalLinkAlt, FaShieldAlt, FaNetworkWired } from 'react-icons/fa';
+import { FaGoogle, FaExternalLinkAlt, FaShieldAlt } from 'react-icons/fa';
 
 interface Certificate {
   id: string;
@@ -103,6 +103,7 @@ function CertificateNode({ cert, index }: { cert: Certificate; index: number }) 
                     {/* Badge Image */}
                     <div className="relative w-24 h-24 mb-6 mx-auto">
                         <div className="absolute inset-0 bg-cyan-500/20 rounded-full blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img 
                             src={cert.image} 
                             alt={cert.title}

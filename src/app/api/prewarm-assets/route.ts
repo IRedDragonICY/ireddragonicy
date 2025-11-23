@@ -43,9 +43,10 @@ export async function GET(req: Request) {
         const tookMs = Date.now() - t0;
         try { await res.clone().json().catch(() => res.text().catch(() => undefined)); } catch {}
         return { path, status: res.status, ok: res.ok, tookMs };
-      } catch (e: any) {
+      } catch (e: unknown) {
         const tookMs = Date.now() - t0;
-        return { path, status: null, ok: false, tookMs, error: e?.message || 'fetch failed' };
+        const message = e instanceof Error ? e.message : 'fetch failed';
+        return { path, status: null, ok: false, tookMs, error: message };
       }
     })
   );

@@ -157,9 +157,10 @@ export async function GET(req: Request) {
     });
     res.headers.set('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
     return res;
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Failed to crawl X stats';
     const res = NextResponse.json(
-      { error: err?.message || 'Failed to crawl X stats', username },
+      { error: message, username },
       { status: 500 },
     );
     res.headers.set('Cache-Control', 'no-store');

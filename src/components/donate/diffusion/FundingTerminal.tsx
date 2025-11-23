@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { FaPaypal, FaPatreon, FaChevronRight } from 'react-icons/fa';
 import { SiKofi } from 'react-icons/si';
 
@@ -36,7 +36,7 @@ const protocols = [
 ];
 
 export default function FundingTerminal() {
-  const [hovered, setHovered] = useState<string | null>(null);
+  const [, setHovered] = useState<string | null>(null);
 
   return (
     <div className="w-full max-w-4xl mx-auto mt-12">

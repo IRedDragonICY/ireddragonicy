@@ -3,20 +3,20 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 
+const logs = [
+  "INITIALIZING_KERNEL...",
+  "LOADING_MODULES [NEURAL_ENGINE_V2]...",
+  "VERIFYING_INTEGRITY...",
+  "ESTABLISHING_SECURE_LINK...",
+  "MOUNTING_FILE_SYSTEM...",
+  "ALLOCATING_MEMORY_PAGES...",
+  "STARTING_DIFFUSION_PROCESS...",
+  "SYSTEM_READY"
+];
+
 export default function Loading() {
   const [progress, setProgress] = useState(0);
   const [bootLogs, setBootLogs] = useState<string[]>([]);
-
-  const logs = [
-    "INITIALIZING_KERNEL...",
-    "LOADING_MODULES [NEURAL_ENGINE_V2]...",
-    "VERIFYING_INTEGRITY...",
-    "ESTABLISHING_SECURE_LINK...",
-    "MOUNTING_FILE_SYSTEM...",
-    "ALLOCATING_MEMORY_PAGES...",
-    "STARTING_DIFFUSION_PROCESS...",
-    "SYSTEM_READY"
-  ];
 
   useEffect(() => {
     let timer: NodeJS.Timeout;

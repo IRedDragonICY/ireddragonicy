@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
-import { FiExternalLink, FiCode, FiCpu, FiLayers, FiDatabase } from 'react-icons/fi';
+import { FiExternalLink, FiCode, FiCpu, FiDatabase } from 'react-icons/fi';
 import { BsTerminal } from 'react-icons/bs';
 
 // Types
@@ -130,7 +130,7 @@ const GenerativeProjects: React.FC<GenerativeProjectsProps> = ({ projects }) => 
         <div className="flex flex-col md:flex-row justify-between items-end mb-20 gap-8 border-l-2 border-white/10 pl-8">
           <div>
             <span className="text-[10px] font-mono uppercase tracking-[0.4em] text-gray-500 mb-4 block">
-              // Project_Manifest
+              {'// Project_Manifest'}
             </span>
             <h2 className="text-4xl md:text-5xl font-bold text-white tracking-tighter uppercase">
               Research <span className="text-gray-600">Output</span>

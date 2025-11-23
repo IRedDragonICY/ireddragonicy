@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
     const data = await res.json();
     if (!data || !data.rates) throw new Error('Malformed response');
     return NextResponse.json({ base, rates: data.rates, time_last_update_utc: data.time_last_update_utc });
-  } catch (e: any) {
+  } catch {
     // Fallback to a tiny static table to avoid breaking UI if offline
     const fallback = {
       USD: 1,

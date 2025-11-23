@@ -93,8 +93,9 @@ export async function GET(req: NextRequest) {
     };
 
     return NextResponse.json(body, { status: 200 });
-  } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'Weather fetch failed' }, { status: 500 });
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : 'Weather fetch failed';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 

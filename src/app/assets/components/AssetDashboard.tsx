@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { FaSearch, FaDatabase, FaSync, FaLayerGroup, FaChartBar, FaNetworkWired } from 'react-icons/fa';
-import { BsCpuFill, BsActivity } from 'react-icons/bs';
+import { FaSearch, FaDatabase, FaSync, FaLayerGroup, FaNetworkWired } from 'react-icons/fa';
+import { BsCpuFill } from 'react-icons/bs';
 
 interface AssetDashboardProps {
   userId: string;
@@ -163,7 +163,7 @@ export const AssetDashboard: React.FC<AssetDashboardProps> = ({
   );
 };
 
-const HUDStat = ({ label, value, icon: Icon, delay, color = "text-cyan-400", trend, graph }: { label: string, value: string, icon: any, delay: number, color?: string, trend?: string, graph?: boolean }) => (
+const HUDStat = ({ label, value, icon: Icon, delay, color = "text-cyan-400", trend, graph }: { label: string, value: string, icon: React.ElementType, delay: number, color?: string, trend?: string, graph?: boolean }) => (
   <motion.div 
     initial={{ opacity: 0, scale: 0.9 }}
     animate={{ opacity: 1, scale: 1 }}

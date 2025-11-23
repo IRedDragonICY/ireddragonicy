@@ -116,7 +116,7 @@ export async function GET(req: Request) {
             redirect: 'follow',
           });
           const text = await embedRes.text();
-          let img = text.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)?.[1]
+          const img = text.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)?.[1]
             || text.match(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i)?.[1];
           if (img) {
             url = new URL(img.replace(/&amp;/g, '&'));
@@ -183,8 +183,9 @@ export async function GET(req: Request) {
     // Aggressive CDN cache for images
     response.headers.set('Cache-Control', 'public, s-maxage=2592000, immutable');
     return response;
-  } catch (err: any) {
-    const res = NextResponse.json({ error: err?.message || 'Fetch failed' }, { status: 500 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Fetch failed';
+    const res = NextResponse.json({ error: message }, { status: 500 });
     res.headers.set('Cache-Control', 'no-store');
     return res;
   }

@@ -29,7 +29,7 @@ const TechStack: React.FC<TechStackProps> = ({ skills }) => {
        <div className="max-w-6xl mx-auto relative z-10">
          <div className="text-center mb-24">
             <span className="text-[10px] font-mono uppercase tracking-[0.4em] text-gray-500 mb-4 block">
-               // System_Capabilities
+               {'// System_Capabilities'}
             </span>
             <h2 className="text-4xl font-bold text-white tracking-tighter uppercase">Technical Stack</h2>
          </div>

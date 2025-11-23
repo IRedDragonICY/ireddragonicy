@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, useScroll, useTransform, useInView, useMotionValue, useSpring } from 'framer-motion';
 import { FaFileAlt, FaRobot, FaBook, FaArrowRight } from 'react-icons/fa';
-import { BsArrowDown, BsTerminal } from 'react-icons/bs';
+import { BsTerminal } from 'react-icons/bs';
 import TypewriterTextMod from './hero/TypewriterText';
 import StableDiffusionCard from './hero/stable/StableDiffusionInterface';
 
@@ -233,7 +233,7 @@ const Hero = () => {
           >
             <p className="text-[10px] text-gray-600 font-mono mb-4 uppercase tracking-widest">Core_Technologies</p>
             <div className="flex flex-wrap gap-2">
-              {['PyTorch', 'JAX', 'Diffusers', 'CUDA', 'LLMs'].map((tech, i) => (
+              {['PyTorch', 'JAX', 'Diffusers', 'CUDA', 'LLMs'].map((tech) => (
                 <span 
                   key={tech}
                   className="px-3 py-1 text-[10px] font-mono text-gray-400 bg-white/5 border border-white/5 hover:border-white/20 transition-colors cursor-default uppercase tracking-wider"

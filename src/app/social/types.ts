@@ -24,6 +24,13 @@ export interface GameItem {
   gradientTo: string;
 }
 
+export interface GitHubUser {
+  url: string;
+  name: string;
+  username: string;
+  avatar: string;
+}
+
 export interface SocialStats {
   followers?: number | null;
   following?: number | null;
@@ -34,6 +41,19 @@ export interface SocialStats {
   views?: number | null;
   distanceKm?: number | null;
   movingTime?: string | null;
+
+  // GitHub specific
+  totalRepositories?: number;
+  totalStars?: number;
+  totalCommits?: number;
+  totalPRs?: number;
+  totalContributed?: number;
+  totalFollowers?: number;
+  totalFollowing?: number;
+  followersList?: GitHubUser[];
+  followingList?: GitHubUser[];
+  notFollowingBack?: GitHubUser[];
+
   loading: boolean;
 }
 

@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { FaSearch, FaMagic, FaTerminal } from 'react-icons/fa';
-import { motion, AnimatePresence } from 'framer-motion';
+import { FaMagic, FaTerminal } from 'react-icons/fa';
+import { motion } from 'framer-motion';
 
 interface AIPromptInputProps {
   value: string;
@@ -13,8 +13,10 @@ interface AIPromptInputProps {
 const AIPromptInput: React.FC<AIPromptInputProps> = ({ value, onChange, placeholder = "Enter prompt to generate social connections..." }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [dots, setDots] = useState('.');
+  const [seed, setSeed] = useState(0);
 
   useEffect(() => {
+    setSeed(Math.floor(Math.random() * 999999));
     const interval = setInterval(() => {
       setDots(prev => prev.length >= 3 ? '.' : prev + '.');
     }, 500);
@@ -89,7 +91,7 @@ const AIPromptInput: React.FC<AIPromptInputProps> = ({ value, onChange, placehol
       {/* Helper Text */}
       <div className="mt-2 flex gap-4 justify-start px-1 text-[10px] font-mono text-gray-600">
         <span>MODE: DIFFUSION</span>
-        <span>SEED: {Math.floor(Math.random() * 999999)}</span>
+        <span>SEED: {seed}</span>
         <span>CFG_SCALE: 7.0</span>
       </div>
     </div>

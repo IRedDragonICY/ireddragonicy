@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import Image from 'next/image';
 import NeuralNetworkVisualization from '../NeuralNetworkVisualization';
-import { CONTROLNET_TYPES, MODELS, SAMPLERS, type ControlNetType, type ModelName, type Sampler } from '../constants';
+import { MODELS, SAMPLERS, type ControlNetType, type ModelName, type Sampler } from '../constants';
 import { createDepthMapDataURL, createSobelEdgeDataURL, createScribbleDataURL, generateTransparencyAwareNoise } from '../utils';
 
 type ControlNetState = {
@@ -116,7 +116,7 @@ const StableDiffusionInterface: React.FC<Props> = ({ isInView, isMobile: isMobil
           : 'medium';
         const scribbleUrl = createScribbleDataURL(img, size, scribbleThickness as 'thin' | 'medium' | 'thick') || null;
         setOverlayData({ canny: cannyUrl, depth: depthUrl, scribble: scribbleUrl });
-      } catch (_e) {
+      } catch {
         // ignore
       }
     };
@@ -305,7 +305,7 @@ const StableDiffusionInterface: React.FC<Props> = ({ isInView, isMobile: isMobil
             {/* Parameter Stats */}
             <div className="grid grid-cols-4 gap-1.5">
                 {[
-                    { label: 'SAMPLER', value: 'DPM++ 2M', color: 'text-cyan-200' },
+                    { label: 'SAMPLER', value: currentSampler, color: 'text-cyan-200' },
                     { label: 'STEPS', value: totalSteps, color: 'text-white' },
                     { label: 'CFG', value: cfgScale, color: 'text-emerald-200' },
                     { label: 'SEED', value: seed.toString().slice(0, 5), color: 'text-purple-200' }

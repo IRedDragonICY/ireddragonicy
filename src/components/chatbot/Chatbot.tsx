@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname } from 'next/navigation';
-import { BsChatQuote, BsSend, BsCpu, BsRobot, BsX, BsStopCircle, BsTerminal } from 'react-icons/bs';
+import { BsSend, BsCpu, BsRobot, BsX, BsStopCircle, BsTerminal } from 'react-icons/bs';
 import { FaBrain } from 'react-icons/fa';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -109,8 +109,8 @@ export default function Chatbot() {
       } else {
         setMessages(prev => [...prev, { role: 'assistant', content: '[ERROR] Neural link failed. Please retry.', id: (Date.now() + 1).toString() }]);
       }
-    } catch (error: any) {
-      if (error.name !== 'AbortError') {
+    } catch (error: unknown) {
+      if (error instanceof Error && error.name !== 'AbortError') {
         setMessages(prev => [...prev, { role: 'assistant', content: '[ERROR] Connection terminated.', id: (Date.now() + 1).toString() }]);
       }
     } finally {

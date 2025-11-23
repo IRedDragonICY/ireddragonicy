@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { IconType } from 'react-icons';
-import { FaServer, FaMemory, FaMicrochip, FaHdd } from 'react-icons/fa';
+import { FaServer, FaMicrochip, FaHdd } from 'react-icons/fa';
 import { BsGpuCard } from 'react-icons/bs';
 
 const RandomGraph = ({ color = '#22d3ee' }: { color?: string }) => {

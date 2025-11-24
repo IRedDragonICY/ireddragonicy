@@ -1,13 +1,59 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-border: var(--card-border);
+  --color-nav-bg: var(--nav-bg);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+}
+
+:root {
+  /* Default to Dark (Current) */
+  --background: #050505;
+  --foreground: #E0E0E0;
+  --card: rgba(255, 255, 255, 0.05);
+  --card-border: rgba(255, 255, 255, 0.1);
+  --nav-bg: rgba(5, 5, 5, 0.8);
+  --muted: rgba(255, 255, 255, 0.1);
+  --muted-foreground: #a3a3a3;
+  --destructive: rgba(127, 29, 29, 0.5);
+  --destructive-foreground: #f87171;
+  --map-filter: grayscale(1) invert(1) contrast(1.2) brightness(0.8);
+}
+
+[data-theme="light"] {
+  --background: #ffffff;
+  --foreground: #09090b;
+  --card: #f4f4f5;
+  --card-border: #e4e4e7;
+  --nav-bg: rgba(255, 255, 255, 0.8);
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --destructive: #fee2e2;
+  --destructive-foreground: #ef4444;
+  --map-filter: grayscale(0.2);
+}
+
 body {
-  @apply bg-[#050505] text-[#E0E0E0] antialiased;
+  @apply bg-background text-foreground antialiased;
   background-image: 
-    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    linear-gradient(var(--card-border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--card-border) 1px, transparent 1px);
   background-size: 100px 100px;
   background-attachment: fixed;
+}
+
+/* View Transition Styles */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
 }
 
 ::selection {

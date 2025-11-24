@@ -27,11 +27,11 @@ const BlogCard: React.FC<BlogCardProps> = ({ post, index }) => {
       className="group relative h-full"
     >
       <Link href={`/blog/${post.slug}`} className="block h-full">
-        <div className="relative h-full overflow-hidden rounded-xl bg-[#0a0a0c] border border-white/5 transition-all duration-500 group-hover:border-cyan-500/30 group-hover:shadow-[0_0_30px_-5px_rgba(6,182,212,0.15)]">
+        <div className="relative h-full overflow-hidden rounded-xl bg-card border border-card-border transition-all duration-500 group-hover:border-cyan-500/30 group-hover:shadow-[0_0_30px_-5px_rgba(6,182,212,0.15)]">
           
           {/* Image Container */}
           <div className="relative h-48 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0c] to-transparent z-10" />
+            <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent z-10" />
             
             {/* Image */}
             <motion.img 
@@ -54,7 +54,7 @@ const BlogCard: React.FC<BlogCardProps> = ({ post, index }) => {
           {/* Content */}
           <div className="p-6 flex flex-col h-[calc(100%-12rem)]">
             {/* Meta Data */}
-            <div className="flex items-center gap-4 mb-4 text-[10px] text-gray-500 font-mono">
+            <div className="flex items-center gap-4 mb-4 text-[10px] text-muted-foreground font-mono">
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-500/50" />
                 {new Date(post.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -66,17 +66,17 @@ const BlogCard: React.FC<BlogCardProps> = ({ post, index }) => {
             </div>
 
             {/* Title */}
-            <h3 className="text-xl font-bold text-white mb-3 line-clamp-2 group-hover:text-cyan-400 transition-colors duration-300">
+            <h3 className="text-xl font-bold text-foreground mb-3 line-clamp-2 group-hover:text-cyan-400 transition-colors duration-300">
               {post.title}
             </h3>
 
             {/* Excerpt */}
-            <p className="text-gray-400 text-sm leading-relaxed mb-6 line-clamp-3 flex-grow">
+            <p className="text-muted-foreground text-sm leading-relaxed mb-6 line-clamp-3 flex-grow">
               {post.excerpt}
             </p>
 
             {/* Footer Stats */}
-            <div className="pt-4 border-t border-white/5 flex items-center justify-between text-xs text-gray-500 font-mono">
+            <div className="pt-4 border-t border-card-border flex items-center justify-between text-xs text-muted-foreground font-mono">
               <div className="flex items-center gap-4">
                 <span className="flex items-center gap-1.5 group-hover:text-cyan-400 transition-colors">
                   <FaEye /> {post.views.toLocaleString()}

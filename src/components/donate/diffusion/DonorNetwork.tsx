@@ -5,11 +5,7 @@ import { motion } from 'framer-motion';
 
 // Mock data for visual effect
 const donors = [
-  { name: 'Anonymous', tier: 'Gold', hash: '0x8f...2a', amount: 'High' },
-  { name: 'DevFan_01', tier: 'Silver', hash: '0x4b...9c', amount: 'Mid' },
-  { name: 'AI_Researcher', tier: 'Platinum', hash: '0x1d...ff', amount: 'Max' },
-  { name: 'Student_X', tier: 'Bronze', hash: '0x9a...11', amount: 'Low' },
-  { name: 'GPU_Lover', tier: 'Silver', hash: '0x3c...4b', amount: 'Mid' },
+  { name: '승림 장', tier: 'Gold', hash: '0x8f...2a', amount: '18.82 US$' },
 ];
 
 interface Donor {
@@ -18,6 +14,16 @@ interface Donor {
   hash: string;
   amount: string;
 }
+
+const censorName = (name: string) => {
+  const parts = name.split(' ');
+  if (parts.length > 1) {
+    const firstName = parts[0];
+    const lastName = parts.slice(1).join(' ');
+    return `${firstName} ${'*'.repeat(lastName.length)}`;
+  }
+  return name;
+};
 
 const DonorNode = ({ donor, index }: { donor: Donor; index: number }) => {
   return (
@@ -32,9 +38,12 @@ const DonorNode = ({ donor, index }: { donor: Donor; index: number }) => {
         donor.tier === 'Gold' ? 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)]' :
         'bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]'
       }`} />
-      <div className="flex-grow">
-        <div className="text-xs font-bold text-gray-300">{donor.name}</div>
-        <div className="text-[10px] font-mono text-gray-600">{donor.hash}</div>
+      <div className="flex-grow min-w-0">
+        <div className="text-xs font-bold text-gray-300 truncate">{censorName(donor.name)}</div>
+        <div className="flex items-center gap-2 mt-0.5">
+           <div className="text-[10px] font-mono text-gray-600">{donor.hash}</div>
+           <div className="text-[10px] font-mono text-green-500/80 whitespace-nowrap">[{donor.amount}]</div>
+        </div>
       </div>
       <div className="text-[10px] font-mono text-cyan-700/50 bg-cyan-900/10 px-2 py-1 rounded">
         NODE_{index + 1}

@@ -31,7 +31,7 @@ const AIPromptInput: React.FC<AIPromptInputProps> = ({ value, onChange, placehol
            <FaTerminal size={10} />
            <span>Input_Stream_Active</span>
         </div>
-        <div className="text-[10px] font-mono text-gray-500">
+        <div className="text-[10px] font-mono text-muted-foreground">
            Processing_Nodes{dots}
         </div>
       </div>
@@ -40,10 +40,10 @@ const AIPromptInput: React.FC<AIPromptInputProps> = ({ value, onChange, placehol
       <motion.div 
         initial={false}
         animate={{
-          borderColor: isFocused ? 'rgba(34, 211, 238, 0.5)' : 'rgba(255, 255, 255, 0.1)',
+          borderColor: isFocused ? 'rgba(34, 211, 238, 0.5)' : 'var(--card-border)',
           boxShadow: isFocused ? '0 0 20px rgba(34, 211, 238, 0.1)' : 'none'
         }}
-        className="relative group bg-black/40 backdrop-blur-xl border border-white/10 rounded-lg overflow-hidden"
+        className="relative group bg-card/40 backdrop-blur-xl border border-card-border rounded-lg overflow-hidden"
       >
         {/* Scanning line effect */}
         <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-20" />
@@ -59,7 +59,7 @@ const AIPromptInput: React.FC<AIPromptInputProps> = ({ value, onChange, placehol
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             placeholder={placeholder}
-            className="w-full bg-transparent border-none outline-none text-white font-mono text-sm placeholder-gray-600"
+            className="w-full bg-transparent border-none outline-none text-foreground font-mono text-sm placeholder-muted-foreground"
             autoComplete="off"
             spellCheck="false"
           />
@@ -71,13 +71,13 @@ const AIPromptInput: React.FC<AIPromptInputProps> = ({ value, onChange, placehol
                  animate={{ scale: 1, opacity: 1 }}
                  exit={{ scale: 0, opacity: 0 }}
                  onClick={() => onChange('')}
-                 className="p-1 hover:text-red-400 text-gray-500 transition-colors text-xs font-mono uppercase"
+                 className="p-1 hover:text-red-400 text-muted-foreground transition-colors text-xs font-mono uppercase"
                >
                  [CLR]
                </motion.button>
              )}
-             <div className="h-4 w-[1px] bg-gray-700 mx-1" />
-             <FaMagic className={`text-sm ${value ? 'text-cyan-400' : 'text-gray-600'}`} />
+             <div className="h-4 w-[1px] bg-card-border mx-1" />
+             <FaMagic className={`text-sm ${value ? 'text-cyan-400' : 'text-muted-foreground'}`} />
           </div>
         </div>
 
@@ -89,7 +89,7 @@ const AIPromptInput: React.FC<AIPromptInputProps> = ({ value, onChange, placehol
       </motion.div>
       
       {/* Helper Text */}
-      <div className="mt-2 flex gap-4 justify-start px-1 text-[10px] font-mono text-gray-600">
+      <div className="mt-2 flex gap-4 justify-start px-1 text-[10px] font-mono text-muted-foreground">
         <span>MODE: DIFFUSION</span>
         <span>SEED: {seed}</span>
         <span>CFG_SCALE: 7.0</span>

@@ -82,7 +82,7 @@ const TypewriterText: React.FC<TypewriterTextProps> = ({
         className={
           gradientAfter && done
             ? 'text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 animate-gradient-x'
-            : 'text-white'
+            : ''
         }
       >
         {out.split('').map((char, i) => (
@@ -99,7 +99,7 @@ const TypewriterText: React.FC<TypewriterTextProps> = ({
       </span>
       {cursor && typing && !done && (
         <motion.span
-          className="inline-block w-0.5 sm:w-1 h-6 sm:h-8 lg:h-10 bg-gradient-to-b from-cyan-400 to-blue-600 ml-[2px] align-middle"
+          className="inline-block w-0.5 sm:w-1 h-6 sm:h-8 lg:h-10 bg-white ml-[2px] align-middle"
           animate={{ opacity: [1, 0], scaleY: [1, 0.8, 1] }}
           transition={{ duration: 0.5, repeat: Infinity }}
         />

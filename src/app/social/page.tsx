@@ -27,7 +27,7 @@ export default function SocialPage() {
     <>
       <CursorEffect />
       
-      <main className="relative min-h-screen bg-[#050505] text-white overflow-x-hidden selection:bg-white/20 selection:text-white">
+      <main className="relative min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-foreground/20 selection:text-foreground">
         
         {/* 1. Dynamic Diffusion Background */}
         <div className="fixed inset-0 z-0 opacity-40 pointer-events-none">
@@ -45,20 +45,20 @@ export default function SocialPage() {
             className="flex flex-col items-center justify-center mb-16 space-y-6 text-center"
           >
              {/* Status Tag */}
-             <div className="inline-flex items-center gap-2 px-3 py-1 border border-white/10 bg-[#0A0A0A]">
+             <div className="inline-flex items-center gap-2 px-3 py-1 border border-card-border bg-card">
                <div className={`w-1.5 h-1.5 rounded-full ${booted ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
-               <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">
+               <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
                  System_Status: {booted ? 'ONLINE' : 'BOOTING'}
                </span>
              </div>
 
              <h1 className="text-5xl md:text-7xl font-bold tracking-tighter uppercase">
-               <span className="text-white">
+               <span className="text-foreground">
                  Social Nexus
                </span>
              </h1>
 
-             <p className="max-w-xl text-gray-500 text-sm md:text-base font-mono leading-relaxed border-l border-white/10 pl-4">
+             <p className="max-w-xl text-muted-foreground text-sm md:text-base font-mono leading-relaxed border-l border-card-border pl-4">
                Exploring the latent space of connectivity. A curated collection of digital identities and communication protocols.
              </p>
           </motion.div>
@@ -74,14 +74,14 @@ export default function SocialPage() {
              initial={{ opacity: 0 }}
              animate={{ opacity: 1 }}
              transition={{ delay: 1 }}
-             className="flex justify-center gap-8 mb-12 text-[10px] font-mono text-gray-500 border-b border-white/5 pb-4 max-w-4xl mx-auto"
+             className="flex justify-center gap-8 mb-12 text-[10px] font-mono text-muted-foreground border-b border-card-border pb-4 max-w-4xl mx-auto"
           >
              <div className="flex items-center gap-2">
-               <BsCpu className="text-white" />
+               <BsCpu className="text-foreground" />
                <span>NODES_ACTIVE: {socials.length + games.length}</span>
              </div>
              <div className="flex items-center gap-2">
-               <BsActivity className="text-white" />
+               <BsActivity className="text-foreground" />
                <span>LATENCY: 12ms</span>
              </div>
              <div className="hidden sm:flex items-center gap-2">
@@ -93,14 +93,14 @@ export default function SocialPage() {
           {/* Section: Socials */}
           <div className="mb-20">
             <div className="flex items-center gap-4 mb-8">
-               <h2 className="text-xl font-bold text-white flex items-center gap-2 uppercase tracking-wider">
-                 <span className="w-1 h-6 bg-white rounded-sm" />
+               <h2 className="text-xl font-bold text-foreground flex items-center gap-2 uppercase tracking-wider">
+                 <span className="w-1 h-6 bg-foreground rounded-sm" />
                  Communication Protocols
                </h2>
-               <div className="h-px flex-grow bg-white/10" />
+               <div className="h-px flex-grow bg-card-border" />
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-px bg-white/5 border border-white/5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-px bg-card border border-card-border">
               {filteredSocials.map((item, idx) => (
                 <GenerativeCard 
                   key={item.id} 
@@ -112,7 +112,7 @@ export default function SocialPage() {
             </div>
             
             {filteredSocials.length === 0 && (
-              <div className="text-center py-12 text-gray-600 font-mono text-sm">
+              <div className="text-center py-12 text-muted-foreground font-mono text-sm">
                 [WARN] No social protocols matching query pattern.
               </div>
             )}
@@ -121,14 +121,14 @@ export default function SocialPage() {
           {/* Section: Games */}
           <div>
             <div className="flex items-center gap-4 mb-8">
-               <h2 className="text-xl font-bold text-white flex items-center gap-2 uppercase tracking-wider">
-                 <span className="w-1 h-6 bg-gray-500 rounded-sm" />
+               <h2 className="text-xl font-bold text-foreground flex items-center gap-2 uppercase tracking-wider">
+                 <span className="w-1 h-6 bg-muted-foreground rounded-sm" />
                  Gaming Identifiers
                </h2>
-               <div className="h-px flex-grow bg-white/10" />
+               <div className="h-px flex-grow bg-card-border" />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-px bg-white/5 border border-white/5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-px bg-card border border-card-border">
               {filteredGames.map((item, idx) => (
                 <GenerativeCard 
                   key={item.id} 
@@ -140,16 +140,13 @@ export default function SocialPage() {
             </div>
             
             {filteredGames.length === 0 && (
-               <div className="text-center py-12 text-gray-600 font-mono text-sm">
+               <div className="text-center py-12 text-muted-foreground font-mono text-sm">
                  [WARN] No game identifiers matching query pattern.
                </div>
             )}
           </div>
 
         </div>
-        
-        {/* Footer Overlay - Removed Gradient */}
-        <div className="fixed bottom-0 left-0 w-full h-20 bg-[#050505] mask-image:linear-gradient(to top, black, transparent) pointer-events-none z-20 opacity-80" />
         
       </main>
     </>

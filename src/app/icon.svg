@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <style>
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes spin-reverse {
+      to { transform: rotate(-360deg); }
+    }
+    @keyframes pulse {
+      0% { r: 3; opacity: 0.7; }
+      50% { r: 5; opacity: 1; box-shadow: 0 0 10px #22d3ee; }
+      100% { r: 3; opacity: 0.7; }
+    }
+    .arc-1 {
+      transform-origin: 16px 16px;
+      animation: spin 3s linear infinite;
+    }
+    .arc-2 {
+      transform-origin: 16px 16px;
+      animation: spin-reverse 4s linear infinite;
+    }
+    .core {
+      animation: pulse 2s ease-in-out infinite;
+    }
+  </style>
+  
+  <!-- Dark Tech Background -->
+  <rect width="32" height="32" rx="8" fill="#050505" />
+  
+  <!-- Subtle Grid/Circuit Background -->
+  <path d="M16 2 L16 6 M16 26 L16 30 M2 16 L6 16 M26 16 L30 16" stroke="#1e293b" stroke-width="1" />
+  
+  <!-- Outer Rotating Arc (Cyan) -->
+  <path d="M16 5 A 11 11 0 0 1 27 16" stroke="#22d3ee" stroke-width="2" fill="none" stroke-linecap="round" class="arc-1" />
+  
+  <!-- Inner Rotating Arc (Darker Cyan/Blue) -->
+  <path d="M16 24 A 8 8 0 0 1 8 16" stroke="#0891b2" stroke-width="2" fill="none" stroke-linecap="round" class="arc-2" />
+  
+  <!-- Pulsing Core -->
+  <circle cx="16" cy="16" r="4" fill="#06b6d4" class="core" />
+  
+  <!-- Glint -->
+  <circle cx="18" cy="14" r="1" fill="white" opacity="0.5" class="core" />
+</svg>

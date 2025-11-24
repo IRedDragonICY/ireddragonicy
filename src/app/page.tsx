@@ -81,15 +81,13 @@ export default function Home() {
                 
                 body {
                     font-family: 'Inter', sans-serif;
-                    background: #0A0A0A;
-                    color: white;
                     overflow-x: hidden;
                 }
             `}</style>
 
             <CursorEffect />
 
-            <main className="relative bg-[#0A0A0A] z-10">
+            <main className="relative bg-background z-10">
                 <Hero />
                 <DiffusionProfile />
                 <GenerativeProjects projects={portfolioData.projects} />

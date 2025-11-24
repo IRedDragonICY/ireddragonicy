@@ -179,8 +179,6 @@ async function crawlInstagramStats(username: string): Promise<InstagramStats> {
     if (isVercel) {
       const chromium = (await import('@sparticuz/chromium')).default;
       // Hints for serverless execution
-      chromium.setHeadlessMode = true;
-      chromium.setGraphicsMode = false;
       puppeteer = await import('puppeteer-core');
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const p: any = (puppeteer as any).default || puppeteer;

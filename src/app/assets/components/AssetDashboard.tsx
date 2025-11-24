@@ -55,11 +55,11 @@ export const AssetDashboard: React.FC<AssetDashboardProps> = ({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="text-4xl md:text-6xl font-black text-white tracking-tighter uppercase"
+              className="text-4xl md:text-6xl font-black text-foreground tracking-tighter uppercase"
             >
               Digital <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">Archive</span>
             </motion.h1>
-            <p className="text-gray-500 font-mono text-xs mt-2 max-w-md">
+            <p className="text-muted-foreground font-mono text-xs mt-2 max-w-md">
               SECURE REPOSITORY FOR GENERATIVE ARTIFACTS. ACCESS LEVEL: UNRESTRICTED.
             </p>
           </div>
@@ -104,7 +104,7 @@ export const AssetDashboard: React.FC<AssetDashboardProps> = ({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6 }}
-        className="relative p-1 rounded-2xl bg-[#050507] border border-white/10 backdrop-blur-xl shadow-2xl overflow-hidden group/bar"
+        className="relative p-1 rounded-2xl bg-card border border-card-border backdrop-blur-xl shadow-2xl overflow-hidden group/bar"
       >
         <div className="absolute inset-0 bg-cyan-500/5 opacity-0 group-hover/bar:opacity-100 transition-opacity" />
         
@@ -112,18 +112,18 @@ export const AssetDashboard: React.FC<AssetDashboardProps> = ({
           {/* Search Input */}
           <div className="relative flex-grow w-full sm:w-auto group">
             <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-              <FaSearch className="text-gray-500 group-focus-within:text-cyan-400 transition-colors" size={14} />
+              <FaSearch className="text-muted-foreground group-focus-within:text-cyan-400 transition-colors" size={14} />
             </div>
             <input
               type="text"
               value={userId}
               onChange={(e) => onUserIdChange(e.target.value)}
-              className="w-full bg-black/50 border border-white/10 text-white text-sm rounded-xl focus:ring-1 focus:ring-cyan-500/50 focus:border-cyan-500/50 block pl-10 p-3 placeholder-gray-600 transition-all outline-none font-mono tracking-wider"
+              className="w-full bg-muted/50 border border-card-border text-foreground text-sm rounded-xl focus:ring-1 focus:ring-cyan-500/50 focus:border-cyan-500/50 block pl-10 p-3 placeholder-muted-foreground transition-all outline-none font-mono tracking-wider"
               placeholder="ENTER USER ID ::"
             />
              <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
                <div className="flex items-center gap-2">
-                  <span className="hidden sm:block text-[10px] text-gray-600 font-mono border border-white/10 px-1 rounded">UID</span>
+                  <span className="hidden sm:block text-[10px] text-muted-foreground font-mono border border-card-border px-1 rounded">UID</span>
                </div>
              </div>
           </div>
@@ -147,7 +147,7 @@ export const AssetDashboard: React.FC<AssetDashboardProps> = ({
                <span className="animate-pulse">DOWNLOADING_ASSETS...</span>
                <span>{Math.round((progress.done / progress.total) * 100)}%</span>
             </div>
-            <div className="h-1.5 w-full bg-black/50 rounded-full overflow-hidden border border-white/5">
+            <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden border border-card-border">
                <motion.div 
                  initial={{ width: 0 }}
                  animate={{ width: `${(progress.done / progress.total) * 100}%` }}
@@ -168,7 +168,7 @@ const HUDStat = ({ label, value, icon: Icon, delay, color = "text-cyan-400", tre
     initial={{ opacity: 0, scale: 0.9 }}
     animate={{ opacity: 1, scale: 1 }}
     transition={{ delay }}
-    className="relative p-3 rounded-lg bg-black/40 border border-white/10 overflow-hidden group hover:border-cyan-500/30 transition-colors"
+    className="relative p-3 rounded-lg bg-card border border-card-border overflow-hidden group hover:border-cyan-500/30 transition-colors"
   >
     <div className="flex justify-between items-start mb-2">
       <Icon size={14} className={`${color} opacity-70`} />
@@ -176,8 +176,8 @@ const HUDStat = ({ label, value, icon: Icon, delay, color = "text-cyan-400", tre
     </div>
     
     <div className="relative z-10">
-      <div className="text-[9px] font-mono text-gray-500 tracking-wider uppercase mb-0.5">{label}</div>
-      <div className="text-xl font-bold text-white font-mono tracking-tight">{value}</div>
+      <div className="text-[9px] font-mono text-muted-foreground tracking-wider uppercase mb-0.5">{label}</div>
+      <div className="text-xl font-bold text-foreground font-mono tracking-tight">{value}</div>
     </div>
 
     {/* Decorative Background Graph */}
@@ -195,6 +195,6 @@ const HUDStat = ({ label, value, icon: Icon, delay, color = "text-cyan-400", tre
     )}
 
     {/* Corner accent */}
-    <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-white/10 group-hover:border-cyan-500/50 transition-colors" />
+    <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-card-border group-hover:border-cyan-500/50 transition-colors" />
   </motion.div>
 );

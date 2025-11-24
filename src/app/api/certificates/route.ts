@@ -62,9 +62,9 @@ export async function GET(request: Request) {
       executablePath = await chromium.executablePath();
       browser = await puppeteerCore.launch({
         args: chromium.args,
-        defaultViewport: chromium.defaultViewport,
+        defaultViewport: { width: 1920, height: 1080 },
         executablePath,
-        headless: chromium.headless,
+        headless: true,
       });
     }
 

@@ -71,14 +71,41 @@ const DiffusionBackground = () => {
     window.addEventListener('mousemove', handleMouseMove);
     resize();
 
+    let colors = {
+        particle: 'rgba(255, 255, 255, 0.5)',
+        lineBase: '255, 255, 255',
+        grid: 'rgba(255, 255, 255, 0.02)'
+    };
+
+    const updateColors = () => {
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+        if (isLight) {
+            colors = {
+                particle: 'rgba(9, 9, 11, 0.5)',
+                lineBase: '9, 9, 11',
+                grid: 'rgba(9, 9, 11, 0.05)'
+            };
+        } else {
+            colors = {
+                particle: 'rgba(255, 255, 255, 0.5)',
+                lineBase: '255, 255, 255',
+                grid: 'rgba(255, 255, 255, 0.02)'
+            };
+        }
+    };
+    
+    updateColors();
+    
+    const observer = new MutationObserver(updateColors);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
     const animate = () => {
-      // 1. Clear (Technical Void)
-      ctx.fillStyle = '#050505'; 
-      ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+      // 1. Clear (Transparent to let CSS background show)
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
 
       // Draw faint grid lines
       ctx.lineWidth = 0.5;
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.02)';
+      ctx.strokeStyle = colors.grid;
       const gridSize = 100;
       for(let x=0; x<window.innerWidth; x+=gridSize) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,window.innerHeight); ctx.stroke(); }
       for(let y=0; y<window.innerHeight; y+=gridSize) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(window.innerWidth,y); ctx.stroke(); }
@@ -107,7 +134,7 @@ const DiffusionBackground = () => {
       }
 
       // 3. Draw Particles (Monochrome)
-      ctx.fillStyle = `rgba(255, 255, 255, 0.5)`; // White/Grey
+      ctx.fillStyle = colors.particle;
       for (let i = 0; i < particleCount; i++) {
          const p = particles[i];
          ctx.beginPath();
@@ -133,8 +160,8 @@ const DiffusionBackground = () => {
              
              if (alpha > 0.01) {
                 ctx.beginPath();
-                // Very faint white lines
-                ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+                // Very faint lines
+                ctx.strokeStyle = `rgba(${colors.lineBase}, ${alpha})`;
                 ctx.moveTo(p.x, p.y);
                 ctx.lineTo(p2.x, p2.y);
                 ctx.stroke();
@@ -150,7 +177,7 @@ const DiffusionBackground = () => {
              if (distSq < connectionDistanceSq) {
                 const alpha = (1 - Math.sqrt(distSq) / connectionDistance) * 0.3;
                 ctx.beginPath();
-                ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+                ctx.strokeStyle = `rgba(${colors.lineBase}, ${alpha})`;
                 ctx.moveTo(p.x, p.y);
                 ctx.lineTo(mouseX, mouseY);
                 ctx.stroke();
@@ -166,6 +193,7 @@ const DiffusionBackground = () => {
     return () => {
       window.removeEventListener('resize', resize);
       window.removeEventListener('mousemove', handleMouseMove);
+      observer.disconnect();
       cancelAnimationFrame(animationFrameId);
     };
   }, []);
@@ -174,7 +202,7 @@ const DiffusionBackground = () => {
     <canvas
       ref={canvasRef}
       style={{ willChange: 'transform' }}
-      className="fixed inset-0 w-full h-full pointer-events-none z-0 bg-[#050505]"
+      className="fixed inset-0 w-full h-full pointer-events-none z-0 bg-background transition-colors duration-300"
     />
   );
 };

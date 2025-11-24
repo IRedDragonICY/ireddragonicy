@@ -128,27 +128,27 @@ const DetailCard = ({ item, onClose }: { item: EducationItem; onClose: () => voi
             exit={{ opacity: 0, x: 50 }}
             className="fixed right-4 md:right-10 top-32 md:top-40 w-full max-w-md z-50 pointer-events-auto"
         >
-            <div className="bg-[#080808] border border-white/10 overflow-hidden flex flex-col shadow-2xl relative">
+            <div className="bg-card border border-card-border overflow-hidden flex flex-col shadow-2xl relative">
                 
                 {/* Close Button */}
                 <button 
                     onClick={onClose}
-                    className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors z-10 flex items-center gap-1 bg-black/50 px-2 py-1 border border-white/10 hover:border-red-500/50 hover:text-red-400"
+                    className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors z-10 flex items-center gap-1 bg-background/50 px-2 py-1 border border-card-border hover:border-red-500/50 hover:text-red-400"
                 >
                     <span className="text-[10px] font-mono uppercase">Close_Panel</span>
                     <span className="text-xs">✕</span>
                 </button>
 
                 {/* Header */}
-                <div className="p-6 border-b border-white/10 bg-white/[0.02]">
+                <div className="p-6 border-b border-card-border bg-card/50">
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 border border-white/10 text-gray-400 bg-black">
+                        <div className="p-2 border border-card-border text-muted-foreground bg-background">
                             <item.icon size={16} />
                         </div>
                         <span className="text-[10px] font-mono text-green-500 tracking-widest uppercase">{item.status}</span>
                     </div>
-                    <h2 className="text-xl font-bold text-white leading-tight uppercase tracking-tight">{item.institution}</h2>
-                    {item.program && <p className="text-xs text-gray-500 mt-1 font-mono uppercase">{item.program}</p>}
+                    <h2 className="text-xl font-bold text-foreground leading-tight uppercase tracking-tight">{item.institution}</h2>
+                    {item.program && <p className="text-xs text-muted-foreground mt-1 font-mono uppercase">{item.program}</p>}
                 </div>
 
                 {/* Content Scroll */}
@@ -157,9 +157,9 @@ const DetailCard = ({ item, onClose }: { item: EducationItem; onClose: () => voi
                     {item.stats.length > 0 && (
                         <div className="grid grid-cols-3 gap-2">
                             {item.stats.map((stat, i) => (
-                                <div key={i} className="bg-black border border-white/10 p-2 text-center">
-                                    <div className="text-[8px] text-gray-600 font-mono uppercase tracking-wider mb-1">{stat.label}</div>
-                                    <div className="text-sm font-bold text-white font-mono">{stat.value}</div>
+                                <div key={i} className="bg-background border border-card-border p-2 text-center">
+                                    <div className="text-[8px] text-muted-foreground font-mono uppercase tracking-wider mb-1">{stat.label}</div>
+                                    <div className="text-sm font-bold text-foreground font-mono">{stat.value}</div>
                                 </div>
                             ))}
                         </div>
@@ -167,11 +167,11 @@ const DetailCard = ({ item, onClose }: { item: EducationItem; onClose: () => voi
 
                     {/* Description */}
                     <div className="space-y-2">
-                        <h3 className="text-[10px] font-mono text-gray-500 uppercase flex items-center gap-2">
-                            <span className="w-1 h-1 bg-white rounded-full" />
+                        <h3 className="text-[10px] font-mono text-muted-foreground uppercase flex items-center gap-2">
+                            <span className="w-1 h-1 bg-foreground rounded-full" />
                             Node_Description
                         </h3>
-                        <p className="text-xs text-gray-400 leading-relaxed font-mono border-l border-white/10 pl-3">
+                        <p className="text-xs text-muted-foreground leading-relaxed font-mono border-l border-card-border pl-3">
                             {item.description}
                         </p>
                     </div>
@@ -180,8 +180,8 @@ const DetailCard = ({ item, onClose }: { item: EducationItem; onClose: () => voi
                     {item.coordinates && (
                         <div className="space-y-2">
                             <div className="flex items-center justify-between">
-                                <h3 className="text-[10px] font-mono text-gray-500 uppercase flex items-center gap-2">
-                                    <span className="w-1 h-1 bg-white rounded-full" />
+                                <h3 className="text-[10px] font-mono text-muted-foreground uppercase flex items-center gap-2">
+                                    <span className="w-1 h-1 bg-foreground rounded-full" />
                                     Geo_Lock
                                 </h3>
                                 <a 
@@ -194,7 +194,7 @@ const DetailCard = ({ item, onClose }: { item: EducationItem; onClose: () => voi
                                 </a>
                             </div>
                             
-                            <div className="relative w-full h-32 border border-white/10 grayscale contrast-125 brightness-75 invert overflow-hidden">
+                            <div className="relative w-full h-32 border border-card-border overflow-hidden [filter:var(--map-filter)]">
                                 {/* Scanning Overlay */}
                                 <div className="absolute inset-0 z-10 pointer-events-none bg-[linear-gradient(rgba(255,255,255,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[size:10px_10px] opacity-20" />
                                 <div className="absolute top-0 left-0 right-0 h-0.5 bg-white/50 z-10 animate-scan-line" />
@@ -216,11 +216,11 @@ const DetailCard = ({ item, onClose }: { item: EducationItem; onClose: () => voi
 
                     {/* System Logs */}
                     <div className="space-y-2">
-                        <h3 className="text-[10px] font-mono text-gray-500 uppercase flex items-center gap-2">
+                        <h3 className="text-[10px] font-mono text-muted-foreground uppercase flex items-center gap-2">
                             <span className="w-1 h-1 bg-green-500 rounded-full" />
                             System_Logs
                         </h3>
-                        <div className="bg-black p-3 font-mono text-[9px] text-green-500/80 space-y-1 border border-white/5">
+                        <div className="bg-background p-3 font-mono text-[9px] text-green-500/80 space-y-1 border border-card-border">
                             {item.logs.map((log, i) => (
                                 <div key={i} className="truncate flex gap-2">
                                     <span className="opacity-30">{(i + 1).toString().padStart(2, '0')}</span>
@@ -236,7 +236,7 @@ const DetailCard = ({ item, onClose }: { item: EducationItem; onClose: () => voi
                 </div>
 
                 {/* Footer */}
-                <div className="p-3 border-t border-white/10 bg-[#050505] text-[9px] font-mono text-gray-600 flex justify-between uppercase">
+                <div className="p-3 border-t border-card-border bg-background text-[9px] font-mono text-muted-foreground flex justify-between uppercase">
                     <span>ID: {item.id}</span>
                     <div className="flex items-center gap-2">
                         <span className="w-1 h-1 rounded-full bg-green-500" />
@@ -253,8 +253,34 @@ export default function EducationPage() {
   const [selectedCertificate, setSelectedCertificate] = useState<Certificate | null>(null);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [certLoading, setCertLoading] = useState(true);
+  const [theme, setTheme] = useState('dark');
   
   const selectedItem = educationData.find(e => e.id === selectedSchoolId);
+
+  // Theme Detection
+  useEffect(() => {
+    const updateTheme = () => {
+      const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+      setTheme(currentTheme);
+    };
+
+    updateTheme();
+
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+          updateTheme();
+        }
+      });
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
   // Fetch Certificates
   useEffect(() => {
@@ -279,7 +305,7 @@ export default function EducationPage() {
     <>
       <style jsx global>{`
         body {
-            background-color: #050505;
+            background-color: var(--background);
             overflow: hidden;
         }
         .custom-scrollbar::-webkit-scrollbar {
@@ -303,7 +329,7 @@ export default function EducationPage() {
 
       <CursorEffect />
       
-      <main className="relative w-full h-screen bg-[#050505]">
+      <main className="relative w-full h-screen bg-background transition-colors duration-500">
         
         {/* 3D Scene Fullscreen */}
         <div className="absolute inset-0 z-0">
@@ -312,6 +338,7 @@ export default function EducationPage() {
                 onSchoolSelect={(data: any) => setSelectedSchoolId(data?.id)}
                 onCertificateSelect={setSelectedCertificate}
                 certificates={certificates}
+                theme={theme}
             />
         </div>
 
@@ -323,12 +350,12 @@ export default function EducationPage() {
                 transition={{ duration: 1 }}
             >
                 <div className="flex items-center gap-2 mb-4">
-                    <div className="w-2 h-2 bg-white animate-pulse" />
-                    <span className="text-[10px] font-mono text-gray-500 uppercase tracking-[0.3em]">System_Architect</span>
+                    <div className="w-2 h-2 bg-foreground animate-pulse" />
+                    <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-[0.3em]">System_Architect</span>
                 </div>
-                <h1 className="text-5xl md:text-7xl font-bold tracking-tighter text-white uppercase leading-[0.9]">
+                <h1 className="text-5xl md:text-7xl font-bold tracking-tighter text-foreground uppercase leading-[0.9]">
                     Neural <br />
-                    <span className="text-gray-600">
+                    <span className="text-muted-foreground">
                         Lattice
                     </span>
                 </h1>
@@ -338,16 +365,16 @@ export default function EducationPage() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 1 }}
-                    className="mt-8 p-4 bg-black/80 border border-white/10 inline-flex flex-col gap-2 pointer-events-auto backdrop-blur-md"
+                    className="mt-8 p-4 bg-card/80 border border-card-border inline-flex flex-col gap-2 pointer-events-auto backdrop-blur-md"
                 >
-                    <div className="flex items-center justify-between w-48 border-b border-white/10 pb-2 mb-1">
-                        <span className="text-[9px] text-gray-500 font-mono uppercase tracking-wider">Certificates_Loaded</span>
-                        <span className="text-xl font-bold text-white font-mono">
+                    <div className="flex items-center justify-between w-48 border-b border-card-border pb-2 mb-1">
+                        <span className="text-[9px] text-muted-foreground font-mono uppercase tracking-wider">Certificates_Loaded</span>
+                        <span className="text-xl font-bold text-foreground font-mono">
                             {certLoading ? '...' : certificates.length.toString().padStart(2, '0')}
                         </span>
                     </div>
                     <div className="flex items-center justify-between w-48">
-                        <span className="text-[9px] text-gray-500 font-mono uppercase tracking-wider">Source</span>
+                        <span className="text-[9px] text-muted-foreground font-mono uppercase tracking-wider">Source</span>
                         <span className="text-[9px] text-green-500 font-mono uppercase">Google.Cloud.Sync</span>
                     </div>
                 </motion.div>

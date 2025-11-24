@@ -62,7 +62,7 @@ export const AssetCard: React.FC<AssetCardProps> = ({ item, onClick }) => {
       transition={{ duration: 0.4 }}
       onMouseMove={handleMouseMove}
       onClick={onClick}
-      className="group relative break-inside-avoid rounded-xl bg-[#0A0A0C] border border-white/5 overflow-hidden cursor-pointer transition-all duration-500 hover:border-cyan-500/40 hover:shadow-[0_0_30px_-10px_rgba(34,211,238,0.2)]"
+      className="group relative break-inside-avoid rounded-xl bg-card border border-card-border overflow-hidden cursor-pointer transition-all duration-500 hover:border-cyan-500/40 hover:shadow-[0_0_30px_-10px_rgba(34,211,238,0.2)]"
     >
       {/* Hover Glow */}
       <motion.div
@@ -71,7 +71,7 @@ export const AssetCard: React.FC<AssetCardProps> = ({ item, onClick }) => {
       />
 
       {/* Image Container */}
-      <div className="relative aspect-[3/4] w-full overflow-hidden bg-gray-900/50">
+      <div className="relative aspect-[3/4] w-full overflow-hidden bg-muted/50">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={imgSrc}
@@ -82,7 +82,7 @@ export const AssetCard: React.FC<AssetCardProps> = ({ item, onClick }) => {
         />
         
         {/* Gradient Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0C] via-transparent to-transparent opacity-60 group-hover:opacity-90 transition-opacity duration-300" />
+        <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent opacity-60 group-hover:opacity-90 transition-opacity duration-300" />
         <div className="absolute inset-0 bg-cyan-900/20 opacity-0 group-hover:opacity-100 mix-blend-overlay transition-opacity duration-500" />
         
         {/* Technical Overlay Grid (Decoration) */}
@@ -90,19 +90,19 @@ export const AssetCard: React.FC<AssetCardProps> = ({ item, onClick }) => {
 
         {/* Top Right Action Badges */}
         <div className="absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-4 group-hover:translate-x-0">
-            <div className="p-2 rounded-lg bg-black/60 backdrop-blur-md border border-white/10 text-cyan-400 hover:bg-cyan-500/20 hover:border-cyan-500/50 transition-colors" title="Expand">
+            <div className="p-2 rounded-lg bg-card/80 backdrop-blur-md border border-card-border text-cyan-400 hover:bg-cyan-500/20 hover:border-cyan-500/50 transition-colors" title="Expand">
                 <FaExpand size={12} />
             </div>
-            <div className="p-2 rounded-lg bg-black/60 backdrop-blur-md border border-white/10 text-cyan-400 hover:bg-cyan-500/20 hover:border-cyan-500/50 transition-colors" title="Details">
+            <div className="p-2 rounded-lg bg-card/80 backdrop-blur-md border border-card-border text-cyan-400 hover:bg-cyan-500/20 hover:border-cyan-500/50 transition-colors" title="Details">
                 <FaInfoCircle size={12} />
             </div>
         </div>
 
         {/* Status Indicator */}
         <div className="absolute top-3 left-3">
-           <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/10">
+           <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-card/80 backdrop-blur-md border border-card-border">
               <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-[8px] font-mono text-gray-300 tracking-wider">LIVE</span>
+              <span className="text-[8px] font-mono text-muted-foreground tracking-wider">LIVE</span>
            </div>
         </div>
       </div>
@@ -116,17 +116,17 @@ export const AssetCard: React.FC<AssetCardProps> = ({ item, onClick }) => {
                 </div>
                 <span className="text-[10px] font-mono text-cyan-300 tracking-wider uppercase">IMG_ASSET</span>
             </div>
-            <span className="text-[10px] font-mono text-gray-500 group-hover:text-white transition-colors">#{item.id}</span>
+            <span className="text-[10px] font-mono text-muted-foreground group-hover:text-foreground transition-colors">#{item.id}</span>
         </div>
         
-        <h3 className="text-sm font-medium text-white truncate group-hover:text-cyan-400 transition-colors duration-300 mb-3">
+        <h3 className="text-sm font-medium text-foreground truncate group-hover:text-cyan-400 transition-colors duration-300 mb-3">
             {item.title || 'Untitled Asset'}
         </h3>
         
         {/* Hidden Actions that slide up */}
         <div className="grid grid-cols-2 gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-4 group-hover:translate-y-0 pb-1">
             <button 
-                className="flex items-center justify-center gap-2 py-1.5 rounded bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 text-[10px] text-gray-300 hover:text-white transition-colors font-mono"
+                className="flex items-center justify-center gap-2 py-1.5 rounded bg-muted/20 hover:bg-muted/40 border border-card-border hover:border-foreground/20 text-[10px] text-muted-foreground hover:text-foreground transition-colors font-mono"
                 onClick={(e) => { e.stopPropagation(); onClick(); }}
             >
                 VIEW

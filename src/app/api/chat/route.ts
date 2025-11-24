@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "openai/gpt-oss-20b:free", // Using consistent free model
+        model: "x-ai/grok-4.1-fast:free", // Using consistent free model
         messages: finalMessages
       })
     });

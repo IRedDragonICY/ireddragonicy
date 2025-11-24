@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname } from 'next/navigation';
-import { BsSend, BsCpu, BsRobot, BsX, BsStopCircle, BsTerminal } from 'react-icons/bs';
+import { BsSend, BsCpu, BsRobot, BsX, BsStopCircle, BsTerminal, BsTrash } from 'react-icons/bs';
 import { FaBrain } from 'react-icons/fa';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -14,6 +14,43 @@ interface Message {
   id: string;
   typed?: boolean;
 }
+
+// Custom Markdown Components for "Tab-like" feel
+const MarkdownComponents = {
+  ul: ({ children }: any) => (
+    <div className="flex flex-col gap-2 my-3 pl-0 list-none">
+      {children}
+    </div>
+  ),
+  li: ({ children }: any) => (
+    <div className="relative overflow-hidden bg-white/5 border border-white/10 rounded-lg p-3 hover:bg-white/10 hover:border-cyan-500/30 transition-all group">
+      <div className="absolute left-0 top-0 bottom-0 w-1 bg-cyan-500/0 group-hover:bg-cyan-500 transition-all" />
+      <div className="text-xs text-gray-300 group-hover:text-white transition-colors pl-2">
+        {children}
+      </div>
+    </div>
+  ),
+  a: ({ href, children }: any) => (
+    <a 
+      href={href} 
+      target="_blank" 
+      rel="noopener noreferrer" 
+      className="text-cyan-400 hover:text-cyan-200 font-medium underline decoration-cyan-500/30 underline-offset-4 hover:decoration-cyan-400 transition-all break-all"
+    >
+      {children}
+    </a>
+  ),
+  p: ({ children }: any) => (
+    <p className="mb-2 last:mb-0 leading-relaxed text-gray-300">
+      {children}
+    </p>
+  ),
+  strong: ({ children }: any) => (
+    <strong className="text-white font-bold bg-white/10 px-1 rounded">
+      {children}
+    </strong>
+  )
+};
 
 // Typewriter effect component for streaming text
 const TypewriterMessage = ({ content, shouldAnimate = true, onComplete }: { content: string, shouldAnimate?: boolean, onComplete?: () => void }) => {
@@ -31,7 +68,7 @@ const TypewriterMessage = ({ content, shouldAnimate = true, onComplete }: { cont
       const timeout = setTimeout(() => {
         setDisplayedContent(prev => prev + content[currentIndex]);
         setCurrentIndex(prev => prev + 1);
-      }, 15); // Fast typing speed
+      }, 10); // Slightly faster typing
       return () => clearTimeout(timeout);
     } else {
       if (onComplete) onComplete();
@@ -39,12 +76,15 @@ const TypewriterMessage = ({ content, shouldAnimate = true, onComplete }: { cont
   }, [currentIndex, content, onComplete, shouldAnimate]);
 
   return (
-    <div className="whitespace-pre-wrap prose prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-black/50 prose-pre:border prose-pre:border-white/10 prose-code:text-cyan-300 prose-headings:text-cyan-100 prose-a:text-cyan-400 hover:prose-a:text-cyan-300">
-      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+    <div className="whitespace-pre-wrap text-sm">
+      <ReactMarkdown 
+        remarkPlugins={[remarkGfm]}
+        components={MarkdownComponents}
+      >
         {displayedContent}
       </ReactMarkdown>
       {currentIndex < content.length && (
-        <span className="inline-block w-2 h-4 bg-cyan-400 ml-1 animate-pulse" />
+        <span className="inline-block w-1.5 h-3 bg-cyan-400 ml-1 animate-pulse align-middle" />
       )}
     </div>
   );
@@ -75,12 +115,39 @@ export default function Chatbot({
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isHistoryLoaded, setIsHistoryLoaded] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const hasInitialized = useRef(false);
 
+  // Load history on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('chat_history');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setMessages(parsed);
+          hasInitialized.current = true;
+        }
+      } catch (e) {
+        console.error('Failed to parse chat history', e);
+      }
+    }
+    setIsHistoryLoaded(true);
+  }, []);
+
+  // Save history when messages change
+  useEffect(() => {
+    if (isHistoryLoaded) {
+      localStorage.setItem('chat_history', JSON.stringify(messages));
+    }
+  }, [messages, isHistoryLoaded]);
+
   // Initial greeting effect on open
   useEffect(() => {
+    if (!isHistoryLoaded) return;
+
     if (isOpen && !hasInitialized.current) {
       hasInitialized.current = true;
       setIsLoading(true);
@@ -94,7 +161,7 @@ export default function Chatbot({
             body: JSON.stringify({
               messages: [{ 
                 role: 'user', 
-                content: 'Generate a short, high-tech, cyberpunk-style system greeting for a visitor to this AI research portfolio. Keep it under 20 words. Do not use quotes.' 
+                content: 'Generate a short, cute, and friendly greeting from Vixevia (a programmer girl AI) to a visitor. Use a kaomoji. Keep it under 20 words. Do not use quotes.' 
               }],
               pathname
             }),
@@ -104,16 +171,16 @@ export default function Chatbot({
           if (data.content) {
             setMessages([{ role: 'assistant', content: data.content, id: 'init' }]);
           } else {
-            setMessages([{ role: 'assistant', content: 'Neural Interface Active. Awaiting input.', id: 'init' }]);
+            setMessages([{ role: 'assistant', content: 'Hi there! Vixevia here, ready to help you explore! (≧◡≦)', id: 'init' }]);
           }
         } catch (_) {
-          setMessages([{ role: 'assistant', content: 'System Online. Connection established.', id: 'init' }]);
+          setMessages([{ role: 'assistant', content: "Vixevia is online! Let's code something cool! (◕‿◕)", id: 'init' }]);
         } finally {
           setIsLoading(false);
         }
       })();
     }
-  }, [isOpen, pathname]);
+  }, [isOpen, pathname, isHistoryLoaded]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -133,6 +200,12 @@ export default function Chatbot({
 
   const handleMessageComplete = (id: string) => {
     setMessages(prev => prev.map(m => m.id === id ? { ...m, typed: true } : m));
+  };
+
+  const handleReset = () => {
+    setMessages([]);
+    localStorage.removeItem('chat_history');
+    hasInitialized.current = false;
   };
 
   const handleSubmit = async (e?: React.FormEvent) => {
@@ -162,11 +235,11 @@ export default function Chatbot({
       if (data.content) {
         setMessages(prev => [...prev, { role: 'assistant', content: data.content, id: (Date.now() + 1).toString() }]);
       } else {
-        setMessages(prev => [...prev, { role: 'assistant', content: '[ERROR] Neural link failed. Please retry.', id: (Date.now() + 1).toString() }]);
+        setMessages(prev => [...prev, { role: 'assistant', content: "Oops! My connection glitched. Can you try again? (＞﹏＜)", id: (Date.now() + 1).toString() }]);
       }
     } catch (error: unknown) {
       if (error instanceof Error && error.name !== 'AbortError') {
-        setMessages(prev => [...prev, { role: 'assistant', content: '[ERROR] Connection terminated.', id: (Date.now() + 1).toString() }]);
+        setMessages(prev => [...prev, { role: 'assistant', content: "Connection lost! I can't reach the server. (T_T)", id: (Date.now() + 1).toString() }]);
       }
     } finally {
       if (abortControllerRef.current === controller) {
@@ -238,7 +311,7 @@ export default function Chatbot({
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-white font-mono tracking-wide flex items-center gap-2">
-                    NEURAL_ASSISTANT
+                    Vixevia
                     <span className="text-[8px] px-1 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">BETA</span>
                   </h3>
                   <div className="flex items-center gap-2 text-[10px] text-gray-400 font-mono">
@@ -248,6 +321,13 @@ export default function Chatbot({
                 </div>
               </div>
               <div className="flex items-center gap-2 text-[10px] font-mono text-cyan-700">
+                <button 
+                  onClick={handleReset}
+                  className="p-1 hover:text-red-400 transition-colors"
+                  title="Reset Chat"
+                >
+                  <BsTrash size={14} />
+                </button>
                 <BsCpu className="animate-spin-slow" /> v1.0.4
               </div>
             </div>
@@ -276,7 +356,7 @@ export default function Chatbot({
                     {msg.role === 'assistant' && (
                       <div className="text-[9px] font-mono text-cyan-600 mb-1 uppercase flex items-center gap-2">
                         <BsTerminal size={10} />
-                        System_Response
+                        Vixevia
                       </div>
                     )}
                     
@@ -287,7 +367,7 @@ export default function Chatbot({
                         onComplete={() => handleMessageComplete(msg.id)}
                       />
                     ) : (
-                        <div className="whitespace-pre-wrap">{msg.content}</div>
+                        <div className="whitespace-pre-wrap text-sm">{msg.content}</div>
                     )}
                   </div>
                 </motion.div>

@@ -32,11 +32,18 @@ const LatentSpaceBackground = () => {
     // Static Noise + Moving Grid Lines
     const animate = () => {
       time += 0.05;
-      ctx.fillStyle = '#050505';
+      
+      // Theme awareness
+      const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+      const bgColor = isDark ? '#050505' : '#f0f2f5';
+      const gridColor = isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.05)';
+      const dropColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+
+      ctx.fillStyle = bgColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Draw subtle grid
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+      ctx.strokeStyle = gridColor;
       ctx.lineWidth = 1;
       const gridSize = 50;
       
@@ -64,7 +71,7 @@ const LatentSpaceBackground = () => {
           
           const grad = ctx.createLinearGradient(x, y, x, y + h);
           grad.addColorStop(0, 'rgba(255, 255, 255, 0)');
-          grad.addColorStop(0.5, 'rgba(255, 255, 255, 0.1)');
+          grad.addColorStop(0.5, dropColor);
           grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
           
           ctx.fillStyle = grad;
@@ -92,9 +99,9 @@ const LatentSpaceBackground = () => {
 
 const TechBadge = ({ text }: { text: string }) => {
   return (
-    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-sm border border-white/10 bg-white/5 backdrop-blur-md">
-      <div className="w-1 h-1 rounded-full bg-white animate-pulse" />
-      <span className="text-[10px] font-mono uppercase tracking-widest text-gray-300 font-semibold">{text}</span>
+    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-sm border border-card-border bg-card backdrop-blur-md">
+      <div className="w-1 h-1 rounded-full bg-foreground animate-pulse" />
+      <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400 font-semibold">{text}</span>
     </div>
   );
 };
@@ -142,13 +149,13 @@ const Hero = () => {
     <section
       ref={heroRef}
       id="home"
-      className="relative w-full h-screen flex flex-col items-center justify-center overflow-hidden bg-[#050505] pt-16 border-b border-white/5"
+      className="relative w-full h-screen flex flex-col items-center justify-center overflow-hidden bg-background pt-16 border-b border-card-border"
     >
       {/* 1. Background Layer */}
       <div className="absolute inset-0 z-0">
         {!isMobile && <LatentSpaceBackground />}
         {/* Vignette for focus */}
-        <div className="absolute inset-0 bg-[#050505]/30 pointer-events-none" />
+        <div className="absolute inset-0 bg-background/30 pointer-events-none" />
       </div>
 
       {/* 2. Main Content Container */}
@@ -170,14 +177,14 @@ const Hero = () => {
 
           {/* Headline */}
           <div className="space-y-2">
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tighter text-white leading-[1.1] uppercase">
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tighter text-foreground leading-[1.1] uppercase">
               <span className="block text-gray-500">
                 Mohammad
               </span>
-              <span className="block text-white relative inline-block">
+              <span className="block text-foreground relative inline-block">
                 Farid
                 {/* Technical bracket accent */}
-                <span className="absolute -right-8 top-0 text-sm font-mono text-gray-600 opacity-50 hidden lg:block">[01]</span>
+                <span className="absolute -right-8 top-0 text-sm font-mono text-gray-500 opacity-50 hidden lg:block">[01]</span>
               </span>
               <span className="block text-gray-400">
                 Hendianto
@@ -186,7 +193,7 @@ const Hero = () => {
           </div>
 
           {/* Subheadline / Typewriter */}
-          <div className="max-w-xl border-l-2 border-white/10 pl-6">
+          <div className="max-w-xl border-l-2 border-card-border pl-6">
             <div className="flex items-center gap-2 text-gray-500 font-mono text-xs mb-2 uppercase tracking-wider">
               <BsTerminal />
               <span>Research_Objective</span>
@@ -197,7 +204,8 @@ const Hero = () => {
                 isInView={isInView}
                 delay={500}
                 showTokens={true}
-                className="text-lg sm:text-xl text-gray-300 font-light leading-relaxed"
+                gradientAfter={false}
+                className="text-xl sm:text-2xl text-foreground/80 font-light leading-relaxed tracking-wide"
               />
             </div>
           </div>
@@ -213,20 +221,13 @@ const Hero = () => {
               href="https://github.com/ireddragonicy"
               target="_blank"
               rel="noopener noreferrer"
-              className="group relative px-8 py-4 bg-white text-black font-bold text-xs uppercase tracking-[0.2em] transition-all hover:bg-gray-200"
+              className="group relative px-8 py-4 bg-foreground text-background font-bold text-xs uppercase tracking-[0.2em] transition-all hover:bg-foreground/80"
             >
               <span className="relative flex items-center gap-3">
                 Explore GitHub
                 <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
               </span>
             </a>
-            
-            <button className="group px-8 py-4 bg-transparent border border-white/20 text-white font-bold text-xs uppercase tracking-[0.2em] hover:bg-white/5 transition-all hover:border-white/40 backdrop-blur-sm">
-              <span className="flex items-center gap-3">
-                View Publications
-                <FaBook className="text-gray-500 group-hover:text-white transition-colors" />
-              </span>
-            </button>
           </motion.div>
 
           {/* Tech Stack Chips - Minimalist */}
@@ -234,14 +235,14 @@ const Hero = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.2 }}
-            className="pt-8 border-t border-white/5 w-full max-w-md"
+            className="pt-8 border-t border-card-border w-full max-w-md"
           >
-            <p className="text-[10px] text-gray-600 font-mono mb-4 uppercase tracking-widest">Core_Technologies</p>
+            <p className="text-[10px] text-gray-500 font-mono mb-4 uppercase tracking-widest">Core_Technologies</p>
             <div className="flex flex-wrap gap-2">
               {['PyTorch', 'JAX', 'Diffusers', 'CUDA', 'LLMs'].map((tech) => (
                 <span 
                   key={tech}
-                  className="px-3 py-1 text-[10px] font-mono text-gray-400 bg-white/5 border border-white/5 hover:border-white/20 transition-colors cursor-default uppercase tracking-wider"
+                  className="px-3 py-1 text-[10px] font-mono text-gray-400 bg-card border border-card-border hover:border-foreground/20 transition-colors cursor-default uppercase tracking-wider"
                 >
                   {tech}
                 </span>
@@ -262,8 +263,8 @@ const Hero = () => {
            {/* Technical Background behind card */}
            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               {/* Subtle wireframe globe or circle instead of blob */}
-              <div className="w-[80%] h-[80%] border border-white/5 rounded-full opacity-20 animate-[spin_60s_linear_infinite]" />
-              <div className="absolute w-[60%] h-[60%] border border-dashed border-white/5 rounded-full opacity-20 animate-[spin_40s_linear_infinite_reverse]" />
+              <div className="w-[80%] h-[80%] border border-card-border rounded-full opacity-20 animate-[spin_60s_linear_infinite]" />
+              <div className="absolute w-[60%] h-[60%] border border-dashed border-card-border rounded-full opacity-20 animate-[spin_40s_linear_infinite_reverse]" />
            </div>
 
            {/* The Card */}
@@ -278,15 +279,15 @@ const Hero = () => {
                 className="absolute -right-4 top-16 hidden xl:block pointer-events-none"
              >
                <div className="group flex items-center gap-2">
-                  <div className="w-8 h-[1px] bg-white/20" />
+                  <div className="w-8 h-[1px] bg-foreground/20" />
                   
-                  <div className="bg-[#0A0A0A] border border-white/10 p-4 shadow-2xl">
-                    <div className="flex items-center gap-3 mb-2 border-b border-white/10 pb-2">
-                      <FaRobot className="text-white text-xs" />
+                  <div className="bg-card border border-card-border p-4 shadow-2xl">
+                    <div className="flex items-center gap-3 mb-2 border-b border-card-border pb-2">
+                      <FaRobot className="text-foreground text-xs" />
                       <span className="text-[9px] font-mono text-gray-500 tracking-widest uppercase">Models_Deployed</span>
                     </div>
                     <div className="flex items-baseline gap-2">
-                         <span className="text-3xl font-bold text-white tracking-tighter">12</span>
+                         <span className="text-3xl font-bold text-foreground tracking-tighter">12</span>
                          <span className="text-[8px] text-green-500 font-mono flex items-center gap-1">
                             <span className="w-1 h-1 bg-green-500 rounded-full animate-pulse" />
                             ACTIVE
@@ -303,15 +304,15 @@ const Hero = () => {
                 className="absolute -left-8 bottom-28 hidden xl:block pointer-events-none"
              >
                <div className="group flex items-center gap-2 flex-row-reverse">
-                  <div className="w-8 h-[1px] bg-white/20" />
+                  <div className="w-8 h-[1px] bg-foreground/20" />
 
-                  <div className="bg-[#0A0A0A] border border-white/10 p-4 shadow-2xl">
-                    <div className="flex items-center gap-3 mb-2 border-b border-white/10 pb-2">
-                      <FaFileAlt className="text-white text-xs" />
+                  <div className="bg-card border border-card-border p-4 shadow-2xl">
+                    <div className="flex items-center gap-3 mb-2 border-b border-card-border pb-2">
+                      <FaFileAlt className="text-foreground text-xs" />
                       <span className="text-[9px] font-mono text-gray-500 tracking-widest uppercase">Papers</span>
                     </div>
                     <div className="flex items-baseline gap-2">
-                         <span className="text-3xl font-bold text-white tracking-tighter">24+</span>
+                         <span className="text-3xl font-bold text-foreground tracking-tighter">24+</span>
                          <span className="text-[8px] text-gray-400 font-mono">PUBLISHED</span>
                     </div>
                   </div>
@@ -329,8 +330,8 @@ const Hero = () => {
         transition={{ delay: 2, duration: 1 }}
         className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-3"
       >
-        <div className="h-8 w-[1px] bg-white/20" />
-        <span className="text-[9px] font-mono text-gray-600 tracking-[0.3em] uppercase">Scroll</span>
+        <div className="h-8 w-[1px] bg-foreground/20" />
+        <span className="text-[9px] font-mono text-gray-500 tracking-[0.3em] uppercase">Scroll</span>
       </motion.div>
 
     </section>

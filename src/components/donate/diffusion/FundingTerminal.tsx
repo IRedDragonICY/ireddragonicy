@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FaPaypal, FaPatreon, FaChevronRight } from 'react-icons/fa';
+import { FaPaypal, FaPatreon, FaChevronRight, FaBolt } from 'react-icons/fa';
 import { SiKofi } from 'react-icons/si';
 
 const protocols = [
@@ -25,9 +25,18 @@ const protocols = [
     link: 'https://patreon.com/c/ireddragonicy/membership'
   },
   {
+    id: 'ko-fi',
+    name: 'Ko-fi',
+    icon: SiKofi,
+    color: 'text-pink-400',
+    bg: 'bg-pink-500',
+    desc: 'Fuel the research with a coffee.',
+    link: 'https://ko-fi.com/ireddragonicy'
+  },
+  {
     id: 'saweria',
     name: 'Saweria',
-    icon: SiKofi,
+    icon: FaBolt,
     color: 'text-yellow-400',
     bg: 'bg-yellow-500',
     desc: 'Local currency support protocol (IDR).',
@@ -65,7 +74,7 @@ export default function FundingTerminal() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
             {protocols.map((p) => (
               <motion.a
                 key={p.id}

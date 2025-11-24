@@ -157,13 +157,13 @@ const GenerativeCard: React.FC<GenerativeCardProps> = memo(({ item, index, type 
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={handleCardClick}
-      className="group relative flex flex-col h-full bg-[#080808] border border-white/10 overflow-hidden transition-colors duration-300 hover:border-white/30 cursor-pointer"
+      className="group relative flex flex-col h-full bg-card border border-card-border overflow-hidden transition-colors duration-300 hover:border-foreground/30 cursor-pointer"
     >
       {/* Technical Corners */}
-      <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-white/20 transition-colors group-hover:border-white/50" />
-      <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-white/20 transition-colors group-hover:border-white/50" />
-      <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-white/20 transition-colors group-hover:border-white/50" />
-      <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-white/20 transition-colors group-hover:border-white/50" />
+      <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-card-border transition-colors group-hover:border-foreground/50" />
+      <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-card-border transition-colors group-hover:border-foreground/50" />
+      <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-card-border transition-colors group-hover:border-foreground/50" />
+      <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-card-border transition-colors group-hover:border-foreground/50" />
 
       {/* Hover Highlight */}
       <motion.div
@@ -177,7 +177,7 @@ const GenerativeCard: React.FC<GenerativeCardProps> = memo(({ item, index, type 
         <div className="flex items-start justify-between mb-6">
           <div className="flex items-center gap-4">
             {/* Icon Box */}
-            <div className="relative flex items-center justify-center w-10 h-10 bg-white/5 border border-white/10 group-hover:bg-white/10 transition-colors">
+            <div className="relative flex items-center justify-center w-10 h-10 bg-muted/50 border border-card-border group-hover:bg-muted transition-colors">
               {isGame && (item as GameItem).videoSrc ? (
                 <video 
                   ref={videoRef}
@@ -188,16 +188,16 @@ const GenerativeCard: React.FC<GenerativeCardProps> = memo(({ item, index, type 
                   className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity grayscale group-hover:grayscale-0"
                 />
               ) : (
-                item.icon && <item.icon className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
+                item.icon && <item.icon className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
               )}
             </div>
             
             <div className="flex flex-col">
-              <h3 className="text-sm font-bold text-white uppercase tracking-wider group-hover:text-cyan-400 transition-colors">
+              <h3 className="text-sm font-bold text-foreground uppercase tracking-wider group-hover:text-cyan-400 transition-colors">
                 {item.name}
               </h3>
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-[9px] font-mono text-gray-600 uppercase tracking-widest">
+                <span className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest">
                   {isGame ? (item as GameItem).server : type}
                 </span>
                 <span className="w-1 h-1 rounded-full bg-green-500 animate-pulse" />
@@ -206,15 +206,15 @@ const GenerativeCard: React.FC<GenerativeCardProps> = memo(({ item, index, type 
           </div>
 
           {'href' in item && (
-            <FaExternalLinkAlt className="text-[10px] text-gray-600 group-hover:text-white transition-colors" />
+            <FaExternalLinkAlt className="text-[10px] text-muted-foreground group-hover:text-foreground transition-colors" />
           )}
         </div>
 
         {/* Content Body */}
         <div className="flex-grow space-y-4">
           {isSocial && (
-            <div className="relative pl-3 border-l border-white/10">
-               <p className="text-xs text-gray-400 font-mono leading-relaxed">
+            <div className="relative pl-3 border-l border-card-border">
+               <p className="text-xs text-muted-foreground font-mono leading-relaxed">
                  {(item as SocialItem).description}
                </p>
             </div>
@@ -222,11 +222,11 @@ const GenerativeCard: React.FC<GenerativeCardProps> = memo(({ item, index, type 
 
           {/* Stats Grid - Technical Layout */}
           {displayStats && displayStats.length > 0 && (
-            <div className="grid grid-cols-2 gap-px bg-white/10 border border-white/10">
+            <div className="grid grid-cols-2 gap-px bg-card-border border border-card-border">
               {displayStats.map((stat, i) => (
-                <div key={i} className="bg-[#0A0A0A] p-2 flex flex-col">
-                  <span className="text-[8px] text-gray-600 uppercase tracking-wider font-mono mb-1">{stat.label}</span>
-                  <span className="text-xs font-mono text-white">{stat.value}</span>
+                <div key={i} className="bg-card p-2 flex flex-col">
+                  <span className="text-[8px] text-muted-foreground uppercase tracking-wider font-mono mb-1">{stat.label}</span>
+                  <span className="text-xs font-mono text-foreground">{stat.value}</span>
                 </div>
               ))}
             </div>
@@ -234,11 +234,11 @@ const GenerativeCard: React.FC<GenerativeCardProps> = memo(({ item, index, type 
 
           {/* GitHub User Lists */}
           {item.id === 'github' && !stats.loading && (
-            <div className="mt-4 space-y-4 border-t border-white/10 pt-4">
+            <div className="mt-4 space-y-4 border-t border-card-border pt-4">
               {stats.followersList && stats.followersList.length > 0 && (
                 <div className="flex flex-col gap-2">
                   <span className="text-[9px] text-green-400 uppercase tracking-wider font-mono">Recent Followers</span>
-                  <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+                  <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
                     {stats.followersList.map((user: GitHubUser, i: number) => (
                       <a key={i} href={user.url} target="_blank" rel="noopener noreferrer" title={user.name} className="block">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -252,7 +252,7 @@ const GenerativeCard: React.FC<GenerativeCardProps> = memo(({ item, index, type 
               {stats.followingList && stats.followingList.length > 0 && (
                 <div className="flex flex-col gap-2">
                   <span className="text-[9px] text-blue-400 uppercase tracking-wider font-mono">Following</span>
-                  <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+                  <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
                     {stats.followingList.map((user: GitHubUser, i: number) => (
                       <a key={i} href={user.url} target="_blank" rel="noopener noreferrer" title={user.name} className="block">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -266,7 +266,7 @@ const GenerativeCard: React.FC<GenerativeCardProps> = memo(({ item, index, type 
               {stats.notFollowingBack && stats.notFollowingBack.length > 0 && (
                 <div className="flex flex-col gap-2">
                   <span className="text-[9px] text-red-400 uppercase tracking-wider font-mono">Not Following Back ({stats.notFollowingBack.length})</span>
-                  <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+                  <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
                     {stats.notFollowingBack.map((user: GitHubUser, i: number) => (
                       <a key={i} href={user.url} target="_blank" rel="noopener noreferrer" title={user.name} className="block">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -281,22 +281,22 @@ const GenerativeCard: React.FC<GenerativeCardProps> = memo(({ item, index, type 
           
           {statsConfig && stats.loading && isInView && (
             <div className="grid grid-cols-2 gap-2">
-               <div className="h-8 bg-white/5 animate-pulse" />
-               <div className="h-8 bg-white/5 animate-pulse" />
+               <div className="h-8 bg-muted/50 animate-pulse" />
+               <div className="h-8 bg-muted/50 animate-pulse" />
             </div>
           )}
           
           {isGame && (
-            <div className="mt-2 bg-white/5 border border-white/10 p-2 flex items-center justify-between group-hover:border-white/20 transition-colors">
+            <div className="mt-2 bg-muted/30 border border-card-border p-2 flex items-center justify-between group-hover:border-foreground/20 transition-colors">
                 <div className="flex flex-col">
-                   <span className="text-[8px] uppercase text-gray-500 font-mono mb-0.5">USER_ID_HASH</span>
-                   <span className="text-xs font-mono text-white">
+                   <span className="text-[8px] uppercase text-muted-foreground font-mono mb-0.5">USER_ID_HASH</span>
+                   <span className="text-xs font-mono text-foreground">
                      {(item as GameItem).uid || (item as GameItem).ign}
                    </span>
                 </div>
                 <button 
                   onClick={handleCopy}
-                  className="p-1.5 hover:bg-white/10 transition-colors text-gray-400 hover:text-white"
+                  className="p-1.5 hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
                   title="Copy ID"
                 >
                   {copied ? <FaCheck size={10} className="text-green-500" /> : <FaCopy size={10} />}
@@ -306,12 +306,12 @@ const GenerativeCard: React.FC<GenerativeCardProps> = memo(({ item, index, type 
         </div>
 
         {/* Footer Metadata */}
-        <div className="mt-6 pt-3 border-t border-white/5 flex justify-between items-center">
-          <div className="flex items-center gap-2 text-[9px] font-mono text-gray-600 uppercase">
+        <div className="mt-6 pt-3 border-t border-card-border flex justify-between items-center">
+          <div className="flex items-center gap-2 text-[9px] font-mono text-muted-foreground uppercase">
              <FaCodeBranch size={8} />
              <span>Node_{index.toString().padStart(3, '0')}</span>
           </div>
-          <FaCircle size={4} className="text-gray-800 group-hover:text-green-500 transition-colors" />
+          <FaCircle size={4} className="text-muted-foreground group-hover:text-green-500 transition-colors" />
         </div>
       </div>
     </motion.div>

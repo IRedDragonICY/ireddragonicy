@@ -63,19 +63,21 @@ const SCHOOLS = [
 interface BrainParticlesProps {
   count?: number;
   isHovered: boolean;
+  theme: string;
 }
 
 function simpleNoise(x: number, y: number, z: number) {
     return Math.sin(x) * Math.cos(y) * Math.sin(z);
 }
 
-function BrainParticles({ count = 15000, isHovered }: BrainParticlesProps) {
+function BrainParticles({ count = 15000, isHovered, theme }: BrainParticlesProps) {
   const mesh = useRef<THREE.Points>(null);
 
   // 1. Generate Main Cortex Cloud
   const particles = useMemo(() => {
     const positions = new Float32Array(count * 3);
     const colors = new Float32Array(count * 3);
+    const isLight = theme === 'light';
 
     for (let i = 0; i < count; i++) {
       let x = 0, y = 0, z = 0, d = 100;
@@ -114,10 +116,14 @@ function BrainParticles({ count = 15000, isHovered }: BrainParticlesProps) {
       // Monochrome Color Mapping
       const c = new THREE.Color();
       if (Math.random() > 0.98) {
-           c.setHex(0xffffff); // Spark
+           c.setHex(isLight ? 0x000000 : 0xffffff); // Spark
       } else {
            // Grey Gradient
-           c.setHSL(0, 0, 0.2 + Math.random() * 0.3);
+           if (isLight) {
+             c.setHSL(0, 0, 0.1 + Math.random() * 0.3); // Dark grey for light mode
+           } else {
+             c.setHSL(0, 0, 0.2 + Math.random() * 0.3); // Light grey for dark mode
+           }
       }
       
       colors[i3] = c.r;
@@ -125,7 +131,7 @@ function BrainParticles({ count = 15000, isHovered }: BrainParticlesProps) {
       colors[i3+2] = c.b;
     }
     return { positions, colors };
-  }, [count]);
+  }, [count, theme]);
 
   // 2. Generate Synapse Lines (Technical)
   const network = useMemo(() => {
@@ -178,7 +184,7 @@ function BrainParticles({ count = 15000, isHovered }: BrainParticlesProps) {
                 size={0.02} 
                 sizeAttenuation={true} 
                 depthWrite={false} 
-                blending={THREE.AdditiveBlending} 
+                blending={theme === 'light' ? THREE.NormalBlending : THREE.AdditiveBlending} 
                 opacity={0.5} 
             />
         </points>
@@ -188,13 +194,13 @@ function BrainParticles({ count = 15000, isHovered }: BrainParticlesProps) {
                 <bufferAttribute attach="attributes-position" count={network.positions.length / 3} array={network.positions} itemSize={3} args={[network.positions, 3]} />
                 <bufferAttribute attach="index" count={network.indices.length} array={network.indices} itemSize={1} args={[network.indices, 1]} />
             </bufferGeometry>
-            <lineBasicMaterial color="#ffffff" transparent opacity={0.1} linewidth={1} />
+            <lineBasicMaterial color={theme === 'light' ? "#000000" : "#ffffff"} transparent opacity={0.1} linewidth={1} />
         </line>
     </group>
   );
 }
 
-function JourneyPath() {
+function JourneyPath({ theme }: { theme: string }) {
     const points = useMemo(() => {
         return SCHOOLS.map(s => new THREE.Vector3(...s.position));
     }, []);
@@ -212,14 +218,14 @@ function JourneyPath() {
         <group>
             <line>
                 <primitive object={lineGeometry} attach="geometry" />
-                <lineBasicMaterial color="#ffffff" opacity={0.2} transparent linewidth={1} />
+                <lineBasicMaterial color={theme === 'light' ? "#000000" : "#ffffff"} opacity={0.2} transparent linewidth={1} />
             </line>
-            <DataFlowParticles curve={curve} count={20} />
+            <DataFlowParticles curve={curve} count={20} theme={theme} />
         </group>
     );
 }
 
-function DataFlowParticles({ curve, count }: { curve: THREE.CatmullRomCurve3; count: number }) {
+function DataFlowParticles({ curve, count, theme }: { curve: THREE.CatmullRomCurve3; count: number; theme: string }) {
     const particles = useRef<THREE.Points>(null);
     const progress = useMemo(() => new Float32Array(count).map(() => Math.random()), [count]);
     const bufferPositions = useMemo(() => new Float32Array(count * 3), [count]);
@@ -244,16 +250,17 @@ function DataFlowParticles({ curve, count }: { curve: THREE.CatmullRomCurve3; co
             <bufferGeometry>
                 <bufferAttribute attach="attributes-position" count={count} array={bufferPositions} itemSize={3} args={[bufferPositions, 3]} />
             </bufferGeometry>
-            <PointMaterial color="#ffffff" size={0.1} transparent opacity={0.8} blending={THREE.AdditiveBlending} />
+            <PointMaterial color={theme === 'light' ? "#000000" : "#ffffff"} size={0.1} transparent opacity={0.8} blending={theme === 'light' ? THREE.NormalBlending : THREE.AdditiveBlending} />
         </points>
     );
 }
 
-function SchoolNode({ data, onSelect, isSelected, index }: { 
+function SchoolNode({ data, onSelect, isSelected, index, theme }: { 
     data: typeof SCHOOLS[0]; 
     onSelect: (data: typeof SCHOOLS[0]) => void; 
     isSelected: boolean; 
-    index: number 
+    index: number;
+    theme: string;
 }) {
     const [hovered, setHover] = useState(false);
     
@@ -263,7 +270,7 @@ function SchoolNode({ data, onSelect, isSelected, index }: {
             {index > 0 && (
                 <Line 
                     points={[ [0,0,0], new THREE.Vector3(...SCHOOLS[index-1].position).sub(new THREE.Vector3(...data.position)) ]}
-                    color="#ffffff"
+                    color={theme === 'light' ? "#000000" : "#ffffff"}
                     lineWidth={1}
                     opacity={0.1}
                     transparent
@@ -277,8 +284,8 @@ function SchoolNode({ data, onSelect, isSelected, index }: {
             >
                 <sphereGeometry args={[isSelected || hovered ? 0.25 : 0.15, 16, 16]} />
                 <meshStandardMaterial 
-                    color={isSelected ? "#ffffff" : "#808080"} 
-                    emissive={isSelected ? "#ffffff" : "#000000"}
+                    color={isSelected ? (theme === 'light' ? "#000000" : "#ffffff") : (theme === 'light' ? "#666666" : "#808080")} 
+                    emissive={isSelected ? (theme === 'light' ? "#000000" : "#ffffff") : "#000000"}
                     emissiveIntensity={isSelected ? 0.5 : 0}
                     wireframe={!isSelected && !hovered}
                 />
@@ -299,11 +306,16 @@ function SchoolNode({ data, onSelect, isSelected, index }: {
                     `}
                 >
                     <div 
-                        className="px-2 py-1 rounded-sm backdrop-blur-md border border-white/20 bg-black/80 flex items-center gap-2 cursor-pointer pointer-events-auto hover:border-white/50"
+                        className={`px-2 py-1 rounded-sm backdrop-blur-md border flex items-center gap-2 cursor-pointer pointer-events-auto
+                            ${theme === 'light' 
+                                ? 'bg-white/80 border-black/20 hover:border-black/50' 
+                                : 'bg-black/80 border-white/20 hover:border-white/50'
+                            }
+                        `}
                         onClick={(e) => { e.stopPropagation(); onSelect(data); }}
                     >
-                        <span className="w-1 h-1 rounded-full bg-white animate-pulse" />
-                        <span className="text-[10px] font-bold text-white font-mono uppercase">{data.name}</span>
+                        <span className={`w-1 h-1 rounded-full ${theme === 'light' ? 'bg-black' : 'bg-white'} animate-pulse`} />
+                        <span className={`text-[10px] font-bold ${theme === 'light' ? 'text-black' : 'text-white'} font-mono uppercase`}>{data.name}</span>
                     </div>
                 </div>
             </Html>
@@ -311,7 +323,7 @@ function SchoolNode({ data, onSelect, isSelected, index }: {
     );
 }
 
-function CertificateCluster({ certificates, onSelect }: { certificates: Certificate[]; onSelect?: (cert: Certificate) => void }) {
+function CertificateCluster({ certificates, onSelect, theme }: { certificates: Certificate[]; onSelect?: (cert: Certificate) => void; theme: string }) {
     const groupRef = useRef<THREE.Group>(null);
 
     useFrame((state) => {
@@ -336,6 +348,7 @@ function CertificateCluster({ certificates, onSelect }: { certificates: Certific
                         cert={cert} 
                         position={[x, y, z]} 
                         onSelect={onSelect}
+                        theme={theme}
                     />
                 );
             })}
@@ -343,7 +356,7 @@ function CertificateCluster({ certificates, onSelect }: { certificates: Certific
     );
 }
 
-function CertificateNode({ cert, position, onSelect }: { cert: Certificate; position: [number, number, number]; onSelect?: (cert: Certificate) => void }) {
+function CertificateNode({ cert, position, onSelect, theme }: { cert: Certificate; position: [number, number, number]; onSelect?: (cert: Certificate) => void; theme: string }) {
     const [hovered, setHover] = useState(false);
     const [visible, setVisible] = useState(false);
     const meshRef = useRef<THREE.Group>(null);
@@ -375,7 +388,7 @@ function CertificateNode({ cert, position, onSelect }: { cert: Certificate; posi
             >
                 <sphereGeometry args={[0.06, 8, 8]} />
                 <meshBasicMaterial 
-                    color={hovered ? "#ffffff" : "#666666"} 
+                    color={hovered ? (theme === 'light' ? "#000000" : "#ffffff") : (theme === 'light' ? "#999999" : "#666666")} 
                     transparent 
                     opacity={0.8} 
                 />
@@ -402,10 +415,10 @@ function CertificateNode({ cert, position, onSelect }: { cert: Certificate; posi
                         onMouseLeave={() => setHover(false)}
                         onClick={handleClick}
                     >
-                        <div className="px-2 py-1 bg-black/90 border border-white/10 rounded-sm text-center">
-                            <div className="text-[6px] font-mono text-gray-300 uppercase tracking-wider">{cert.title.substring(0, 20)}</div>
+                        <div className={`px-2 py-1 rounded-sm text-center border ${theme === 'light' ? 'bg-white/90 border-black/10' : 'bg-black/90 border-white/10'}`}>
+                            <div className={`text-[6px] font-mono uppercase tracking-wider ${theme === 'light' ? 'text-gray-700' : 'text-gray-300'}`}>{cert.title.substring(0, 20)}</div>
                         </div>
-                        <div className="absolute top-full left-1/2 -translate-x-1/2 w-px h-4 bg-white/20" />
+                        <div className={`absolute top-full left-1/2 -translate-x-1/2 w-px h-4 ${theme === 'light' ? 'bg-black/20' : 'bg-white/20'}`} />
                     </div>
                 </Html>
                 </Billboard>
@@ -429,9 +442,10 @@ interface DiffusionSceneProps {
     onSchoolSelect: (data: any) => void;
     onCertificateSelect?: (cert: Certificate) => void;
     certificates?: Certificate[];
+    theme?: string;
 }
 
-export default function DiffusionScene({ onSchoolSelect, onCertificateSelect, certificates = [] }: DiffusionSceneProps) {
+export default function DiffusionScene({ onSchoolSelect, onCertificateSelect, certificates = [], theme = 'dark' }: DiffusionSceneProps) {
   const [selectedSchool, setSelected] = useState<typeof SCHOOLS[0] | null>(null);
 
   const handleSelect = (school: typeof SCHOOLS[0]) => {
@@ -445,9 +459,9 @@ export default function DiffusionScene({ onSchoolSelect, onCertificateSelect, ce
   };
 
   return (
-    <div className="absolute inset-0 z-0 bg-[#050505]">
+    <div className="absolute inset-0 z-0 bg-background transition-colors duration-500">
       <Canvas camera={{ position: [0, 0, 22], fov: 45 }} gl={{ antialias: true, alpha: true }}>
-        <fog attach="fog" args={['#050505', 10, 60]} />
+        <fog attach="fog" args={[theme === 'light' ? '#ffffff' : '#050505', 10, 60]} />
         
         <OrbitControls 
             enableZoom={true} 
@@ -461,11 +475,11 @@ export default function DiffusionScene({ onSchoolSelect, onCertificateSelect, ce
 
         <group>
             {/* Central Brain */}
-            <BrainParticles count={12000} isHovered={!!selectedSchool} />
+            <BrainParticles count={12000} isHovered={!!selectedSchool} theme={theme} />
             
             {/* School System */}
             <SchoolConstellation>
-                <JourneyPath />
+                <JourneyPath theme={theme} />
                 {SCHOOLS.map((school, index) => (
                     <SchoolNode 
                         key={school.id} 
@@ -473,21 +487,22 @@ export default function DiffusionScene({ onSchoolSelect, onCertificateSelect, ce
                         index={index}
                         isSelected={selectedSchool?.id === school.id}
                         onSelect={handleSelect}
+                        theme={theme}
                     />
                 ))}
             </SchoolConstellation>
 
             {/* Certificates System */}
             {certificates.length > 0 && (
-                <CertificateCluster certificates={certificates} onSelect={onCertificateSelect} />
+                <CertificateCluster certificates={certificates} onSelect={onCertificateSelect} theme={theme} />
             )}
         </group>
 
         <Stars radius={100} depth={50} count={2000} factor={4} saturation={0} fade speed={1} />
         
         <ambientLight intensity={0.1} />
-        <pointLight position={[10, 10, 10]} intensity={0.8} color="#ffffff" />
-        <pointLight position={[-10, -10, -10]} intensity={0.5} color="#ffffff" />
+        <pointLight position={[10, 10, 10]} intensity={0.8} color={theme === 'light' ? "#000000" : "#ffffff"} />
+        <pointLight position={[-10, -10, -10]} intensity={0.5} color={theme === 'light' ? "#000000" : "#ffffff"} />
       </Canvas>
     </div>
   );

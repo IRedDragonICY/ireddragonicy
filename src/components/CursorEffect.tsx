@@ -90,7 +90,7 @@ const CursorEffect = () => {
         transition={{ duration: 0.2, ease: "easeOut" }}
       >
         {/* Latent Noise Texture inside the cursor (Diffusion theme) */}
-        <div className="absolute inset-0 opacity-20 bg-[url('/noise.png')] bg-repeat rounded-full" />
+        <div className="absolute inset-0 opacity-20 bg-[url('/noise.svg')] bg-repeat rounded-full" />
         
         {/* Rotating Ring for "Processing" feel */}
         <motion.div 

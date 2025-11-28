@@ -28,17 +28,17 @@ const TechStack: React.FC<TechStackProps> = ({ skills }) => {
 
        <div className="max-w-6xl mx-auto relative z-10">
          <div className="text-center mb-24">
-            <span className="text-[10px] font-mono uppercase tracking-[0.4em] text-muted-foreground mb-4 block">
-               {'// System_Capabilities'}
+            <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mb-4 block">
+               Skills
             </span>
-            <h2 className="text-4xl font-bold text-foreground tracking-tighter uppercase">Technical Stack</h2>
+            <h2 className="text-4xl font-bold text-foreground tracking-tighter">Technical Stack</h2>
          </div>
 
          <div className="space-y-20">
             {skills.map((category, catIdx) => (
               <div key={catIdx} className="relative border border-card-border bg-card p-8">
-                 {/* Category Header - Technical Tab */}
-                 <div className="absolute -top-3 left-8 px-4 py-1 bg-background border border-card-border text-xs font-mono text-cyan-500 uppercase tracking-widest">
+                 {/* Category Header */}
+                 <div className="absolute -top-3 left-8 px-4 py-1 bg-background border border-card-border text-xs text-foreground">
                     {category.category}
                  </div>
 
@@ -53,17 +53,11 @@ const TechStack: React.FC<TechStackProps> = ({ skills }) => {
                          className="group flex flex-col items-center gap-4"
                        >
                           {/* Icon Container */}
-                          <div className="relative w-16 h-16 flex items-center justify-center border border-card-border bg-foreground/[0.02] group-hover:bg-foreground/[0.05] group-hover:border-foreground/30 transition-all duration-300">
-                             {/* Corner Markers */}
-                             <div className="absolute top-0 left-0 w-1 h-1 bg-foreground/20" />
-                             <div className="absolute top-0 right-0 w-1 h-1 bg-foreground/20" />
-                             <div className="absolute bottom-0 left-0 w-1 h-1 bg-foreground/20" />
-                             <div className="absolute bottom-0 right-0 w-1 h-1 bg-foreground/20" />
-                             
+                          <div className="relative w-16 h-16 flex items-center justify-center border border-card-border rounded-lg bg-foreground/[0.02] group-hover:bg-foreground/[0.05] group-hover:border-foreground/20 transition-all duration-300">
                              <skill.icon className="text-2xl text-muted-foreground group-hover:text-foreground transition-colors duration-300" />
                           </div>
                           
-                          <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider group-hover:text-cyan-500 transition-colors">
+                          <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">
                              {skill.name}
                           </span>
                        </motion.div>

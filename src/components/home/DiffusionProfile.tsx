@@ -17,22 +17,22 @@ const DiffusionProfile = () => {
   return (
     <section className="relative py-32 px-4 overflow-hidden border-t border-card-border bg-background" ref={containerRef}>
       <div className="max-w-7xl mx-auto relative z-10">
-        {/* Section Header - Technical Style */}
-        <div className="mb-24 flex flex-col items-start border-l-2 border-card-border pl-8">
+        {/* Section Header */}
+        <div className="mb-24 flex flex-col items-start">
           <motion.span 
             initial={{ opacity: 0, x: -20 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
-            className="text-[10px] font-mono uppercase tracking-[0.4em] text-muted-foreground mb-2"
+            className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mb-4"
           >
-            {'// Entity_Configuration'}
+            About
           </motion.span>
           <motion.h2 
             initial={{ opacity: 0 }}
             animate={isInView ? { opacity: 1 } : {}}
             transition={{ delay: 0.1, duration: 0.8 }}
-            className="text-4xl md:text-5xl font-bold text-foreground tracking-tighter uppercase"
+            className="text-4xl md:text-5xl font-bold text-foreground tracking-tighter"
           >
-            Researcher <span className="text-muted-foreground">Profile</span>
+            Researcher Profile
           </motion.h2>
         </div>
 
@@ -47,42 +47,39 @@ const DiffusionProfile = () => {
             <div className="p-px bg-card-border">
               <div className="bg-card p-6">
                 <div className="flex items-center gap-4 mb-6 pb-6 border-b border-card-border">
-                  <div className="w-12 h-12 bg-foreground/5 flex items-center justify-center border border-card-border">
+                  <div className="w-12 h-12 bg-foreground/5 flex items-center justify-center border border-card-border rounded-lg">
                     <FaFingerprint className="text-xl text-foreground" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-foreground font-mono uppercase tracking-wider">Identity_Core</h3>
-                    <p className="text-[10px] text-muted-foreground font-mono">ID: IRedDragonICY</p>
+                    <h3 className="text-lg font-bold text-foreground">IRedDragonICY</h3>
+                    <p className="text-xs text-muted-foreground">AI Researcher</p>
                   </div>
                 </div>
 
-                <div className="space-y-4 font-mono text-[10px] tracking-widest uppercase">
+                <div className="space-y-4 text-sm">
                   <div className="flex justify-between items-center border-b border-card-border pb-2">
-                    <span className="text-muted-foreground">ROLE</span>
+                    <span className="text-muted-foreground">Role</span>
                     <span className="text-foreground">AI Research Scientist</span>
                   </div>
                   <div className="flex justify-between items-center border-b border-card-border pb-2">
-                    <span className="text-muted-foreground">VERSION</span>
-                    <span className="text-foreground">v2.4.0 (Stable)</span>
+                    <span className="text-muted-foreground">Focus</span>
+                    <span className="text-foreground">Generative Models</span>
                   </div>
                   <div className="flex justify-between items-center border-b border-card-border pb-2">
-                    <span className="text-muted-foreground">ARCH</span>
-                    <span className="text-foreground">Transformer</span>
+                    <span className="text-muted-foreground">Architecture</span>
+                    <span className="text-foreground">Transformers</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">STATUS</span>
-                    <span className="text-green-500 flex items-center gap-2">
-                      <span className="w-1 h-1 rounded-full bg-green-500 animate-pulse" />
-                      Online
-                    </span>
+                    <span className="text-muted-foreground">Location</span>
+                    <span className="text-foreground">Indonesia</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Competency Radar (Stylized) */}
+            {/* Competency Radar */}
             <div className="bg-card p-6 border border-card-border relative overflow-hidden group">
-              <h4 className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-6">Parametric_Optimization</h4>
+              <h4 className="text-xs text-muted-foreground mb-6 uppercase tracking-wide">Expertise</h4>
               <div className="space-y-4">
                 {[
                   { label: "Deep Learning", val: 95 },

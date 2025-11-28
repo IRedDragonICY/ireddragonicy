@@ -97,14 +97,7 @@ const LatentSpaceBackground = () => {
   );
 };
 
-const TechBadge = ({ text }: { text: string }) => {
-  return (
-    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-sm border border-card-border bg-card backdrop-blur-md">
-      <div className="w-1 h-1 rounded-full bg-foreground animate-pulse" />
-      <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400 font-semibold">{text}</span>
-    </div>
-  );
-};
+
 
 const Hero = () => {
   const heroRef = useRef<HTMLDivElement>(null);
@@ -166,25 +159,14 @@ const Hero = () => {
           style={{ y: y1, opacity }}
           className="flex flex-col items-start justify-center space-y-8"
         >
-          {/* Status Badge */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <TechBadge text="System Online // v2.4.0" />
-          </motion.div>
-
           {/* Headline */}
           <div className="space-y-2">
             <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tighter text-foreground leading-[1.1] uppercase">
               <span className="block text-gray-500">
                 Mohammad
               </span>
-              <span className="block text-foreground relative inline-block">
+              <span className="block text-foreground">
                 Farid
-                {/* Technical bracket accent */}
-                <span className="absolute -right-8 top-0 text-sm font-mono text-gray-500 opacity-50 hidden lg:block">[01]</span>
               </span>
               <span className="block text-gray-400">
                 Hendianto
@@ -193,11 +175,7 @@ const Hero = () => {
           </div>
 
           {/* Subheadline / Typewriter */}
-          <div className="max-w-xl border-l-2 border-card-border pl-6">
-            <div className="flex items-center gap-2 text-gray-500 font-mono text-xs mb-2 uppercase tracking-wider">
-              <BsTerminal />
-              <span>Research_Objective</span>
-            </div>
+          <div className="max-w-xl">
             <div className="h-24 sm:h-20">
               <TypewriterTextMod
                 text="Architecting the future of Generative AI through research in Diffusion Models and Transformer Architectures."
@@ -237,7 +215,7 @@ const Hero = () => {
             transition={{ delay: 1.2 }}
             className="pt-8 border-t border-card-border w-full max-w-md"
           >
-            <p className="text-[10px] text-gray-500 font-mono mb-4 uppercase tracking-widest">Core_Technologies</p>
+            <p className="text-[10px] text-muted-foreground mb-4 uppercase tracking-widest">Technologies</p>
             <div className="flex flex-wrap gap-2">
               {['PyTorch', 'JAX', 'Diffusers', 'CUDA', 'LLMs'].map((tech) => (
                 <span 
@@ -284,14 +262,11 @@ const Hero = () => {
                   <div className="bg-card border border-card-border p-4 shadow-2xl">
                     <div className="flex items-center gap-3 mb-2 border-b border-card-border pb-2">
                       <FaRobot className="text-foreground text-xs" />
-                      <span className="text-[9px] font-mono text-gray-500 tracking-widest uppercase">Models_Deployed</span>
+                      <span className="text-[9px] font-mono text-muted-foreground tracking-widest uppercase">Models</span>
                     </div>
                     <div className="flex items-baseline gap-2">
                          <span className="text-3xl font-bold text-foreground tracking-tighter">12</span>
-                         <span className="text-[8px] text-green-500 font-mono flex items-center gap-1">
-                            <span className="w-1 h-1 bg-green-500 rounded-full animate-pulse" />
-                            ACTIVE
-                         </span>
+                         <span className="text-[8px] text-muted-foreground font-mono">deployed</span>
                     </div>
                   </div>
                </div>

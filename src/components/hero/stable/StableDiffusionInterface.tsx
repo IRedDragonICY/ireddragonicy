@@ -201,16 +201,10 @@ const StableDiffusionInterface: React.FC<Props> = ({ isInView, isMobile: isMobil
               <div className="w-2 h-2 rounded-full bg-green-500/20 border border-green-500/50" />
             </div>
             <div className="h-3 w-px bg-card-border" />
-            <div className="flex flex-col">
-              <span className="text-[9px] font-bold text-foreground tracking-wider leading-none">DIFFUSION_ENGINE</span>
-              <span className="text-[7px] text-muted-foreground font-mono leading-none mt-0.5">V2.4.0 // RUNNING</span>
-            </div>
+            <span className="text-[9px] font-semibold text-foreground tracking-wide">Diffusion Engine</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-cyan-950/30 border border-cyan-500/20">
-                <div className={`w-1 h-1 rounded-full ${isGenerating ? 'bg-cyan-400 animate-pulse' : 'bg-cyan-900'}`} />
-                <span className="text-[8px] font-mono text-cyan-300">{isGenerating ? 'BUSY' : 'IDLE'}</span>
-            </div>
+          <div className="text-[8px] font-mono text-muted-foreground">
+            {selectedModel}
           </div>
         </div>
 
@@ -225,16 +219,10 @@ const StableDiffusionInterface: React.FC<Props> = ({ isInView, isMobile: isMobil
                 <div className="absolute inset-0 z-20 pointer-events-none border-[0.5px] border-white/5 m-1.5 rounded-sm" />
                 
                 {/* Corner Markers - Smaller */}
-                <div className="absolute top-2.5 left-2.5 w-1.5 h-1.5 border-t border-l border-cyan-500/50 z-20" />
-                <div className="absolute top-2.5 right-2.5 w-1.5 h-1.5 border-t border-r border-cyan-500/50 z-20" />
-                <div className="absolute bottom-2.5 left-2.5 w-1.5 h-1.5 border-b border-l border-cyan-500/50 z-20" />
-                <div className="absolute bottom-2.5 right-2.5 w-1.5 h-1.5 border-b border-r border-cyan-500/50 z-20" />
-
-                {/* Model Badge Overlay - More Compact */}
-                <div className="absolute top-3 right-3 z-30 flex items-center gap-1.5 bg-black/60 backdrop-blur-md border border-white/10 px-1.5 py-0.5 rounded text-[8px] text-gray-300 font-mono">
-                    <span className="w-1.5 h-1.5 rounded bg-gradient-to-br from-cyan-400 to-blue-600 animate-spin-slow" />
-                    {selectedModel}
-                </div>
+                <div className="absolute top-2.5 left-2.5 w-1.5 h-1.5 border-t border-l border-foreground/20 z-20" />
+                <div className="absolute top-2.5 right-2.5 w-1.5 h-1.5 border-t border-r border-foreground/20 z-20" />
+                <div className="absolute bottom-2.5 left-2.5 w-1.5 h-1.5 border-b border-l border-foreground/20 z-20" />
+                <div className="absolute bottom-2.5 right-2.5 w-1.5 h-1.5 border-b border-r border-foreground/20 z-20" />
 
                 <AnimatePresence>
                   {showLatent && (
@@ -266,25 +254,25 @@ const StableDiffusionInterface: React.FC<Props> = ({ isInView, isMobile: isMobil
                     </motion.div>
                 )}
                 
-                {/* Progress Overlay (Cyberpunk style) - Compact */}
+                {/* Progress Overlay */}
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-3 z-30">
                      <div className="flex justify-between items-end mb-1">
                         <div className="flex flex-col">
-                            <span className="text-[7px] text-cyan-500/60 font-mono uppercase mb-0.5">Denoising Loop</span>
+                            <span className="text-[7px] text-muted-foreground uppercase mb-0.5">Progress</span>
                             <div className="flex items-baseline gap-0.5">
                                 <span className="text-xl font-light text-white tracking-tighter">{Math.floor(denoisingProgress * 100)}</span>
-                                <span className="text-[8px] text-cyan-400 font-mono">%</span>
+                                <span className="text-[8px] text-muted-foreground">%</span>
                             </div>
                         </div>
                         <div className="flex flex-col items-end">
-                            <span className="text-[7px] text-gray-500 font-mono">STEP {currentStep}/{totalSteps}</span>
-                            <span className="text-[7px] text-cyan-500 font-mono">SIGMA: {sigmaValue.toFixed(2)}</span>
+                            <span className="text-[7px] text-muted-foreground">Step {currentStep}/{totalSteps}</span>
+                            <span className="text-[7px] text-muted-foreground">σ {sigmaValue.toFixed(2)}</span>
                         </div>
                      </div>
                      {/* Progress Bar */}
                      <div className="relative w-full h-0.5 bg-white/10 rounded-full overflow-hidden">
                         <motion.div 
-                            className="absolute top-0 left-0 bottom-0 bg-cyan-500 shadow-[0_0_10px_#06b6d4]"
+                            className="absolute top-0 left-0 bottom-0 bg-foreground/80"
                             style={{ width: `${denoisingProgress * 100}%` }}
                         />
                      </div>
@@ -292,8 +280,8 @@ const StableDiffusionInterface: React.FC<Props> = ({ isInView, isMobile: isMobil
 
                 {/* Scanner Beam */}
                 <motion.div 
-                    className="absolute left-0 right-0 h-[1px] bg-cyan-400/50 shadow-[0_0_15px_rgba(34,211,238,0.8)] z-20 pointer-events-none"
-                    animate={{ top: ["0%", "100%"], opacity: [0, 1, 0] }}
+                    className="absolute left-0 right-0 h-[1px] bg-foreground/30 z-20 pointer-events-none"
+                    animate={{ top: ["0%", "100%"], opacity: [0, 0.5, 0] }}
                     transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
                 />
             </div>
@@ -343,13 +331,10 @@ const StableDiffusionInterface: React.FC<Props> = ({ isInView, isMobile: isMobil
             <div className="border border-card-border rounded-md bg-foreground/[0.02] overflow-hidden">
                 <button 
                     onClick={() => setShowControlNet(!showControlNet)}
-                    className="w-full flex items-center justify-between p-1.5 text-[8px] text-muted-foreground hover:text-foreground hover:bg-foreground/5 transition-colors uppercase font-mono tracking-wider"
+                    className="w-full flex items-center justify-between p-1.5 text-[8px] text-muted-foreground hover:text-foreground hover:bg-foreground/5 transition-colors uppercase tracking-wider"
                 >
-                    <div className="flex items-center gap-1.5">
-                        <div className="w-1 h-1 bg-cyan-500 rounded-full" />
-                        ControlNet Pipeline
-                    </div>
-                    <span>{showControlNet ? '[-]' : '[+]'}</span>
+                    <span>ControlNet</span>
+                    <span>{showControlNet ? '−' : '+'}</span>
                 </button>
                 
                 <AnimatePresence>
@@ -391,23 +376,10 @@ const StableDiffusionInterface: React.FC<Props> = ({ isInView, isMobile: isMobil
                 </AnimatePresence>
             </div>
 
-            {/* Footer Metrics - Very Compact */}
-            <div className="flex items-center justify-between pt-1 border-t border-card-border text-[7px] font-mono text-muted-foreground uppercase tracking-widest">
-                <div className="flex items-center gap-2">
-                    <span className="flex items-center gap-1">
-                        <span className="w-1 h-1 bg-green-500 rounded-full animate-pulse" />
-                        A100
-                    </span>
-                    <span>VRAM: {isGenerating ? '92%' : '14%'}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground/50">74°C</span>
-                    <div className="flex gap-0.5">
-                        {[1,2,3,4,5].map(i => (
-                            <div key={i} className={`w-0.5 h-1.5 ${i < 3 ? 'bg-cyan-500/30' : 'bg-muted'}`} />
-                        ))}
-                    </div>
-                </div>
+            {/* Footer Metrics */}
+            <div className="flex items-center justify-between pt-1 border-t border-card-border text-[7px] text-muted-foreground uppercase tracking-wider">
+                <span>GPU Memory: {isGenerating ? '92%' : '14%'}</span>
+                <span>74°C</span>
             </div>
 
         </div>

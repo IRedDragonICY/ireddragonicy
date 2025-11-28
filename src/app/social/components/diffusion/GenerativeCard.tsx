@@ -3,7 +3,7 @@
 import React, { useState, useMemo, memo, useRef, useEffect } from 'react';
 import { motion, useMotionTemplate, useMotionValue, useInView, Variants } from 'framer-motion';
 import { SocialItem, GameItem, SocialStats, GitHubUser } from '../../types';
-import { FaExternalLinkAlt, FaCopy, FaCheck, FaCodeBranch, FaCircle } from 'react-icons/fa';
+import { FaExternalLinkAlt, FaCopy, FaCheck } from 'react-icons/fa';
 import { useSocialStats, ApiHookConfig } from '../../hooks';
 import { formatUtils } from '../../utils';
 
@@ -193,15 +193,14 @@ const GenerativeCard: React.FC<GenerativeCardProps> = memo(({ item, index, type 
             </div>
             
             <div className="flex flex-col">
-              <h3 className="text-sm font-bold text-foreground uppercase tracking-wider group-hover:text-cyan-400 transition-colors">
+              <h3 className="text-sm font-semibold text-foreground group-hover:text-foreground/80 transition-colors">
                 {item.name}
               </h3>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest">
-                  {isGame ? (item as GameItem).server : type}
+              {isGame && (
+                <span className="text-[10px] text-muted-foreground mt-0.5">
+                  {(item as GameItem).server}
                 </span>
-                <span className="w-1 h-1 rounded-full bg-green-500 animate-pulse" />
-              </div>
+              )}
             </div>
           </div>
 
@@ -289,7 +288,7 @@ const GenerativeCard: React.FC<GenerativeCardProps> = memo(({ item, index, type 
           {isGame && (
             <div className="mt-2 bg-muted/30 border border-card-border p-2 flex items-center justify-between group-hover:border-foreground/20 transition-colors">
                 <div className="flex flex-col">
-                   <span className="text-[8px] uppercase text-muted-foreground font-mono mb-0.5">USER_ID_HASH</span>
+                   <span className="text-[9px] text-muted-foreground mb-0.5">ID</span>
                    <span className="text-xs font-mono text-foreground">
                      {(item as GameItem).uid || (item as GameItem).ign}
                    </span>
@@ -305,14 +304,8 @@ const GenerativeCard: React.FC<GenerativeCardProps> = memo(({ item, index, type 
           )}
         </div>
 
-        {/* Footer Metadata */}
-        <div className="mt-6 pt-3 border-t border-card-border flex justify-between items-center">
-          <div className="flex items-center gap-2 text-[9px] font-mono text-muted-foreground uppercase">
-             <FaCodeBranch size={8} />
-             <span>Node_{index.toString().padStart(3, '0')}</span>
-          </div>
-          <FaCircle size={4} className="text-muted-foreground group-hover:text-green-500 transition-colors" />
-        </div>
+        {/* Footer */}
+        <div className="mt-6 pt-3 border-t border-card-border" />
       </div>
     </motion.div>
   );

@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { FaMagic, FaTerminal } from 'react-icons/fa';
+import React, { useState } from 'react';
+import { FaSearch } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 
 interface AIPromptInputProps {
@@ -10,47 +10,22 @@ interface AIPromptInputProps {
   placeholder?: string;
 }
 
-const AIPromptInput: React.FC<AIPromptInputProps> = ({ value, onChange, placeholder = "Enter prompt to generate social connections..." }) => {
+const AIPromptInput: React.FC<AIPromptInputProps> = ({ value, onChange, placeholder = "Search platforms..." }) => {
   const [isFocused, setIsFocused] = useState(false);
-  const [dots, setDots] = useState('.');
-  const [seed, setSeed] = useState(0);
-
-  useEffect(() => {
-    setSeed(Math.floor(Math.random() * 999999));
-    const interval = setInterval(() => {
-      setDots(prev => prev.length >= 3 ? '.' : prev + '.');
-    }, 500);
-    return () => clearInterval(interval);
-  }, []);
 
   return (
-    <div className="w-full max-w-2xl mx-auto mb-12 relative z-10">
-      {/* Label / Status */}
-      <div className="flex justify-between items-end mb-2 px-1">
-        <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-cyan-500/80 font-mono">
-           <FaTerminal size={10} />
-           <span>Input_Stream_Active</span>
-        </div>
-        <div className="text-[10px] font-mono text-muted-foreground">
-           Processing_Nodes{dots}
-        </div>
-      </div>
-
+    <div className="w-full max-w-xl mx-auto mb-12 relative z-10">
       {/* Input Container */}
       <motion.div 
         initial={false}
         animate={{
-          borderColor: isFocused ? 'rgba(34, 211, 238, 0.5)' : 'var(--card-border)',
-          boxShadow: isFocused ? '0 0 20px rgba(34, 211, 238, 0.1)' : 'none'
+          borderColor: isFocused ? 'var(--foreground)' : 'var(--card-border)',
         }}
-        className="relative group bg-card/40 backdrop-blur-xl border border-card-border rounded-lg overflow-hidden"
+        transition={{ duration: 0.2 }}
+        className="relative bg-card/40 backdrop-blur-xl border border-card-border rounded-xl overflow-hidden"
       >
-        {/* Scanning line effect */}
-        <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-20" />
-        <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-purple-500 to-transparent opacity-20" />
-
-        <div className="flex items-center px-4 py-4">
-          <span className="text-cyan-500 mr-3 text-lg animate-pulse">{'>'}</span>
+        <div className="flex items-center px-4 py-3">
+          <FaSearch className="text-muted-foreground mr-3" size={14} />
           
           <input
             type="text"
@@ -59,41 +34,24 @@ const AIPromptInput: React.FC<AIPromptInputProps> = ({ value, onChange, placehol
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             placeholder={placeholder}
-            className="w-full bg-transparent border-none outline-none text-foreground font-mono text-sm placeholder-muted-foreground"
+            className="w-full bg-transparent border-none outline-none text-foreground text-sm placeholder-muted-foreground"
             autoComplete="off"
             spellCheck="false"
           />
 
-          <div className="ml-2 flex items-center gap-2">
-             {value && (
-               <motion.button
-                 initial={{ scale: 0, opacity: 0 }}
-                 animate={{ scale: 1, opacity: 1 }}
-                 exit={{ scale: 0, opacity: 0 }}
-                 onClick={() => onChange('')}
-                 className="p-1 hover:text-red-400 text-muted-foreground transition-colors text-xs font-mono uppercase"
-               >
-                 [CLR]
-               </motion.button>
-             )}
-             <div className="h-4 w-[1px] bg-card-border mx-1" />
-             <FaMagic className={`text-sm ${value ? 'text-cyan-400' : 'text-muted-foreground'}`} />
-          </div>
+          {value && (
+            <motion.button
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              onClick={() => onChange('')}
+              className="ml-2 px-2 py-1 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors text-xs rounded"
+            >
+              Clear
+            </motion.button>
+          )}
         </div>
-
-        {/* Corner accents */}
-        <div className="absolute top-0 left-0 w-2 h-2 border-l border-t border-cyan-500/50" />
-        <div className="absolute top-0 right-0 w-2 h-2 border-r border-t border-cyan-500/50" />
-        <div className="absolute bottom-0 left-0 w-2 h-2 border-l border-b border-purple-500/50" />
-        <div className="absolute bottom-0 right-0 w-2 h-2 border-r border-b border-purple-500/50" />
       </motion.div>
-      
-      {/* Helper Text */}
-      <div className="mt-2 flex gap-4 justify-start px-1 text-[10px] font-mono text-muted-foreground">
-        <span>MODE: DIFFUSION</span>
-        <span>SEED: {seed}</span>
-        <span>CFG_SCALE: 7.0</span>
-      </div>
     </div>
   );
 };

@@ -1,15 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence, useScroll, useTransform, useSpring } from 'framer-motion';
+import React, { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { HiMenuAlt3, HiX, HiSun, HiMoon } from 'react-icons/hi';
-import { HiSparkles } from 'react-icons/hi2';
+import { HiSparkles, HiArrowRight } from 'react-icons/hi2';
 import { BsTerminal } from 'react-icons/bs';
 import { 
-  FaBrain, 
-  FaGraduationCap, 
+  FaUser, 
   FaGithub, 
   FaDiscord, 
   FaTwitter 
@@ -17,10 +16,9 @@ import {
 import {
   BiHomeAlt,
   BiCodeAlt,
-  BiNetworkChart
 } from 'react-icons/bi';
 import { RiArticleLine, RiShareLine } from 'react-icons/ri';
-import { TbBrain } from 'react-icons/tb';
+import { TbBrain, TbHeartHandshake } from 'react-icons/tb';
 import Chatbot from './chatbot/Chatbot';
 
 // --- Types ---
@@ -33,7 +31,7 @@ interface NavigationProps {
 // --- Constants ---
 const NAV_LINKS = [
   { id: 'home', label: 'Home', icon: BiHomeAlt, href: '/' },
-  { id: 'education', label: 'Education', icon: FaGraduationCap, href: '/education' },
+  { id: 'about', label: 'About', icon: FaUser, href: '/about' },
   { id: 'assets', label: 'Assets', icon: BiCodeAlt, href: '/assets' },
   { id: 'social', label: 'Social', icon: RiShareLine, href: '/social' },
   { id: 'blog', label: 'Blog', icon: RiArticleLine, href: '/blog' },
@@ -46,13 +44,6 @@ const SOCIAL_LINKS = [
 ];
 
 // --- Components ---
-
-const StatusIndicator = ({ label, active = true }: { label: string, active?: boolean }) => (
-  <div className="flex items-center gap-2 px-2 py-1 rounded-full bg-card border border-card-border text-[10px] font-mono text-muted-foreground">
-    <span className={`w-1.5 h-1.5 rounded-full ${active ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
-    <span className="uppercase tracking-wider">{label}</span>
-  </div>
-);
 
 const NavItem = ({ 
   link, 
@@ -71,33 +62,42 @@ const NavItem = ({
       onClick={onClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="relative px-4 py-2 group"
+      className="relative px-4 py-2.5 group"
     >
-      {/* Hover Background */}
+      {/* Active Background with premium gradient */}
       {isActive && (
         <motion.div
           layoutId="activeNavBackground"
-          className="absolute inset-0 bg-foreground/5 rounded-lg backdrop-blur-sm"
-          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+          className="absolute inset-0 bg-gradient-to-r from-foreground/[0.08] via-foreground/[0.04] to-foreground/[0.08] rounded-xl border border-foreground/[0.08]"
+          transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
         />
       )}
       
       {/* Content */}
-      <div className="relative z-10 flex items-center gap-2">
-        <link.icon className={`text-sm transition-colors duration-300 ${isActive ? 'text-cyan-400' : 'text-muted-foreground group-hover:text-foreground'}`} />
-        <span className={`text-xs font-medium uppercase tracking-wider transition-colors duration-300 ${isActive ? 'text-foreground' : 'text-muted-foreground group-hover:text-foreground'}`}>
+      <div className="relative z-10 flex items-center gap-2.5">
+        <link.icon className={`text-[13px] transition-all duration-300 ${
+          isActive 
+            ? 'text-foreground' 
+            : 'text-muted-foreground/70 group-hover:text-foreground'
+        }`} />
+        <span className={`text-[11px] font-semibold tracking-[0.08em] uppercase transition-all duration-300 ${
+          isActive 
+            ? 'text-foreground' 
+            : 'text-muted-foreground/70 group-hover:text-foreground'
+        }`}>
           {link.label}
         </span>
       </div>
 
-      {/* Hover Glow */}
+      {/* Subtle hover state */}
       <AnimatePresence>
         {isHovered && !isActive && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            className="absolute inset-0 bg-card rounded-lg -z-10"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="absolute inset-0 bg-foreground/[0.03] rounded-xl -z-10"
           />
         )}
       </AnimatePresence>
@@ -110,7 +110,6 @@ const Navigation = ({ personalInfo = { alias: 'IRedDragonICY' } }: NavigationPro
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
-  const [currentTime, setCurrentTime] = useState('');
   const [theme, setTheme] = useState('dark');
 
   useEffect(() => {
@@ -119,7 +118,7 @@ const Navigation = ({ personalInfo = { alias: 'IRedDragonICY' } }: NavigationPro
     document.documentElement.setAttribute('data-theme', savedTheme);
   }, []);
 
-  const toggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const toggleTheme = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     const newTheme = theme === 'dark' ? 'light' : 'dark';
     
     if (!(document as any).startViewTransition) {
@@ -158,7 +157,7 @@ const Navigation = ({ personalInfo = { alias: 'IRedDragonICY' } }: NavigationPro
         }
       );
     });
-  };
+  }, [theme]);
   
   // Scroll progress for the top bar
   const { scrollYProgress } = useScroll();
@@ -171,24 +170,17 @@ const Navigation = ({ personalInfo = { alias: 'IRedDragonICY' } }: NavigationPro
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
-    
-    // Time update
-    const timer = setInterval(() => {
-      const now = new Date();
-      setCurrentTime(now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }));
-    }, 1000);
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      clearInterval(timer);
     };
   }, []);
 
   return (
     <>
-      {/* Top Progress Bar */}
+      {/* Top Progress Bar - Ultra thin and elegant */}
       <motion.div
-        className="fixed top-0 left-0 right-0 h-[2px] bg-cyan-500 z-[100] origin-left"
+        className="fixed top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-foreground/40 to-transparent z-[100] origin-left"
         style={{ scaleX }}
       />
 
@@ -196,44 +188,50 @@ const Navigation = ({ personalInfo = { alias: 'IRedDragonICY' } }: NavigationPro
         <motion.div
           initial={{ y: -100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           className={`
-            relative w-full max-w-7xl transition-all duration-500 ease-out
+            relative w-full max-w-6xl transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]
             ${scrolled 
-              ? `bg-nav-bg backdrop-blur-xl border border-card-border shadow-2xl ${theme === 'light' ? 'shadow-zinc-200/50' : 'shadow-black/50'} rounded-2xl p-2` 
-              : 'bg-transparent border-transparent p-4'
+              ? 'bg-background/80 backdrop-blur-2xl border border-foreground/[0.06] shadow-[0_8px_32px_rgba(0,0,0,0.12)] rounded-2xl py-3 px-4' 
+              : 'bg-transparent border-transparent py-4 px-4'
             }
           `}
         >
+          {/* Subtle gradient overlay when scrolled */}
+          {scrolled && (
+            <div className="absolute inset-0 bg-gradient-to-r from-foreground/[0.01] via-transparent to-foreground/[0.01] rounded-2xl pointer-events-none" />
+          )}
+
           {/* Inner Container */}
           <div className="flex items-center justify-between relative">
             
-            {/* Left: Brand & Status */}
-            <div className="flex items-center gap-6">
+            {/* Left: Brand */}
+            <div className="flex items-center gap-4">
               <Link href="/" className="group flex items-center gap-3 relative z-20">
-                <div className="relative w-10 h-10 flex items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-foreground/10 to-foreground/5 border border-card-border group-hover:border-cyan-500/50 transition-all duration-500 group-hover:shadow-[0_0_20px_rgba(6,182,212,0.3)]">
-                  <div className="absolute inset-0 bg-cyan-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  <FaBrain className="text-foreground group-hover:text-cyan-400 transition-colors duration-300 text-lg relative z-10" />
+                {/* Premium Logo Mark */}
+                <div className="relative">
+                  <div className="relative w-10 h-10 flex items-center justify-center rounded-xl bg-foreground/[0.04] border border-foreground/[0.08] group-hover:border-foreground/20 transition-all duration-500">
+                    <TbBrain className="text-foreground text-lg relative z-10 group-hover:scale-110 transition-transform duration-300" />
+                  </div>
+                  {/* Subtle glow on hover */}
+                  <div className="absolute inset-0 rounded-xl bg-foreground/10 blur-xl opacity-0 group-hover:opacity-50 transition-opacity duration-500" />
                 </div>
+                
+                {/* Brand Text */}
                 <div className="hidden sm:flex flex-col">
-                  <span className="text-sm font-bold text-foreground font-mono tracking-widest uppercase group-hover:text-cyan-400 transition-colors duration-300">
+                  <span className="text-sm font-semibold text-foreground tracking-tight">
                     {personalInfo.alias}
                   </span>
-                  <span className="text-[10px] text-muted-foreground font-mono group-hover:text-cyan-500/70 transition-colors">
-                    NEURAL_INTERFACE_V2.0
+                  <span className="text-[10px] text-muted-foreground/60 font-medium tracking-wide">
+                    Developer & Creator
                   </span>
                 </div>
               </Link>
-
-              {/* Desktop Status Indicators */}
-              <div className="hidden lg:flex items-center gap-3 border-l border-card-border pl-6">
-                <StatusIndicator label="SYSTEM ONLINE" />
-              </div>
             </div>
 
             {/* Center: Navigation (Desktop) */}
             <nav className="hidden lg:flex items-center absolute left-1/2 -translate-x-1/2">
-              <div className="flex items-center gap-1 p-1 bg-card border border-card-border rounded-xl backdrop-blur-md">
+              <div className="flex items-center gap-0.5 p-1.5 bg-foreground/[0.03] border border-foreground/[0.06] rounded-xl">
                 {NAV_LINKS.map((link) => (
                   <NavItem
                     key={link.id}
@@ -246,38 +244,35 @@ const Navigation = ({ personalInfo = { alias: 'IRedDragonICY' } }: NavigationPro
             </nav>
 
             {/* Right: Actions */}
-            <div className="flex items-center gap-3">
-              {/* Time Display */}
-              <div className="hidden md:block text-xs font-mono text-muted-foreground bg-card px-3 py-1.5 rounded-lg border border-card-border">
-                {currentTime || '00:00'} UTC
-              </div>
-
+            <div className="flex items-center gap-2">
               {/* Theme Toggle */}
-              <button
+              <motion.button
                 onClick={toggleTheme}
-                className="p-2.5 rounded-xl bg-card border border-card-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-all duration-300"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="p-2.5 rounded-xl bg-foreground/[0.03] border border-foreground/[0.06] text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06] hover:border-foreground/[0.12] transition-all duration-300"
+                aria-label="Toggle theme"
               >
-                {theme === 'dark' ? <HiSun size={20} /> : <HiMoon size={20} />}
-              </button>
+                {theme === 'dark' ? <HiSun size={18} /> : <HiMoon size={18} />}
+              </motion.button>
 
               {/* Chatbot Toggle */}
               <div className="relative">
-                <button
+                <motion.button
                   onClick={() => setChatOpen(!chatOpen)}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   className={`
-                    relative p-2.5 rounded-xl border transition-all duration-300 group overflow-hidden
+                    relative p-2.5 rounded-xl border transition-all duration-300
                     ${chatOpen 
-                      ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.2)]' 
-                      : 'bg-card border-card-border text-muted-foreground hover:text-foreground hover:border-foreground/30'
+                      ? 'bg-foreground/10 border-foreground/20 text-foreground' 
+                      : 'bg-foreground/[0.03] border-foreground/[0.06] text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06] hover:border-foreground/[0.12]'
                     }
                   `}
+                  aria-label="Toggle chat"
                 >
-                  <div className="relative z-10">
-                    {chatOpen ? <HiX size={20} /> : <BsTerminal size={20} />}
-                  </div>
-                  {/* Scanline effect on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/10 to-transparent translate-y-[-100%] group-hover:translate-y-[100%] transition-transform duration-700" />
-                </button>
+                  {chatOpen ? <HiX size={18} /> : <BsTerminal size={18} />}
+                </motion.button>
 
                 {/* Embedded Chatbot */}
                 <Chatbot 
@@ -287,78 +282,102 @@ const Navigation = ({ personalInfo = { alias: 'IRedDragonICY' } }: NavigationPro
                 />
               </div>
 
-              {/* Donate Button */}
-              <Link
-                href="/donate"
-                className="hidden md:flex group relative px-5 py-2.5 bg-white text-black overflow-hidden rounded-xl transition-all hover:scale-105 active:scale-95"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-white to-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[length:200%_100%] animate-shimmer" />
-                <span className="relative z-10 text-[11px] font-bold uppercase tracking-widest flex items-center gap-2">
-                  <TbBrain className="text-lg" />
-                  <span>Support</span>
-                </span>
+              {/* Support CTA Button - Premium style */}
+              <Link href="/donate" className="hidden md:block">
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="group relative px-5 py-2.5 bg-foreground text-background rounded-xl overflow-hidden transition-all duration-300"
+                >
+                  {/* Shimmer effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-background/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                  
+                  <span className="relative z-10 flex items-center gap-2 text-[11px] font-semibold tracking-[0.06em] uppercase">
+                    <TbHeartHandshake className="text-base" />
+                    <span>Support</span>
+                    <HiArrowRight className="text-xs opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all duration-300" />
+                  </span>
+                </motion.div>
               </Link>
 
               {/* Mobile Menu Toggle */}
-              <button
+              <motion.button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden p-2.5 text-muted-foreground hover:text-foreground bg-card border border-card-border rounded-xl transition-colors"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="lg:hidden p-2.5 text-muted-foreground hover:text-foreground bg-foreground/[0.03] border border-foreground/[0.06] rounded-xl transition-all duration-300"
+                aria-label="Toggle menu"
               >
                 {mobileMenuOpen ? <HiX size={20} /> : <HiMenuAlt3 size={20} />}
-              </button>
+              </motion.button>
             </div>
           </div>
         </motion.div>
       </header>
 
-      {/* Mobile Menu Overlay */}
+      {/* Mobile Menu Overlay - Premium Design */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 bg-background/95 backdrop-blur-2xl lg:hidden flex flex-col pt-32 px-6"
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 z-40 bg-background lg:hidden flex flex-col"
           >
-            {/* Background Grid */}
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(128,128,128,0.1)_1px,transparent_1px),linear-gradient(to_bottom,rgba(128,128,128,0.1)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
-
-            <div className="flex flex-col gap-2 relative z-10">
-              {NAV_LINKS.map((link, idx) => (
-                <motion.div
-                  key={link.id}
-                  initial={{ x: -50, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: idx * 0.1 }}
-                >
-                  <Link
-                    href={link.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`
-                      group flex items-center justify-between p-5 rounded-2xl border transition-all duration-300
-                      ${pathname === link.href 
-                        ? 'bg-foreground/10 border-foreground/20 text-foreground' 
-                        : 'bg-foreground/5 border-foreground/5 text-muted-foreground hover:bg-foreground/10 hover:text-foreground'
-                      }
-                    `}
+            {/* Close zone */}
+            <div className="h-24" />
+            
+            {/* Navigation content */}
+            <div className="flex-1 flex flex-col px-6 py-8">
+              <div className="flex flex-col gap-1">
+                {NAV_LINKS.map((link, idx) => (
+                  <motion.div
+                    key={link.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.05, duration: 0.3 }}
                   >
-                    <div className="flex items-center gap-4">
-                      <div className={`p-2 rounded-lg ${pathname === link.href ? 'bg-cyan-500/20 text-cyan-400' : 'bg-foreground/5 text-muted-foreground group-hover:text-foreground'}`}>
-                        <link.icon size={20} />
+                    <Link
+                      href={link.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`
+                        group flex items-center justify-between p-4 rounded-xl transition-all duration-300
+                        ${pathname === link.href 
+                          ? 'bg-foreground/[0.06] text-foreground' 
+                          : 'text-muted-foreground hover:bg-foreground/[0.03] hover:text-foreground'
+                        }
+                      `}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={`p-2 rounded-lg transition-colors duration-300 ${
+                          pathname === link.href 
+                            ? 'bg-foreground/10 text-foreground' 
+                            : 'bg-foreground/[0.04] text-muted-foreground group-hover:text-foreground'
+                        }`}>
+                          <link.icon size={18} />
+                        </div>
+                        <span className="text-base font-medium">{link.label}</span>
                       </div>
-                      <span className="text-lg font-medium tracking-wide">{link.label}</span>
-                    </div>
-                    <HiSparkles className={`text-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity ${pathname === link.href ? 'opacity-100' : ''}`} />
-                  </Link>
-                </motion.div>
-              ))}
+                      <HiArrowRight className={`text-sm transition-all duration-300 ${
+                        pathname === link.href 
+                          ? 'opacity-100' 
+                          : 'opacity-0 -translate-x-2 group-hover:opacity-50 group-hover:translate-x-0'
+                      }`} />
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
 
-              {/* Mobile Socials */}
+              {/* Divider */}
+              <div className="my-6 h-px bg-foreground/[0.06]" />
+
+              {/* Mobile Social Links */}
               <motion.div 
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.5 }}
-                className="mt-8 flex justify-center gap-4"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.3 }}
+                className="flex justify-center gap-3"
               >
                 {SOCIAL_LINKS.map((social, idx) => (
                   <a
@@ -366,11 +385,28 @@ const Navigation = ({ personalInfo = { alias: 'IRedDragonICY' } }: NavigationPro
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-3 rounded-full bg-foreground/5 border border-foreground/10 text-muted-foreground hover:text-foreground hover:bg-foreground/10 hover:scale-110 transition-all"
+                    className="p-3 rounded-xl bg-foreground/[0.03] border border-foreground/[0.06] text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06] transition-all duration-300"
                   >
-                    <social.icon size={20} />
+                    <social.icon size={18} />
                   </a>
                 ))}
+              </motion.div>
+
+              {/* Mobile Support Button */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4, duration: 0.3 }}
+                className="mt-6"
+              >
+                <Link
+                  href="/donate"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center justify-center gap-2 w-full py-4 bg-foreground text-background rounded-xl font-semibold text-sm tracking-wide"
+                >
+                  <TbHeartHandshake size={18} />
+                  <span>Support My Work</span>
+                </Link>
               </motion.div>
             </div>
           </motion.div>

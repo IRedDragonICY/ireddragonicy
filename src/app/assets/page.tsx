@@ -82,9 +82,8 @@ export default function AssetsPage() {
         />
 
         {error && (
-          <div className="p-4 mb-8 rounded-xl bg-destructive border border-destructive-foreground/20 text-destructive-foreground flex items-center gap-3">
-            <div className="w-2 h-2 rounded-full bg-destructive-foreground animate-pulse" />
-            <span className="font-mono text-sm">ERROR: {error}</span>
+          <div className="p-4 mb-8 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 flex items-center gap-3">
+            <span className="text-sm">Error: {error}</span>
           </div>
         )}
 
@@ -101,10 +100,10 @@ export default function AssetsPage() {
         ) : (
           !loading && (
             <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">
-               <div className="w-16 h-16 mb-4 rounded-full bg-card flex items-center justify-center">
-                  <span className="font-mono text-2xl">?</span>
+               <div className="w-16 h-16 mb-4 rounded-full bg-card border border-card-border flex items-center justify-center">
+                  <span className="text-2xl">📂</span>
                </div>
-               <h3 className="text-lg font-mono text-muted-foreground mb-2">NO_ASSETS_FOUND</h3>
+               <h3 className="text-lg text-foreground mb-2">No assets found</h3>
                <p className="text-sm text-muted-foreground">Try a different User ID or sync again.</p>
             </div>
           )

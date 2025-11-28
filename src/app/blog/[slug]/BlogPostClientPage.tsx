@@ -4,7 +4,7 @@ import React from 'react';
 import { motion, useScroll, useSpring } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
-import { FaArrowLeft, FaCalendar, FaClock, FaTag, FaTwitter, FaLinkedin, FaLink } from 'react-icons/fa';
+import { FaArrowLeft, FaCalendar, FaClock, FaTwitter, FaLinkedin, FaLink } from 'react-icons/fa';
 import CursorEffect from '@/components/CursorEffect';
 import AgencyFooter from '@/components/home/AgencyFooter';
 import DiffusionBackground from '@/app/social/components/diffusion/DiffusionBackground';
@@ -50,12 +50,12 @@ export default function BlogPostClientPage({ post, relatedPosts, children }: Blo
             />
             
             <div className="absolute inset-0 z-20 flex flex-col justify-end pb-20 px-4">
-              <div className="max-w-4xl mx-auto w-full">
+              <div className="max-w-[720px] mx-auto w-full">
                 <Link 
                   href="/blog" 
-                  className="inline-flex items-center gap-2 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors mb-8 uppercase tracking-widest"
+                  className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8"
                 >
-                  <FaArrowLeft /> Return_To_Index
+                  <FaArrowLeft className="w-3 h-3" /> Back
                 </Link>
 
                 <motion.div
@@ -64,96 +64,92 @@ export default function BlogPostClientPage({ post, relatedPosts, children }: Blo
                   transition={{ delay: 0.2 }}
                 >
                   <div className="flex items-center gap-3 mb-6">
-                    <span className="px-3 py-1 text-[10px] font-bold bg-foreground text-background rounded-sm uppercase tracking-widest">
+                    <span className="text-sm text-muted-foreground">
                       {post.category}
                     </span>
-                    {post.featured && (
-                      <span className="px-3 py-1 text-[10px] font-bold border border-card-border text-foreground rounded-sm uppercase tracking-widest backdrop-blur-md">
-                        Featured
-                      </span>
-                    )}
                   </div>
 
                   <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-6 text-foreground tracking-tight">
                     {post.title}
                   </h1>
 
-                  <div className="flex flex-wrap items-center gap-8 text-xs font-mono text-muted-foreground uppercase tracking-wider">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-muted border border-card-border" />
-                      <span className="text-muted-foreground">{post.author}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <FaCalendar className="text-muted-foreground" />
+                  <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground">
+                    <span>{post.author}</span>
+                    <span className="flex items-center gap-2">
+                      <FaCalendar className="w-3 h-3" />
                       {new Date(post.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <FaClock className="text-muted-foreground" />
+                    </span>
+                    <span className="flex items-center gap-2">
+                      <FaClock className="w-3 h-3" />
                       {post.readTime}
-                    </div>
+                    </span>
                   </div>
                 </motion.div>
               </div>
             </div>
           </div>
 
-          <div className="max-w-4xl mx-auto px-4 py-16 grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-16">
+          {/* Article Content - Full Width, Optimal Reading */}
+          <div className="max-w-[720px] mx-auto px-4 py-16">
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="prose dark:prose-invert prose-lg max-w-none prose-headings:font-bold prose-headings:text-foreground prose-p:text-muted-foreground prose-p:font-light prose-p:leading-loose prose-a:text-foreground prose-a:underline hover:prose-a:text-muted-foreground prose-img:rounded-sm prose-img:border prose-img:border-card-border prose-pre:bg-card prose-pre:border prose-pre:border-card-border prose-code:text-muted-foreground prose-strong:text-foreground font-serif"
+              className="prose dark:prose-invert prose-lg max-w-none prose-headings:font-bold prose-headings:text-foreground prose-p:text-muted-foreground prose-p:leading-[1.8] prose-a:text-foreground prose-a:underline hover:prose-a:text-muted-foreground prose-img:rounded-sm prose-img:border prose-img:border-card-border prose-pre:bg-card prose-pre:border prose-pre:border-card-border prose-code:text-muted-foreground prose-strong:text-foreground"
             >
               {children}
 
+              {/* Tags */}
               <div className="mt-16 pt-8 border-t border-card-border">
                 <div className="flex flex-wrap gap-2">
                   {post.tags.map(tag => (
-                    <span key={tag} className="flex items-center gap-1 px-3 py-1 bg-muted/20 border border-card-border rounded-sm text-xs font-mono text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors uppercase">
-                      <FaTag className="text-[10px]" /> {tag}
+                    <span key={tag} className="px-3 py-1.5 bg-muted/30 rounded-full text-xs text-muted-foreground hover:text-foreground transition-colors">
+                      {tag}
                     </span>
                   ))}
                 </div>
               </div>
-            </motion.div>
 
-            <aside className="space-y-8">
-              <div className="sticky top-32">
-                <div className="bg-card rounded-sm p-6 border border-card-border mb-8">
-                  <h3 className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest mb-6">Share_Protocol</h3>
-                  <div className="flex gap-4">
-                    <button className="p-3 rounded-sm bg-muted/20 hover:bg-muted/40 text-muted-foreground hover:text-foreground transition-colors border border-card-border">
-                      <FaTwitter />
+              {/* Share Section */}
+              <div className="mt-12 pt-8 border-t border-card-border">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Share this article</span>
+                  <div className="flex gap-2">
+                    <button className="p-2.5 rounded-full bg-muted/20 hover:bg-muted/40 text-muted-foreground hover:text-foreground transition-colors">
+                      <FaTwitter className="w-4 h-4" />
                     </button>
-                    <button className="p-3 rounded-sm bg-muted/20 hover:bg-muted/40 text-muted-foreground hover:text-foreground transition-colors border border-card-border">
-                      <FaLinkedin />
+                    <button className="p-2.5 rounded-full bg-muted/20 hover:bg-muted/40 text-muted-foreground hover:text-foreground transition-colors">
+                      <FaLinkedin className="w-4 h-4" />
                     </button>
-                    <button className="p-3 rounded-sm bg-muted/20 hover:bg-muted/40 text-muted-foreground hover:text-foreground transition-colors border border-card-border">
-                      <FaLink />
+                    <button className="p-2.5 rounded-full bg-muted/20 hover:bg-muted/40 text-muted-foreground hover:text-foreground transition-colors">
+                      <FaLink className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
-
-                {relatedPosts.length > 0 && (
-                  <div className="bg-card rounded-sm p-6 border border-card-border">
-                    <h3 className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest mb-6">Related_Data</h3>
-                    <div className="space-y-6">
-                      {relatedPosts.map(rp => (
-                        <Link key={rp.id} href={`/blog/${rp.slug}`} className="block group">
-                          <h4 className="font-bold text-sm text-foreground group-hover:text-muted-foreground transition-colors mb-2 leading-snug">
-                            {rp.title}
-                          </h4>
-                          <p className="text-[10px] text-muted-foreground font-mono uppercase tracking-wide">
-                            {rp.readTime} • {new Date(rp.date).toLocaleDateString()}
-                          </p>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
-            </aside>
+            </motion.div>
           </div>
+
+          {/* Related Posts - Full Width Section */}
+          {relatedPosts.length > 0 && (
+            <div className="border-t border-card-border">
+              <div className="max-w-[720px] mx-auto px-4 py-16">
+                <h3 className="text-sm text-muted-foreground mb-8">Continue Reading</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {relatedPosts.map(rp => (
+                    <Link key={rp.id} href={`/blog/${rp.slug}`} className="block group">
+                      <h4 className="text-lg font-medium text-foreground group-hover:text-muted-foreground transition-colors mb-2 leading-snug">
+                        {rp.title}
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        {rp.readTime} · {new Date(rp.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </p>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </article>
         
         <AgencyFooter />

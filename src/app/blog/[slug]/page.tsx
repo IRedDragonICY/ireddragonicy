@@ -18,31 +18,27 @@ const components = {
   ol: (props: any) => <ol className="list-decimal list-inside mb-4 space-y-2 text-muted-foreground" {...props} />,
   li: (props: any) => <li className="ml-4" {...props} />,
   blockquote: (props: any) => (
-    <blockquote className="border-l-4 border-cyan-500 pl-4 py-2 my-4 bg-muted/20 italic text-muted-foreground rounded-r-lg shadow-lg backdrop-blur-sm" {...props} />
+    <blockquote className="border-l-2 border-muted-foreground/30 pl-6 py-2 my-6 text-muted-foreground italic" {...props} />
   ),
-  a: (props: any) => <a className="text-cyan-400 hover:text-cyan-300 underline decoration-cyan-500/30 hover:decoration-cyan-300 transition-all" {...props} />,
+  a: (props: any) => <a className="text-foreground underline underline-offset-2 hover:text-muted-foreground transition-colors" {...props} />,
   code: (props: any) => (
-    <code className="bg-muted text-cyan-500 rounded px-1.5 py-0.5 font-mono text-sm border border-card-border" {...props} />
+    <code className="bg-muted/50 text-foreground rounded px-1.5 py-0.5 font-mono text-sm" {...props} />
   ),
   pre: (props: any) => (
-    <div className="relative group">
-      <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-xl blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
-      <pre className="relative bg-card p-4 rounded-xl overflow-x-auto mb-6 border border-card-border shadow-2xl" {...props} />
-    </div>
+    <pre className="bg-card p-4 rounded-lg overflow-x-auto mb-6 border border-card-border" {...props} />
   ),
   img: (props: any) => (
-    <div className="relative my-8 rounded-xl overflow-hidden border border-card-border shadow-2xl group">
-      <div className="absolute inset-0 bg-gradient-to-t from-background/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="w-full h-auto object-cover transform transition-transform duration-700 group-hover:scale-105" {...props} alt={props.alt || 'Blog Image'} />
+    <div className="my-8 rounded-lg overflow-hidden border border-card-border">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img className="w-full h-auto object-cover" {...props} alt={props.alt || 'Blog Image'} />
     </div>
   ),
   table: (props: any) => (
-    <div className="overflow-x-auto my-8 border border-card-border rounded-lg shadow-xl bg-card backdrop-blur-sm">
+    <div className="overflow-x-auto my-8 border border-card-border rounded-lg bg-card">
       <table className="w-full text-left text-sm text-muted-foreground" {...props} />
     </div>
   ),
-  th: (props: any) => <th className="bg-muted/40 px-4 py-3 text-cyan-400 font-bold border-b border-card-border font-mono uppercase tracking-wider" {...props} />,
+  th: (props: any) => <th className="bg-muted/30 px-4 py-3 text-foreground font-medium border-b border-card-border" {...props} />,
   td: (props: any) => <td className="px-4 py-3 border-b border-card-border hover:bg-muted/20 transition-colors" {...props} />,
 };
 /* eslint-enable @typescript-eslint/no-explicit-any */

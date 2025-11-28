@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { FaTimes, FaSearchPlus, FaSearchMinus, FaUndo } from 'react-icons/fa';
+import { FaTimes, FaSearchPlus, FaSearchMinus, FaUndo, FaExternalLinkAlt } from 'react-icons/fa';
 
 interface AssetViewerProps {
   item: {
@@ -28,7 +28,6 @@ export const AssetViewer: React.FC<AssetViewerProps> = ({ item, onClose }) => {
     setPan({ x: 0, y: 0 });
   };
 
-  // Pan handlers
   const onMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
     dragStart.current = { x: e.clientX - pan.x, y: e.clientY - pan.y };
@@ -44,7 +43,6 @@ export const AssetViewer: React.FC<AssetViewerProps> = ({ item, onClose }) => {
 
   const onMouseUp = () => setIsDragging(false);
 
-  // Keyboard nav
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -64,27 +62,20 @@ export const AssetViewer: React.FC<AssetViewerProps> = ({ item, onClose }) => {
       className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-md"
     >
       {/* Background (Click to close) */}
-      <div className="absolute inset-0 cursor-pointer" onClick={onClose}>
-         {/* Grid Pattern */}
-         <div className="absolute inset-0 opacity-20 pointer-events-none bg-[linear-gradient(to_right,rgba(34,211,238,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(34,211,238,0.05)_1px,transparent_1px)] bg-[size:40px_40px]" />
-      </div>
+      <div className="absolute inset-0 cursor-pointer" onClick={onClose} />
 
-      {/* Top Bar: HUD */}
+      {/* Top Bar */}
       <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-start pointer-events-none z-20">
-        <div className="pointer-events-auto flex flex-col">
-           <div className="flex items-center gap-3 mb-1">
-               <div className="h-2 w-2 bg-cyan-500 rounded-full animate-pulse" />
-               <span className="font-mono text-xs text-cyan-400 tracking-widest">VIEWER_ACTIVE</span>
-           </div>
-           <h2 className="text-xl font-bold text-foreground">{item.title || 'Untitled Asset'}</h2>
-           <span className="font-mono text-xs text-muted-foreground">ID: {item.id}</span>
+        <div className="pointer-events-auto">
+          <h2 className="text-lg font-medium text-foreground">{item.title || 'Untitled'}</h2>
+          <span className="text-sm text-muted-foreground">ID: {item.id}</span>
         </div>
 
         <button
           onClick={onClose}
-          className="pointer-events-auto p-3 rounded-xl bg-muted/20 hover:bg-red-500/20 border border-card-border hover:border-red-500/50 text-muted-foreground hover:text-red-400 transition-all group"
+          className="pointer-events-auto p-3 rounded-lg bg-card hover:bg-muted/50 border border-card-border text-muted-foreground hover:text-foreground transition-all"
         >
-          <FaTimes size={20} className="group-hover:rotate-90 transition-transform" />
+          <FaTimes size={18} />
         </button>
       </div>
 
@@ -100,21 +91,21 @@ export const AssetViewer: React.FC<AssetViewerProps> = ({ item, onClose }) => {
         <img
           src={`/api/pixiv-img?src=${encodeURIComponent(item.thumb || '')}`}
           alt={item.title || ''}
-          className="absolute inset-0 m-auto max-w-full max-h-full object-contain select-none shadow-2xl shadow-cyan-500/10"
+          className="absolute inset-0 m-auto max-w-full max-h-full object-contain select-none"
           style={{
             transform: `scale(${zoom}) translate(${pan.x / zoom}px, ${pan.y / zoom}px)`,
-            transition: isDragging ? 'none' : 'transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1)'
+            transition: isDragging ? 'none' : 'transform 0.2s ease-out'
           }}
           draggable={false}
         />
       </div>
 
-      {/* Bottom Bar: Controls */}
+      {/* Bottom Controls */}
       <div className="absolute bottom-8 inset-x-0 flex justify-center pointer-events-none z-20">
-        <div className="pointer-events-auto flex items-center gap-2 p-2 rounded-2xl bg-card/80 backdrop-blur-xl border border-card-border shadow-2xl shadow-black/10">
+        <div className="pointer-events-auto flex items-center gap-1 p-1.5 rounded-lg bg-card border border-card-border">
           <ControlBtn onClick={() => handleZoom(-0.2)} icon={FaSearchMinus} label="Zoom Out" />
           <ControlBtn onClick={resetView} icon={FaUndo} label="Reset" />
-          <span className="px-2 font-mono text-xs text-cyan-400 min-w-[3rem] text-center">
+          <span className="px-3 text-sm text-muted-foreground min-w-[3.5rem] text-center">
             {Math.round(zoom * 100)}%
           </span>
           <ControlBtn onClick={() => handleZoom(0.2)} icon={FaSearchPlus} label="Zoom In" />
@@ -125,7 +116,7 @@ export const AssetViewer: React.FC<AssetViewerProps> = ({ item, onClose }) => {
             href={item.href}
             target="_blank"
             rel="noopener noreferrer"
-            className="p-3 rounded-xl text-muted-foreground hover:text-cyan-400 hover:bg-muted/20 transition-colors"
+            className="p-2.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors"
             title="Open Source"
           >
             <FaExternalLinkAlt size={14} />
@@ -136,13 +127,11 @@ export const AssetViewer: React.FC<AssetViewerProps> = ({ item, onClose }) => {
   );
 };
 
-import { FaExternalLinkAlt } from 'react-icons/fa';
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const ControlBtn = ({ onClick, icon: Icon, label }: any) => (
   <button
     onClick={onClick}
-    className="p-3 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/20 transition-colors"
+    className="p-2.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors"
     title={label}
   >
     <Icon size={14} />

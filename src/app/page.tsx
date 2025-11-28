@@ -5,6 +5,7 @@ import { FaPython, FaReact, FaNodeJs, FaDocker, FaGitAlt, FaGithub, FaLinkedin }
 import { SiTypescript, SiTailwindcss, SiNextdotjs, SiTensorflow, SiPytorch, SiScikitlearn, SiJupyter, SiPostgresql, SiOpenai, SiHuggingface } from 'react-icons/si';
 import Hero from '@/components/Hero';
 import CursorEffect from '@/components/CursorEffect';
+import MarqueeBanner from '@/components/home/MarqueeBanner';
 import DiffusionProfile from '@/components/home/DiffusionProfile';
 import GenerativeProjects from '@/components/home/GenerativeProjects';
 import TechStack from '@/components/home/TechStack';
@@ -89,6 +90,7 @@ export default function Home() {
 
             <main className="relative bg-background z-10">
                 <Hero />
+                <MarqueeBanner />
                 <DiffusionProfile />
                 <GenerativeProjects projects={portfolioData.projects} />
                 <TechStack skills={portfolioData.skills} />

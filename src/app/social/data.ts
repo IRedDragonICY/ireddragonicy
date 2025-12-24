@@ -29,7 +29,8 @@ import {
   SiSteam,
   SiEpicgames,
   SiBilibili,
-  SiXiaomi
+  SiXiaomi,
+  SiDuolingo
 } from 'react-icons/si';
 import { TbBrandBluesky, TbWorld } from 'react-icons/tb';
 import { MdForum } from 'react-icons/md';
@@ -379,6 +380,16 @@ export const socials: SocialItem[] = [
     accent: '#00A1D6',
     gradientFrom: '#00A1D6',
     gradientTo: '#0083B0',
+  },
+  {
+    id: 'duolingo',
+    name: 'Duolingo',
+    href: 'https://www.duolingo.com/profile/ireddragonicy',
+    icon: SiDuolingo,
+    description: 'Language learning progress and streaks.',
+    accent: '#58CC02',
+    gradientFrom: '#58CC02',
+    gradientTo: '#4B9C0F',
   },
 ];
 
